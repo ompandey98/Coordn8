@@ -25,7 +25,7 @@
   "author": "pandeom",
   "license": "MIT",
   "files": [
-    "PLAYBOOK.md",
+    "engine/",
     "VERSION",
     "bin/",
     "adapters/",

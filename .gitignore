@@ -1,0 +1,32 @@
+# Coordn8 — repo hygiene
+
+# Build/output folders Coordn8 produces in TARGET repos (never in this repo)
+Coordn8/
+_research/
+_build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# The release zip is generated; do not commit it
+coordn8-*.zip
+
+# Local scratch
+/tmp_scratch/
+*.log
