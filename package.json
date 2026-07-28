@@ -1,0 +1,41 @@
+{
+  "name": "coordn8",
+  "version": "1.0.0",
+  "description": "Point it at any codebase; it ships an interactive page and a narrated, synced video — audience-tailored, every claim traced to the code.",
+  "bin": {
+    "coordn8": "bin/coordn8.js"
+  },
+  "scripts": {
+    "generate": "python3 build/generate_adapters.py",
+    "check": "python3 build/generate_adapters.py --check",
+    "test": "python3 tests/run_tests.py"
+  },
+  "keywords": [
+    "documentation",
+    "codebase",
+    "walkthrough",
+    "onboarding",
+    "video",
+    "diagram",
+    "ai-agent",
+    "claude-code",
+    "cursor",
+    "codex"
+  ],
+  "author": "pandeom",
+  "license": "MIT",
+  "files": [
+    "PLAYBOOK.md",
+    "VERSION",
+    "bin/",
+    "adapters/",
+    "scripts/",
+    "build/",
+    "install.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=14"
+  }
+}
