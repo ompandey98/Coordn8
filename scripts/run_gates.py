@@ -61,6 +61,9 @@ def main() -> int:
     flows = build / "_build" / "flows.json"
     claims = build / "_build" / "claims.json"
     beatmap = build / "_build" / "beatmap.json"
+    layout = build / "_build" / "layout.json"
+    storyboard = build / "_build" / "storyboard.json"
+    page_plan = build / "_build" / "page_plan.json"
     jargon = build / "_research" / "jargon.txt"
 
     plan = [
@@ -70,8 +73,16 @@ def main() -> int:
         ("dom_smoke", GATES / "dom_smoke.py", [str(html)]),
         ("content_ban", GATES / "content_ban.py",
          [str(html)] + (["--jargon", str(jargon)] if jargon.exists() else [])),
+        # Visual-density runs on the PLAN, before rendering — the one-shot fix for
+        # sparse/static/filler deliverables (PLAYBOOK 2.1a / 1.1a). Two invocations:
+        # page plan and video storyboard, each explicitly typed.
+        ("visual_density:page", GATES / "visual_density.py",
+         [str(page_plan), "--kind", "page"]),
+        ("visual_density:video", GATES / "visual_density.py",
+         [str(storyboard), "--kind", "video"]),
         ("beat_sync", GATES / "beat_sync.py", [str(mp4), str(beatmap)]),
         ("media_probe", GATES / "media_probe.py", [str(mp4)]),
+        ("layout_probe", GATES / "layout_probe.py", [str(layout)]),
     ]
 
     print(f"\nCoordn8 gate report — {build}\n" + "=" * 60)

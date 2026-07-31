@@ -73,8 +73,23 @@ The brain runs as a graph, not a single pass (PLAYBOOK.md PHASE R):
 - **Readers** fan out over subsystems, each writing facts to the memory palace.
 - **Cartographer** joins reader output into `project_map.md` (code wins over docs).
 - **Flow-builders** fan out, one per core unit, emitting decision-tree `flows.json`.
+- **Storyboarder / visual designer** fan out, one per scene, turning each scripted
+  beat into a concrete visual plan (`storyboard.json`) *before* any frame is
+  rendered — what is drawn, what moves, and what each element explains. This is
+  what stops a scene from collapsing into a static text box: a scene with no
+  planned motion or no meaningful visual is rejected on paper, cheaply.
+- **Motion director** joins the storyboard, enforcing movement continuity (a
+  persistent object travels across beats) and one consistent visual system.
 - **Renderers** fan out, one per scene, capturing frames independently.
-- **Validators/adversaries** fan out to re-verify claims and hunt banned content.
+- **Validators/adversaries** fan out to re-verify claims and hunt banned content —
+  including three visual adversaries that run on both deliverables: a
+  **visual-relevance adversary** (every visual must teach something and be the
+  most-relevant depiction — no decoration-with-no-referent), a **composition/space
+  critic** (the whole frame/width is used; density matches an explainer, not a
+  slideshow), an **explainability critic** (would the target newcomer actually
+  *get it* — is each idea shown, not just told?), and a **medium-fit critic**
+  (page only — is the page a genuine compact reader, or the video re-skinned?
+  bar: remove the video tab entirely and the page still fully teaches).
 
 The memory palace (`_research/`, `_build/`) is the shared, persistent store every
 agent reads and writes. Nothing is held only in a model's head; every fact lands
@@ -120,6 +135,55 @@ the words. It structurally flags any visual scheduled to enter *before* its
 sentence, non-monotonic timestamps, and duration drift beyond tolerance.
 `scripts/gates/media_probe.py` checks resolution, fps, audio presence, and a
 clean full decode.
+
+## 7a. Composition / layout verification
+
+Timing and container sanity say nothing about whether content physically *fits*
+the frame — which is how cluttered, overflowing, misaligned scenes used to ship.
+`scripts/gates/layout_probe.py` closes that gap. Its deterministic core reads a
+`layout.json` of every visible element's bounding box (sampled at several `t`
+per scene, since entrances animate) and flags any box that overflows the frame
+or the 5% safe area, is larger than the frame, collides with another text box,
+or renders below the type-size floor (PLAYBOOK 2.4a). An optional Pillow-backed
+pixel probe measures the content bounding box of a rendered frame to catch
+edge-crowding and barren/scattered compositions. Like every gate it is advisory:
+a clean probe is necessary, not sufficient — the agent still looks at the frames.
+The video also carries **no meta chrome** (no username, hash, build date, or path
+caption burned into a frame); traceability lives in the page footer and rebuild
+guide instead.
+
+## 7b. Visual-density verification (the one-shot fix for low-effort output)
+
+The most common quality failure was never a wrong fact — it was a low-effort,
+under-visualized deliverable: a video that's a static text box with two shapes,
+or a page that's a slideshow of boxes-and-bullets. That slipped through even at
+max tokens on a heavy model because "make it rich" was never a *structural,
+checked* requirement. `scripts/gates/visual_density.py` makes it one. Crucially it
+runs on the **plan, before rendering** — the video's `storyboard.json` (PLAYBOOK
+2.1a) and the page's `page_plan.json` (1.1a) — so a thin design is caught and
+redesigned on paper, not after five iterations of burned frames. It auto-detects
+which plan it's reading (`scenes[]` vs `sections[]`) and enforces the visual
+doctrine (0.4a) mechanically: every scene/section has a **non-text primary
+visual** (show, don't tell); every element has an `explains` mapping and isn't
+decorative filler (random stars/flowers/pigs are flagged); depictions aren't a
+wall of generic boxes; the composition uses the **full frame/width** rather than a
+centered quarter with dead margins; every video scene has **real motion** under
+narration (and the page's equivalent — an interaction/progressive build); and the
+overall meaningful-visual density clears an explainer-grade floor. Advisory, like
+every gate: a deliberate single-hero focal beat is a valid override, and a PASS
+never excuses a plan that still reads low-effort to the agent's own eyes.
+
+The page carries two extra behaviors here, because the page is a **reader, not the
+video re-skinned** (PLAYBOOK 1.1a): the video and the page are different media with
+different ideologies — the video is a linear narrated film; the page is a compact,
+random-access reader organized by information architecture, whose structure is
+*derived per-project* (how many tabs, what splits, what depth) rather than mirrored
+from the video's scene order. So (1) an optional "Watch" tab that merely embeds the
+sibling mp4 in a player with speed controls is **exempt** from the carry-your-own-
+visuals checks — but must stay an optional guest, not the spine; and (2) a section
+that self-declares it's a transcribed video beat (`not_video_scene:false`) is
+**flagged** — the medium-fit critic's bar is that removing the video entirely still
+leaves a page that fully teaches on its own.
 
 ## 8. Distribution
 

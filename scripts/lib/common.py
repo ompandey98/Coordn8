@@ -35,7 +35,13 @@ def have(tool: str) -> bool:
 
 
 def find_chrome() -> str | None:
-    """Locate a headless-capable Chrome/Chromium across platforms."""
+    """Locate a headless-capable Chrome/Chromium across platforms.
+
+    Order: PATH → OS default app locations → a Playwright-installed chromium
+    (the sudo-free install path used by setup_env.py). Finding the Playwright
+    browser is what lets `pip install playwright && playwright install chromium`
+    promote a machine from Tier B to Tier A without any root access.
+    """
     for name in ("google-chrome", "google-chrome-stable", "chromium",
                  "chromium-browser", "chrome"):
         p = shutil.which(name)
@@ -46,6 +52,45 @@ def find_chrome() -> str | None:
     for p in mac:
         if Path(p).exists():
             return p
+    pw = find_playwright_chromium()
+    if pw:
+        return pw
+    return None
+
+
+def _playwright_cache_dirs() -> list[Path]:
+    """Where `playwright install chromium` puts browsers, across platforms.
+    Honors PLAYWRIGHT_BROWSERS_PATH if the user/agent set it."""
+    import os
+    dirs: list[Path] = []
+    env = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    if env and env not in ("0",):
+        dirs.append(Path(env))
+    home = Path.home()
+    dirs += [
+        home / ".cache" / "ms-playwright",                       # Linux
+        home / "Library" / "Caches" / "ms-playwright",           # macOS
+        home / "AppData" / "Local" / "ms-playwright",            # Windows
+    ]
+    return [d for d in dirs if d.exists()]
+
+
+def find_playwright_chromium() -> str | None:
+    """Return an executable path to a Playwright-installed chromium, or None."""
+    # Candidate executable names inside each browser dir, per platform.
+    patterns = (
+        "chromium-*/chrome-linux/chrome",
+        "chromium-*/chrome-linux/headless_shell",
+        "chromium_headless_shell-*/chrome-linux/headless_shell",
+        "chromium-*/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+        "chromium-*/chrome-win/chrome.exe",
+    )
+    for base in _playwright_cache_dirs():
+        for pat in patterns:
+            hits = sorted(base.glob(pat))
+            for h in hits:
+                if h.exists():
+                    return str(h)
     return None
 
 

@@ -141,6 +141,17 @@ def test_content_ban():
         r = run("scripts/gates/content_ban.py", [str(clean)])
         check("clean payload PASSES (exit 0)", r.returncode == 0, r.stdout)
 
+        # capability-excuse text must never ship in a deliverable
+        excuse = d / "excuse.html"
+        excuse.write_text(
+            "<h1>How it works</h1>\n"
+            "<p>Note: video is not supported in this system.</p>\n")
+        r = run("scripts/gates/content_ban.py", [str(excuse)])
+        check("capability-excuse text flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names it a capability_excuse",
+              "capability_excuse" in r.stdout, r.stdout)
+
 
 def test_facts_trace():
     print("\n[gate: facts_trace catches broken references]")
@@ -190,6 +201,234 @@ def test_dom_smoke():
               r.stdout)
 
 
+def test_layout_probe():
+    print("\n[gate: layout_probe flags overflow/crowding/collision/tiny type]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        frame = {"width": 1920, "height": 1080}
+        # clean: all inside the 5% safe area (96x54 margins), no overlap, big type
+        good = {
+            "frame": frame, "safe_margin_pct": 0.05,
+            "samples": [{"scene": "s1", "t": 0.0, "boxes": [
+                {"id": "title", "role": "title", "x": 120, "y": 80,
+                 "w": 900, "h": 90, "font_px": 48, "text": True},
+                {"id": "body", "role": "body", "x": 120, "y": 300,
+                 "w": 800, "h": 200, "font_px": 30, "text": True},
+            ]}]
+        }
+        # dirty: one box overflows the right edge, two texts overlap, one tiny font
+        bad = {
+            "frame": frame, "safe_margin_pct": 0.05,
+            "samples": [{"scene": "s2", "t": 0.5, "boxes": [
+                {"id": "spill", "x": 1700, "y": 100, "w": 400, "h": 80,
+                 "font_px": 40, "text": True},          # x2=2100 > 1920 -> overflow
+                {"id": "a", "x": 200, "y": 500, "w": 300, "h": 100,
+                 "font_px": 30, "text": True},
+                {"id": "b", "x": 350, "y": 550, "w": 300, "h": 100,
+                 "font_px": 20, "text": True},          # overlaps 'a' AND tiny type
+            ]}]
+        }
+        gp = d / "good.json"; gp.write_text(json.dumps(good))
+        bp = d / "bad.json"; bp.write_text(json.dumps(bad))
+
+        r = run("scripts/gates/layout_probe.py", [str(gp)])
+        check("clean layout PASSES (exit 0)", r.returncode == 0, r.stdout)
+
+        r = run("scripts/gates/layout_probe.py", [str(bp)])
+        check("bad layout flagged REVIEW (exit 1)", r.returncode == 1, r.stdout)
+        check("names the overflow", "overflow" in r.stdout.lower(), r.stdout)
+        check("names the overlap/collision", "overlap" in r.stdout.lower(), r.stdout)
+        check("names the tiny type", "too small" in r.stdout.lower()
+              or "floor" in r.stdout.lower(), r.stdout)
+
+        r = run("scripts/gates/layout_probe.py", [str(d / "missing.json")])
+        check("missing layout -> SKIPPED (exit 2)", r.returncode == 2, r.stdout)
+
+
+def test_visual_density():
+    print("\n[gate: visual_density flags sparse/static/filler/generic plans]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        # --- VIDEO storyboard ---------------------------------------------
+        # rich scene: non-text primary, 2 explained visuals, real motion,
+        # full-frame regions.
+        good_sb = {
+            "fps": 30, "frame": {"width": 1920, "height": 1080},
+            "scenes": [{
+                "id": "s1", "beat": "machinery",
+                "primary_visual": "request traveling the router -> cache -> engine",
+                "elements": [
+                    {"id": "router", "kind": "component",
+                     "explains": "entry point that classifies the request",
+                     "ref": "router.py:40", "region": "left-third",
+                     "motion": "pulse when the token arrives"},
+                    {"id": "token", "kind": "data",
+                     "explains": "one request moving through the system",
+                     "ref": "types.py:12", "region": "center",
+                     "motion": "travels left->right, eased"},
+                    {"id": "cache", "kind": "component",
+                     "explains": "slots that fill and evict",
+                     "ref": "cache.py:88", "region": "right-third"},
+                ],
+                "moving_element_count": 2,
+                "uses_regions": ["left-third", "center", "right-third"],
+            }]
+        }
+        # bad scene: text-only primary, no motion, center-only, a filler star
+        # with no explains.
+        bad_sb = {
+            "fps": 30, "frame": {"width": 1920, "height": 1080},
+            "scenes": [{
+                "id": "s2", "beat": "intro",
+                "primary_visual": "a text box",
+                "elements": [
+                    {"id": "sparkle", "kind": "star", "region": "center"},
+                ],
+                "moving_element_count": 0,
+                "uses_regions": ["center"],
+            }]
+        }
+        gsb = d / "good_sb.json"; gsb.write_text(json.dumps(good_sb))
+        bsb = d / "bad_sb.json"; bsb.write_text(json.dumps(bad_sb))
+
+        r = run("scripts/gates/visual_density.py", [str(gsb)])
+        check("rich storyboard PASSES (exit 0)", r.returncode == 0, r.stdout)
+        check("auto-detects video kind", '"kind": "video"' in r.stdout, r.stdout)
+
+        r = run("scripts/gates/visual_density.py", [str(bsb)])
+        check("thin storyboard flagged REVIEW (exit 1)", r.returncode == 1, r.stdout)
+        check("names the text-only primary", "show, don't tell" in r.stdout.lower()
+              or "non-text primary" in r.stdout.lower(), r.stdout)
+        check("names the missing motion", "static hold" in r.stdout.lower()
+              or "no motion" in r.stdout.lower(), r.stdout)
+        check("names the center-only composition", "center" in r.stdout.lower(),
+              r.stdout)
+        check("flags the decorative star", "decorative" in r.stdout.lower()
+              or "banned" in r.stdout.lower(), r.stdout)
+
+        # --- PAGE plan -----------------------------------------------------
+        good_pp = {
+            "sections": [{
+                "id": "architecture", "idea": "how data flows",
+                "primary_visual": "animated component map with particle flows",
+                "elements": [
+                    {"id": "map", "kind": "diagram",
+                     "explains": "every component and its edges",
+                     "ref": "app.py:1", "region": "full"},
+                    {"id": "legend", "kind": "figure",
+                     "explains": "color = source of truth", "ref": "app.py:2"},
+                ],
+                "interaction": "hover a component to see its config",
+                "uses_full_width": True,
+            }]
+        }
+        bad_pp = {
+            "sections": [{
+                "id": "overview", "idea": "what it is",
+                "primary_visual": "bullet list",
+                "elements": [
+                    {"id": "b1", "kind": "box", "explains": "point one",
+                     "ref": "x:1"},
+                ],
+                "uses_full_width": False,
+            }]
+        }
+        gpp = d / "good_pp.json"; gpp.write_text(json.dumps(good_pp))
+        bpp = d / "bad_pp.json"; bpp.write_text(json.dumps(bad_pp))
+
+        r = run("scripts/gates/visual_density.py", [str(gpp), "--kind", "page"])
+        check("rich page plan PASSES (exit 0)", r.returncode == 0, r.stdout)
+
+        r = run("scripts/gates/visual_density.py", [str(bpp), "--kind", "page"])
+        check("thin page section flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names the missing interaction", "interaction" in r.stdout.lower(),
+              r.stdout)
+        check("names the wasted width", "full width" in r.stdout.lower()
+              or "center strip" in r.stdout.lower(), r.stdout)
+
+        # a section that self-declares it's a re-skinned video beat is flagged
+        # (the page must be a reader, not the video's timeline replayed — 1.1a)
+        reskin_pp = {
+            "sections": [{
+                "id": "machinery", "idea": "the engine",
+                "primary_visual": "animated pipeline diagram",
+                "elements": [
+                    {"id": "pipe", "kind": "diagram",
+                     "explains": "the stages end to end", "ref": "e.py:1"},
+                    {"id": "note", "kind": "figure",
+                     "explains": "stage timings", "ref": "e.py:9"},
+                ],
+                "interaction": "step through each stage",
+                "uses_full_width": True,
+                "not_video_scene": False,   # <- admits it mirrors a video beat
+            }]
+        }
+        rpp = d / "reskin_pp.json"; rpp.write_text(json.dumps(reskin_pp))
+        r = run("scripts/gates/visual_density.py", [str(rpp), "--kind", "page"])
+        check("re-skinned video beat flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names the re-skin / reader-destination failure",
+              "re-skinned" in r.stdout.lower() or "reader destination" in r.stdout.lower()
+              or "own information architecture" in r.stdout.lower(), r.stdout)
+
+        # the optional video-embed "Watch" tab is EXEMPT — it carries no visuals
+        # of its own and must not be flagged as sparse (1.1 item 6)
+        embed_pp = {
+            "sections": [
+                {"id": "arch", "idea": "data flow",
+                 "primary_visual": "animated component map",
+                 "elements": [
+                     {"id": "map", "kind": "diagram", "explains": "components",
+                      "ref": "a.py:1"},
+                     {"id": "legend", "kind": "figure", "explains": "colors",
+                      "ref": "a.py:2"}],
+                 "interaction": "hover", "uses_full_width": True},
+                {"id": "watch", "role": "embed",
+                 "primary_visual": "embedded video player with speed controls",
+                 "elements": []},
+            ]
+        }
+        epp = d / "embed_pp.json"; epp.write_text(json.dumps(embed_pp))
+        r = run("scripts/gates/visual_density.py", [str(epp), "--kind", "page"])
+        check("page with an exempt video-embed tab PASSES (exit 0)",
+              r.returncode == 0, r.stdout)
+        check("marks the embed tab exempt", "exempt" in r.stdout.lower(), r.stdout)
+
+        # missing plan -> SKIPPED (build the plan before rendering)
+        r = run("scripts/gates/visual_density.py", [str(d / "missing.json")])
+        check("missing plan -> SKIPPED (exit 2)", r.returncode == 2, r.stdout)
+
+
+def test_setup_env():
+    print("\n[setup_env: dry-run plans installs and never claims false success]")
+    r = run("scripts/setup_env.py", ["--dry-run", "--json"])
+    check("setup_env dry-run runs (exit 0)", r.returncode == 0, r.stderr)
+    try:
+        data = json.loads(r.stdout)
+        check("dry_run flag is true", data.get("dry_run") is True, r.stdout)
+        check("reports capabilities_after", "capabilities_after" in data, r.stdout)
+        check("reports video_ready boolean",
+              isinstance(data.get("video_ready"), bool), r.stdout)
+        # dry-run must not actually install: every action is a plan, not a result
+        acts = data.get("actions", [])
+        statuses = {a.get("status") for a in acts}
+        check("dry-run installs nothing (no 'installed' status)",
+              "installed" not in statuses, str(statuses))
+        # honesty: if video isn't ready, blockers must be listed specifically
+        if not data.get("video_ready"):
+            check("names specific blockers when not video-ready",
+                  len(data.get("still_blocking_video", [])) > 0, r.stdout)
+        else:
+            check("names specific blockers when not video-ready", True, "")
+    except Exception as e:  # noqa
+        check("setup_env emits valid JSON", False, str(e))
+
+    # subset flag is accepted
+    r = run("scripts/setup_env.py", ["--dry-run", "--json", "--only", "pillow"])
+    check("setup_env --only subset runs (exit 0)", r.returncode == 0, r.stderr)
+
+
 def test_env_detect():
     print("\n[env_detect: emits a valid tier + bounded worker budget]")
     r = run("scripts/env_detect.py", ["--json"])
@@ -221,6 +460,9 @@ def main() -> int:
     test_content_ban()
     test_facts_trace()
     test_dom_smoke()
+    test_layout_probe()
+    test_visual_density()
+    test_setup_env()
     test_env_detect()
     test_parallel_pool()
     print("=" * 50)

@@ -6,6 +6,7 @@
  *   npx coordn8 init [target]   install adapter(s): claude|cursor|codex|kiro|generic|all
  *   npx coordn8 uninstall       remove installed adapters
  *   npx coordn8 print           print the raw brain (paste into any agent)
+ *   npx coordn8 setup           auto-install missing runtime tools (ffmpeg/chromium/tts) to unlock video
  *   npx coordn8 detect          run environment/tier detection
  *   npx coordn8 gates <folder>  run the advisory gate report on a build folder
  *   npx coordn8 check           verify adapters are in sync with PLAYBOOK.md
@@ -56,6 +57,7 @@ Usage (no clone needed — runs straight from GitHub):
   npx github:ompandey98/coordn8 init [target]   Install: claude|cursor|codex|kiro|generic|all
   npx github:ompandey98/coordn8 uninstall       Remove installed adapters
   npx github:ompandey98/coordn8 print           Print the raw engine brain (paste into any agent)
+  npx github:ompandey98/coordn8 setup           Auto-install missing tools (ffmpeg/chromium/TTS) to unlock the video — sudo-free where possible
   npx github:ompandey98/coordn8 detect          Detect environment capabilities and the tier
   npx github:ompandey98/coordn8 gates <folder>  Run the advisory gate report on a build folder
   npx github:ompandey98/coordn8 check           Verify adapters are byte-in-sync with PLAYBOOK.md
@@ -74,6 +76,9 @@ switch (cmd) {
     break;
   case 'print':
     printBrain();
+    break;
+  case 'setup':
+    runPy('scripts/setup_env.py', rest);
     break;
   case 'detect':
     runPy('scripts/env_detect.py', rest);

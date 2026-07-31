@@ -66,7 +66,7 @@ This engine was hardened on projects whose core objects were decision categories
 - [ ] Walk the entire repo tree. Read the code — not skimming: entry points, the core engine/logic files in full, configs, deploy scripts.
 - [ ] Read all docs: READMEs, design docs, wikis, `CLAUDE.md`/`AGENTS.md`, memory/context files from past sessions, anything linked from them (fetch linked URLs if reachable).
 - [ ] Find every version/snapshot of the system present (dated folders, branches, deploy artifacts). Determine which one is the LATEST / actually-deployed version. **Docs lie; code is truth.** Where a doc and the code disagree, diff them, trust the code, and note the discrepancy.
-- [ ] Compute a hash of the ground-truth snapshot and record it — you will stamp it in the deliverable footers so anyone can tell which code version the deliverables describe:
+- [ ] Compute a hash of the ground-truth snapshot and record it — you will stamp it in the **page footer** and the rebuild guide (never on a video frame — see 2.4a) so anyone can tell which code version the deliverables describe:
   ```bash
   md5 <ground-truth files>        # macOS; use md5sum on Linux
   git rev-parse HEAD              # if the snapshot is a git commit
@@ -139,30 +139,72 @@ Both deliverables are teaching artifacts, not documentation dumps. Apply the dis
 
 These principles override any structural default below when they conflict: if a different section order or video arc teaches THIS project better for THIS audience, use it (see the Creative Freedom Clause) — but you must be able to name which principle the deviation serves.
 
-### 0.5 CAPABILITY DETECTION & TIER SELECTION (platform-agnostic core)
+### 0.4a VISUAL DOCTRINE — "visual-maxxing," relevance, and full-frame use (governs BOTH deliverables)
 
-Before planning, detect what THIS environment can physically do, and pick the richest tier it supports. Run the bundled detector if present (`scripts/env_detect.py` — see also PHASE 0.6), otherwise probe by hand. The tiers:
+The most common quality failure is not a wrong fact — it is a **low-effort, under-visualized deliverable**: a video that's a static text box with two shapes and no motion, or a page that's a slideshow of boxes-and-bullets. This happens even at max tokens on a heavy model because "make it rich" was never a *structural requirement* — so it got skipped. This doctrine makes visual richness a planned, gated obligation for the interactive page AND the video. Read every rule as "or it's a build failure."
 
-- **Tier A — full local agent** (shell + file write + `ffmpeg` + headless Chrome + TTS): webpage **and** video **and** all gates. The full experience.
-- **Tier B — shell + file write, no `ffmpeg`/browser**: the webpage + all data/content/structure gates. The **video is skipped**, with an explicit message and the exact install commands to unlock it. Nothing silently missing.
-- **Tier C — file write only** (artifact-style env, no shell): single-file HTML only; run whatever gates you can reason through in-model; state clearly that the video needs a local run and give the command.
+**The benchmark.** Aim at the density and craft of the best explainer studios — 3Blue1Brown, Kurzgesagt, TED-Ed: the screen is *always* doing explanatory work through visuals, not just hosting text. That is the bar for both deliverables. A frame or a section that a viewer would call "low effort" fails, regardless of how correct the words are.
+
+**1 — Show, don't tell (visual-first).** The primary carrier of every idea is a *visual* — a diagram, an animated process, a spatial metaphor, a built-up figure — with text as support, not the other way around. If an idea is currently expressed as a sentence or a bullet, ask "what is the picture of this?" and draw that. A beat/section whose only content is text has failed the doctrine.
+
+**2 — Every visual EARNS its place; nothing is decoration.** This is the hard constraint that separates richness from noise. Each visual, icon, motion, and connecting element must map to a specific thing being explained — a component, a data movement, a decision, a quantity, a relationship. State that mapping (the storyboard/visual-plan `explains` field). **Randomly drawn flowers, stars, pigs, butterflies, generic clip-art mascots with no referent are BANNED** — that is not creativity, it's clutter. "Make it more creative" never means "add unrelated doodles"; it means "find a *more relevant, more illuminating* visual for this exact idea."
+
+**3 — Most-relevant depiction, not a generic box.** Prefer a domain-specific representation over an abstract rectangle. A queue is drawn as a queue; a tree as a tree; a cache as filling/evicting slots; a request as a token traveling a path; a rate as something accumulating. Reach for the visual a great teacher would sketch for *this* concept. Generic-box-with-a-label is the fallback of last resort, and a page/scene made mostly of them fails.
+
+**4 — Use the WHOLE frame, deliberately.** A visual marooned in the center with dead empty margins is a failure of composition. Compose edge-aware within the safe area (2.4a): distribute related elements across the space, use the periphery for context/legend/labels/secondary detail, let the composition guide the eye. A single hero element owning a frame is allowed **only** as a deliberate focal beat — not as the default because nothing else was designed.
+
+**5 — Motion carries meaning (video) / interaction & progressive build (page).** In the **video**, the screen is never static under narration: data flows along edges, a case travels the pipeline, figures build up piece by piece, quantities count/grow, elements enter staggered and eased (2.4b). In the **page**, the equivalent is animated diagrams, hover/step interactions, "walk an example" steppers, and progressive reveal — the reader *does* something and the figure *responds*. Static-only is acceptable for neither.
+
+**6 — Layered density, not clutter.** Rich means *many meaningful elements composed and revealed in layers* (progressive disclosure), not *everything crammed at once*. Build a figure up; reveal supporting detail as the narration/section reaches it. Density is achieved over time (video) or over interaction/scroll (page), so each moment stays clean while the whole is rich.
+
+**7 — Screenshot-worthy moments.** Design at least a few frames/figures that stand alone as a shareable reference — a viewer could screenshot it and it would explain the idea on its own. Small, relevant, self-contained visual summaries (a labeled diagram, a compact comparison, a mini-map) are encouraged even where the narration doesn't strictly need them, because they raise the reference value.
+
+**8 — Creative liberty, bounded only by relevance and clarity (esp. the page).** The interactive page is NOT a corporate/shareholder document — take full liberty to represent things in whatever form teaches best: custom illustrations, spatial metaphors, invented diagram types, playful-but-relevant depictions. The ONLY bounds are: it must be relevant (rule 2), it must be the clearest option for the audience (0.3), and it must pass the gates (traceability, tree-shape, bans). Within those, be inventive — sameness and timidity are themselves defects (see the Creative Freedom Clause).
+
+This doctrine is enforced, not hoped for: the visual plan is designed and checked BEFORE rendering (2.1a for video; 1.1a for the page), and the `visual_density` gate plus dedicated visual adversaries (R.1) fail deliverables that are sparse, static, irrelevant-filler, or poorly space-using. "It's correct but it looks low-effort" is a failing deliverable here.
+
+### 0.5 CAPABILITY: INSTALL FIRST, THEN SELECT THE TIER (platform-agnostic core)
+
+**Read this order carefully — getting it wrong is the single worst failure mode.** You do NOT detect a missing tool and immediately declare a lower tier. That is how Coordn8 shipped poor content and false "not supported on this system" claims. The correct order is: **try to INSTALL everything the full pipeline needs (0.6), re-probe, and only THEN pick a tier from what the machine can do *after* your best install effort.** A tier below A is a **last resort reached only after a genuine, verified install failure** — never a first move, never an excuse to skip work.
+
+**Mandatory sequence:**
+1. **Run environment self-setup (0.6) — always, before any tier decision.** Aggressively install ffmpeg/ffprobe, a headless Chromium, and a TTS engine (plus Pillow/numpy). Prefer the sudo-free paths. This is not optional and it is not "only if convenient."
+2. **Re-probe** (`scripts/env_detect.py`) to get the *post-install* truth. Tier is a function of capabilities **after** setup, not before.
+3. **Pick the richest tier the post-install machine supports.** If that's A, you build the video — full stop. If a tool genuinely could not be installed, you may drop — but you must name the *specific, verified* blocker (no network / no package manager / pip failed), not a vague capability claim.
+
+The tiers:
+
+- **Tier A — full pipeline** (shell + file write + `ffmpeg` + headless Chrome + TTS): webpage **and** video **and** all gates. **This is the default and expected outcome on essentially any machine with a network connection** — the sudo-free installers reach it without root. Getting to A is your job, not a lucky accident.
+- **Tier B — shell + file write, but a required video tool could NOT be installed** (verified: no network AND no package manager AND pip failed): the webpage + all data/content/structure gates. The video is skipped **only** with the specific reason and the exact unlock command. You must have actually *attempted* installation first.
+- **Tier C — file write only** (artifact-style env, no shell to install anything): single-file HTML only; run whatever gates you can reason through in-model; state that the video needs a local run and give the command.
 - **Tier D — chat only, no file write**: emit the HTML in a fenced code block plus a rebuild guide; label it honestly as degraded and tell the user how to get Tier A.
 
 **Rules that hold in every tier:**
-- Announce the detected tier and exactly which deliverables it will and won't produce, up front, in the plan.
+- Attempt full setup BEFORE announcing a tier. Announce the tier and exactly which deliverables it will and won't produce, up front, in the plan — after setup, not before.
 - The packaged output in a given tier is always ≥ what the raw prompt would produce in that same environment.
-- Never claim a video (or any artifact) you did not produce. A skipped deliverable is stated as skipped, with the unlock path.
-- Degrade the *deliverable set*, never the *rigor*: whatever you DO produce meets the full quality bar and passes its gates.
+- Never claim a video (or any artifact) you did not produce. A skipped deliverable is stated as skipped, with the *specific* verified blocker and the unlock path — never a generic "not supported here."
+- Degrade the *deliverable set* only as a last resort, and never the *rigor*: whatever you DO produce meets the full quality bar and passes its gates.
+- **Capability-excuse text is BANNED from the deliverables themselves.** Phrases like "X is not supported in this system", "video unavailable", or any apology about the environment must NEVER appear in the page or the video. The page and video are for the *audience*, who don't care about your machine. A skip is an operator-facing status line in your handover, not content. (Enforced by the content-ban sweep — see Deliverable 1.5.)
 
-### 0.6 Environment self-setup — without asking
+### 0.6 Environment self-setup — aggressive, sudo-free-first, verified (do this BEFORE tier selection)
 
-Unblock yourself at every point; never stall silently waiting for something you can install:
+Unblock the machine so the FULL deliverable set is producible. Never stall, never give up early, never ask permission to install standard open-source tooling. **Run the bundled auto-installer first — it does all of this and verifies each install by re-probing:**
 
-- [ ] `pip install` / `npm install` whatever you need (playwright/puppeteer, Pillow, numpy, etc.).
-- [ ] Verify `ffmpeg -version` and `ffprobe -version`; install if missing (this may promote you from Tier B to Tier A).
-- [ ] Verify a headless Chrome/Chromium is runnable (`google-chrome --headless=new --version`, or Playwright's bundled browser).
-- [ ] Cloud credentials (e.g., for premium TTS): use them ONLY if the user gave you a command/profile for them. Otherwise use local fallbacks — never block on missing cloud access.
-- [ ] Check available CPU cores (`sysctl -n hw.ncpu` / `nproc`) and current load — you will parallelize renders across cores, bounded (see PHASE R).
+```bash
+python3 scripts/setup_env.py         # installs ffmpeg, chromium (sudo-free via playwright), TTS, Pillow; re-probes
+# or, from anywhere:  npx github:ompandey98/coordn8 setup
+```
+
+If the bundled script isn't present, do the same by hand, in this priority (sudo-free FIRST so locked-down/CI/cloud shells still reach Tier A):
+
+- [ ] **Headless browser (sudo-free):** `pip install playwright && python3 -m playwright install chromium`. This needs NO root and works in most restricted environments. Only if that fails, try the OS package manager (`brew install chromium`, `apt-get install -y chromium-browser`, etc.). `find_chrome()` already looks in Playwright's cache, so a pip-installed browser promotes you to Tier A automatically.
+- [ ] **ffmpeg + ffprobe:** OS package manager (`brew install ffmpeg` / `apt-get install -y ffmpeg` / `dnf` / `pacman` / `apk` / `winget` / `choco`). If no package manager and no root, download a static build from ffmpeg.org and put it on `PATH`. Re-check `ffmpeg -version` && `ffprobe -version` afterward.
+- [ ] **TTS (sudo-free):** `pip install edge-tts` (or piper); macOS has `say` built in. Never block on cloud TTS.
+- [ ] **Python libs (sudo-free):** `pip install Pillow numpy` (Pillow powers the layout pixel-probe; use `--user` if a plain pip is denied).
+- [ ] **Cloud credentials** (premium TTS, etc.): use ONLY if the user gave you a command/profile. Otherwise use the local fallbacks above — never block on missing cloud access.
+- [ ] **Verify every install by re-running its probe.** Installed ≠ working. Report a capability as available only after you've observed it run. Then check CPU cores (`nproc` / `sysctl -n hw.ncpu`) and load for the bounded render budget (PHASE R).
+
+**After setup, if — and only if — a video tool is *still* missing, diagnose why specifically** (offline? no package manager? pip blocked?) and record that exact reason. That specific reason is the only acceptable basis for dropping below Tier A, and it goes in your operator handover, never in the deliverables.
 
 ### 0.7 Mandatory readiness check — PAUSE and ask
 
@@ -200,8 +242,14 @@ Spawn specialized sub-agents; each has one job and writes its result to a named 
 - **Cartographer** (join): merges reader outputs into `project_map.md`, resolves conflicts (code wins over docs). Serial after readers.
 - **Flow-builders** (fan-out, one per core unit): turn the map into decision-tree `flows.json` for that unit. Parallel.
 - **Scriptwriter** (single): writes the video script/arc from the map + audience file.
-- **Renderers** (fan-out, one per scene): capture frames for their scene independently. Parallel, process-level (see R.3).
-- **Validators / adversaries** (fan-out): sample claims and re-verify each against the code; hunt banned content; check tree-shape. Parallel. Their findings are LEADS — you re-check the load-bearing ones yourself (advisory principle).
+- **Storyboarder / visual designer** (fan-out, one per scene): BEFORE any frame is rendered, turns each scripted beat into a concrete visual plan — what is drawn, what moves, and *what each element explains* — and writes `_build/storyboard.json` (see 2.1a). This role is what prevents a scene from collapsing into a static text box: a scene with no planned motion and no meaningful visual is rejected here, on paper, before a single frame is captured. Parallel per scene, then joined.
+- **Motion director** (single, join): reviews the storyboard as a whole for movement continuity — a persistent object travels between beats, entrances stagger, nothing sits dead on screen under narration — and for one consistent visual system across scenes. Serial after storyboarding.
+- **Renderers** (fan-out, one per scene): capture frames for their scene independently, driven by the storyboard. Parallel, process-level (see R.3).
+- **Validators / adversaries** (fan-out): sample claims and re-verify each against the code; hunt banned content; check tree-shape. Parallel. Their findings are LEADS — you re-check the load-bearing ones yourself (advisory principle). This fleet includes two visual adversaries for the video:
+  - **Visual-relevance adversary** — for every visual/animation, demands "what does this teach, and is it the *most relevant* image/motion for THIS idea?" Flags decoration-with-no-referent (random stars/flowers/mascots), a generic shape where a domain-specific depiction was possible, and any element it can't tie to a sentence. Its job is to kill both *emptiness* and *irrelevant filler*.
+  - **Composition / space critic** — on real frames, checks the whole frame is used deliberately (no "one small visual marooned in the center with dead margins"), that motion is actually present, and that density matches a Kurzgesagt/3Blue1Brown-grade explainer, not a slideshow.
+  - **Explainability critic** (the "would a newcomer *get it*?" adversary — runs on BOTH deliverables). Watches the video / reads the page cold, as the target audience (0.3) with no prior context, and for each beat/section asks: does the visual make the idea *click*, or does it just decorate correct narration? Could the point be understood with the sound off (video) or by figures alone (page)? Is anything shown before it's introduced, or asserted without being *shown*? It flags beats that are "told, not shown," visuals that are technically relevant but don't actually aid understanding, and missing intermediate steps a newcomer needs. Its findings drive concrete fixes (a better visual metaphor, an added intermediate reveal, a re-order), not vague "make it clearer." This is the role that turns "correct" into "clear."
+  - **Medium-fit critic** (page only — the "is this just the video re-skinned?" adversary). Compares the page against the video/storyboard and against the reader ideology (1.1a). Flags: sections that mirror the video's scene order 1:1; narration transcribed into body paragraphs; a linear top-to-bottom read with no real random-access structure; slide-sized one-idea screens padded with whitespace instead of compact reading; the video embed being load-bearing rather than an optional guest. Its bar: *remove the video entirely and the page still fully teaches the system, in its own compact reader form.* If the page fails that, it's redesigned, not tweaked.
 
 ### R.2 Control flow — prefer pipelines, use graphs of loops
 
@@ -236,15 +284,50 @@ Parallelism is mandatory but must be **bounded to the machine**, computed at run
 
 **Contract:** one `.html` file. Zero external dependencies — no CDN links, no separate CSS/JS/image files; inline everything (fonts optional, SVG inline, data as embedded JSON). It must render fully when double-clicked from a file manager with no network.
 
-### 1.1 Structure (tabs/sections — a floor, not a ceiling; ordered by the audience's entry point from 0.3)
+### 1.1 Structure — DERIVE it from THIS project (the list below is a starting palette, not a mandate)
+
+**You decide the information architecture, from the project — you do not fill in a fixed template.** Before laying anything out, look at THIS system and decide, and write into the Phase-0 plan + `_build/page_plan.json`: **how many tabs/sections** it actually needs (a small library needs 3; a large multi-service platform might need 8), **what the natural splits are** (by subsystem? by pipeline stage? by data domain? by decision unit?), **what depth each section warrants** for the audience (0.3), and **which visual each concept demands** (1.1a). Two different projects should produce visibly different page shapes — if every project comes out with the same five tabs, you defaulted instead of designing. State the rationale for the split you chose.
+
+A common starting palette (adapt, merge, drop, reorder, rename, or add freely):
 
 1. **Overview** — what the system is, why it exists, impact. Open on the curiosity gap (teaching principle 1). Tiles with the headline numbers (each traced to the project map).
 2. **Architecture** — an ANIMATED data-flow map of all components. Hover any component for a tooltip: what it does, its config, file references. Animate the flow (moving particles/pulses along edges) so the eye follows the data.
 3. **The engine** — the core pipeline stages end to end, as one master flow.
 4. **Per-unit deep dives** — one view per core unit (category/service/module/…), see 1.3.
 5. **Reference** — the complete output vocabulary: every code/label/status the system can publish, its meaning, and where it's produced.
+6. **Watch (only if a video was produced)** — an OPTIONAL tab that embeds the sibling `<slug>.mp4` in a native `<video controls>` player **with playback-speed options** (e.g. 0.75×/1×/1.25×/1.5×/2×), so a reader who prefers the narrated walk can watch it in place. Reference the local sibling file (a relative path — not a CDN, so the self-contained/offline contract holds); if the tier produced no video, simply omit this tab — never add an apology or "video unavailable" note (that is banned capability-excuse text, 1.5). The video is a *guest feature here, not the page's spine* — the page must stand fully on its own with the tab removed.
 
 Order and emphasis follow the audience: leadership leads with Overview/impact and keeps the engine shallow; an SME jumps to the engine and reference; a newcomer gets the scaffolded full walk. Progressive disclosure (principle 4) governs within every tab.
+
+### 1.1a The page is a READER, not the video re-skinned — a different medium with a different ideology
+
+**This is the load-bearing rule for Deliverable 1, and the one most often violated.** The video and the page are NOT the same content in two wrappers. They are two different media, and the page must be conceived from its own ideology — not by "putting the video on a webpage." The most common failure is exactly that: the page comes out as a linear slide-run of the video's beats, one section per scene, read top-to-bottom, narration turned into paragraphs. That is a **cheap copy of the video and a failed deliverable**, even if it's pretty.
+
+Hold the two apart deliberately:
+
+| | **Video** | **Page** |
+|---|---|---|
+| Time | Linear, author-paced — you watch start→end | Random-access, reader-paced — you jump, scan, re-read |
+| Spine | A narrative arc (hook→machinery→payoff) | An information architecture (tabs/sections you navigate) |
+| Density | One idea per beat, revealed over time | Compact, high-density-per-screen; the whole map is reachable at once |
+| "Motion" | Real animation under narration | Interaction the reader drives (hover, step, toggle, scroll-reveal) |
+| Job | Make you *feel the story* of how it works | Let you *look up and understand* any part, fast, on your own |
+
+So the page is closer to an **interactive Distill.pub / 3Blue1Brown article, a great API-reference, or a well-drawn "flow reader"** than to a slide deck or a recorded talk. Its power comes entirely from **visuals the reader explores** and from **crisp, scannable structure** — never from paragraphs of narration or from replaying the video's timeline. Design it so anyone can open it in a browser and *read through and understand the system compactly*, in whatever order they want. Concretely, the page must:
+
+- **Be organized by structure, not by story.** Navigable tabs/sections and in-page anchors (1.1) — a reader lands anywhere and it makes sense without having "watched from the start." Do not mirror the video's scene order; derive the page's own splits from the project (1.1).
+- **Be crisp and compact — reading-optimized, not slide-sized.** Tight, skimmable prose (short lead + labeled visuals), information-dense but never cluttered, laid out to use the **whole width of the page** well (see below). No giant one-idea-per-screen slides padded with whitespace; no walls of text either. A reader's eye should get a lot per screen and always know where to look next.
+- **Explain through representation, not narration.** Every concept is carried by the *right picture* (a flow, a tree, a map, a before/after, a table, a stepper) with text as tight labels and annotations around it — the opposite of transcribing the voiceover into body copy.
+- **Carry the video as an optional guest, never as its spine.** If a video exists, it lives in one embedded player tab with speed controls (1.1 item 6) — an alternative way in, not the page's content. Remove that tab and the page must still fully teach the system.
+
+Apply the visual doctrine (0.4a) throughout, and plan it before you build:
+
+- **Design a section visual plan first (`_build/page_plan.json`).** For each section/tab, record: its one idea; the **primary visual** that carries it (a diagram/figure/animated map/interactive widget — NOT a text block); what each visual **explains** (the doctrine-2 mapping, with `file:line`); the **interaction** (hover, step, toggle, scrollytelling reveal); how it **uses the full width**; and — to keep it from becoming the video — a `not_video_scene: true` intent, i.e. this section is a reader destination that stands on its own, not a transcribed beat. A section whose plan has no primary visual, only "text + a box," or that is just a video beat rewritten as prose, is rejected here and redesigned before rendering.
+- **Every core concept gets a bespoke visual.** Data flow → animated flow map; decisions → real trees (1.2); a transformation → before/after or a built-up figure; a quantity/distribution → a chart drawn from real numbers; a state machine → states and transitions; a schema → a structured, explorable figure. Reach for the *most relevant* depiction (doctrine 3), not a generic rectangle.
+- **Interaction is the page's "motion."** Static figures are the exception, not the rule: animate diagram flows, add hover-to-reveal detail, "walk an example" steppers (1.3), toggles between views, and progressive reveal on scroll. The reader should be *doing* something and the figure responding.
+- **Full-width, layered composition.** Use the whole content width; no lonely 300px figure centered in a sea of empty page. Compose figure + legend + annotations + supporting detail across the space; reveal complexity in layers (doctrine 6) so each moment is clean but the whole is rich.
+- **Full creative liberty (bounded by relevance).** This is not a business document — invent custom illustrations, spatial metaphors, and novel diagram types wherever they teach better. The only bounds: relevance (doctrine 2), clarity for the audience, and the gates. No decorative filler with no referent.
+- The `visual_density` gate (1.6) and the visual adversaries (R.1) run on the page too: a section that is text-heavy with too few meaningful visual/interactive elements, that wastes its width, or that reads as a re-skinned video beat rather than a standalone reader destination, is flagged and fixed.
 
 ### 1.2 The flow diagrams — THE HEART. Non-negotiables:
 
@@ -273,7 +356,8 @@ Every claim on the page — every node, every condition, every outcome — carri
 - No customer/case/order identifiers, real or realistic.
 - No person names (author attribution excepted, only if the user asks for it).
 - No internal jargon handles or codenames as labels — everything in plain language a newcomer can read without a decoder ring.
-- Run the bundled grep-based sweep (`scripts/gates/content_ban.py`) over the final HTML payload for ID patterns, name lists, and known jargon; treat hits as leads and clear each yourself. Run it as a build gate.
+- **No capability-excuse / meta chrome text.** The deliverables never apologize for or describe the build environment: no "not supported in this system", "video unavailable", "generated by", "this tool couldn't…", username, snapshot hash, or file-path captions. Those belong in your operator handover, never in content the audience reads (see 0.5 and 2.4a). The snapshot hash lives only in the page footer.
+- Run the bundled grep-based sweep (`scripts/gates/content_ban.py`) over the final HTML payload for ID patterns, name lists, known jargon, and capability-excuse phrases; treat hits as leads and clear each yourself. Run it as a build gate.
 
 ### 1.6 Verification loop (mandatory, in this order)
 
@@ -282,19 +366,22 @@ Every claim on the page — every node, every condition, every outcome — carri
    ```bash
    google-chrome --headless=new --disable-gpu --dump-dom "file:///abs/path/Coordn8/<slug>.html" | grep -c '<expected-marker>'
    ```
-3. **LOOK at it.** Screenshot the largest flows at real size and inspect the images yourself:
+3. **Visual density & relevance (`scripts/gates/visual_density.py` on `_build/page_plan.json`).** Before trusting the rendered page, check the *plan* the way the video checks its storyboard (2.1a): every section has a **primary visual** that is not just text/a box; the ratio of meaningful visual/interactive elements to prose clears the explainer-grade floor (not a slideshow); every visual has an `explains` mapping (doctrine-2 — no decorative filler, no random stars/flowers/pigs); depictions are the most-relevant domain form, not generic boxes (doctrine-3); and the layout `uses` the full width rather than a centered quarter with dead margins (doctrine-5). A section that fails is redesigned here, cheaply, before more rendering.
+4. **LOOK at it.** Screenshot the largest flows AND a normal reading scroll at real size and inspect the images yourself:
    ```bash
    google-chrome --headless=new --disable-gpu --screenshot=/tmp/flow1.png --window-size=1600,2400 "file:///abs/path/Coordn8/<slug>.html#unit-1"
    ```
-   Read the screenshots with your own vision: are labels readable? do edges overlap nodes? is any flow a linear chain? A claim of visual quality without visual inspection is void.
-4. **Adversarial validation agents** — spawn independent agents that (a) sample N claims from the page and re-verify each line-by-line against the code, and (b) hunt for banned content and jargon. Treat their findings as leads, then re-check the load-bearing ones yourself.
-5. **Fix and re-verify** until zero HIGH/MEDIUM findings. Re-run ALL gates after every fix — a fix can break a previously-passing gate.
+   Read the screenshots with your own vision: are labels readable? do edges overlap nodes? is any flow a linear chain? Does the page *read like an illustrated Distill/3Blue1Brown article* — carried by figures, diagrams, and interactive widgets — or has it degraded into slides of boxes and bullets (1.1a)? Is the full column width used, or is content stranded in a narrow center strip? A claim of visual quality without visual inspection is void.
+5. **Adversarial validation agents** — spawn independent agents that (a) sample N claims from the page and re-verify each line-by-line against the code, (b) hunt for banned content and jargon, (c) run the **visual-relevance adversary and composition/space critic (R.1)** on the rendered page: does every visual earn its place and depict the right thing, is any section a low-effort text-and-box slide, is any width wasted? and (d) run the **medium-fit critic (R.1)**: is this a genuine compact reader, or the video re-skinned (scene-order sections, transcribed narration, linear-only read)? Would the page still fully teach with the video tab removed? Treat their findings as leads, then re-check the load-bearing ones yourself.
+6. **Fix and re-verify** until zero HIGH/MEDIUM findings. Re-run ALL gates after every fix — a fix can break a previously-passing gate.
 
 ---
 
 ## DELIVERABLE 2 — THE VIDEO
 
 **Contract:** one MP4, ≤4–5 minutes, narrated, 1920×1080 (or user-specified), explicit fps, clean audio, every visual synced to its sentence. Produced only in a tier that supports it; otherwise skipped honestly with the unlock path.
+
+**Aesthetic quality is MANDATORY and non-waivable — regardless of anything.** A video that is not visually polished, aligned, and composed to professional craft standards is a FAILED deliverable, exactly like a wrong fact or a broken decode — not a "nice to have," not something to trade away under time pressure, tier pressure, or a rushed build. "It's synced and it plays" is NOT the bar; "a stranger would call this well-made" is the bar. If you cannot produce a video that clears the aesthetic gate (§2.4a + §2.4b), you do not ship an ugly one — you fix it, or you honestly skip the video (Tier honesty) and say why. The alignment/composition gate (`scripts/gates/layout_probe.py`) and your own eyes both must sign off before any video is called done.
 
 ### 2.1 Pedagogy first (the TED-Ed / Kurzgesagt discipline from 0.4)
 
@@ -308,6 +395,49 @@ Write the full script BEFORE any visual work, tuned to the audience from 0.3. Th
 6. **Outcomes/impact recap** — close the loop back to the hook (retrieval & closure).
 
 One idea per beat. Explicit bridges between beats. If a sentence doesn't advance the one idea of its beat, cut it. Pace and register follow the audience table in 0.3 (leadership: short, stakes-first; SME: fast, dense; newcomer: medium, one example is the payoff).
+
+**No meta chrome on screen.** The video is a teaching artifact, not a report — keep it clean. It carries **no username, no snapshot hash or build date, no file-path captions, no "generated by" or build stamp** burned into any frame. None of that teaches anything; it just makes the video look like a machine dump. Traceability for the video lives in the page footer and the rebuild guide, never on screen. The closing beat is the impact recap that loops back to the hook (teaching principle 8) — it is **not** a metadata card.
+
+### 2.1a STORYBOARD BEFORE RENDER — the one-shot fix for "static text-box" videos
+
+The reason videos come back as a flat text box with two shapes — even at max tokens on a heavy model — is that visual design was never a required, checked step. It is now. **Before rendering a single frame, produce a storyboard (`_build/storyboard.json`) and pass the `visual_density` gate on it.** No storyboard → no render. This front-loads the design so the video is rich on the FIRST pass instead of after five cursing iterations.
+
+For every scene, the storyboard specifies (default shape; deviate if your project needs to, but keep the fields the gate reads):
+
+```json
+{
+  "fps": 30,
+  "frame": {"width": 1920, "height": 1080},
+  "scenes": [{
+    "id": "s3",
+    "beat": "machinery",
+    "sentence_ids": [7, 8, 9],
+    "primary_visual": "animated request traveling the router → cache → engine path",
+    "elements": [
+      {"id": "router", "kind": "component", "explains": "entry point that classifies the request",
+       "ref": "router.py:40", "region": "left-third", "motion": "pulse when the token arrives"},
+      {"id": "token", "kind": "data", "explains": "one request moving through the system",
+       "ref": "types.py:12", "motion": "travels left→right along the edges, eased"},
+      {"id": "cache", "kind": "component", "explains": "slots that fill and evict",
+       "ref": "cache.py:88", "region": "center", "motion": "a slot fills as the token passes"}
+    ],
+    "moving_element_count": 2,
+    "uses_regions": ["left-third", "center", "right-third"],
+    "screenshot_worthy": true
+  }]
+}
+```
+
+Requirements the storyboard must meet (these are what the gate checks — see 2.6):
+- **Every scene has a `primary_visual` that is not "text".** A scene carried only by on-screen text is rejected.
+- **Every scene has real motion** — at least one moving/animating/building element under the narration (`moving_element_count ≥ 1`, typically more). No static holds under speech.
+- **Every element has an `explains` and, where it depicts a code fact, a `ref`.** This is doctrine-2 enforcement: an element that explains nothing is filler and is cut. No element may be decorative with no referent (the "no random stars/flowers/pigs" rule).
+- **Most-relevant depiction** — `kind`/`primary_visual` should reflect the domain object (queue, tree, cache, token, rate…), not a generic box, wherever one exists (doctrine 3).
+- **Full-frame use** — `uses_regions` must show the composition spans the frame (not everything stuck in `center`); the gate flags scenes that live only in the center with dead margins.
+- **Visual density across the video** — the whole storyboard must clear a minimum meaningful-visual density (per scene and overall), benchmarked to an explainer-grade video, not a slideshow.
+- **Continuity** — persistent objects (the traveling token, the growing figure) carry across scenes rather than each scene starting cold (the motion director checks this, R.1).
+
+If the storyboard fails any of these, redesign it BEFORE rendering — that is the whole point: fix it on paper cheaply, not after burning frames. Then the renderers (R.3) build exactly what the storyboard specifies, and the post-render visual checks (2.6) confirm the frames actually deliver the planned richness.
 
 ### 2.2 Narration
 
@@ -331,6 +461,55 @@ One idea per beat. Explicit bridges between beats. If a sentence doesn't advance
 
 Rich animated 2D, not slideware: gradient/glow backgrounds, glassmorphism cards, particle data-flows along edges, a travelling case/token dot through the pipeline, count-up numbers, bar races against baselines, staggered eased entrances. Motion should always MEAN something (data moving, a case progressing) — never decoration for its own sake (teaching principle 7).
 
+### 2.4a Composition & layout discipline (NON-NEGOTIABLE — clutter is a build failure)
+
+A frame that overflows, clips, crowds, or misaligns is as broken as a wrong fact. Rich visuals mean *well-composed* visuals, not *dense* ones. These rules are hard, checked by the layout gate (2.6), and re-checked by your own eyes on real frames:
+
+- **Everything lives inside a safe area.** Reserve a margin of **≥5% of frame size on every edge** (≈96px left/right, ≈54px top/bottom at 1920×1080). No text, card, node, or axis label may touch or cross the frame boundary. Nothing is ever clipped by the edge — if it doesn't fit inside the safe area, it doesn't belong on that frame.
+- **One frame, one idea, breathing room.** A scene shows the *minimum* that teaches its beat's one idea. If a frame needs a magnifying glass, it's carrying two beats — split it into two scenes in time, don't cram them in space. Prefer sequential reveal (staggered entrances, progressive disclosure) over simultaneous density.
+- **No overlap.** Text never overlaps text; labels never sit on top of other nodes/cards/edges; no element occludes another unless it's a deliberate, animated layering (a card sliding over a dimmed background). Edge/connector labels sit in their own pill and clear every node.
+- **Alignment to a grid.** Lay elements on a consistent grid/baseline. Cards in a row share a top edge and equal gutters; a column of items shares a left edge; centered content is *actually* centered (equal left/right margin, verified, not eyeballed). Ragged, off-by-a-bit placement reads as sloppy even when nothing overflows.
+- **Legible type.** Body/caption text ≥ **28px** and titles ≥ **44px** at 1080p; adequate contrast against its background (including over gradients/glow — add a scrim behind text on busy backgrounds). Line length capped (~40–50 chars) so text wraps sanely instead of running edge to edge. Never shrink text to force more onto one frame.
+- **Deliberate use of space.** Neither cluttered nor barren. A single number or one card is allowed to own a frame (leadership hooks often should) — that's focus, not waste. The failure modes to kill are *cramming* (too much, overflowing/overlapping) and *scattering* (elements flung to corners with a dead void in the middle and no visual grouping). Group related things; let the composition guide the eye along the beat.
+- **Consistent visual system across scenes.** Same margins, same type scale, same card style, same color language (the source-of-truth palette from Deliverable 1) in every scene. The video should feel like one designed piece, not a pile of different templates.
+
+When you invent a new visual form (Creative Freedom Clause), it still obeys every rule here. Novelty never excuses a frame that spills or crowds.
+
+### 2.4b Craft principles — filmmaking, motion design & instructional video (apply, don't decorate)
+
+§2.4a keeps a frame from being *broken*. This section makes it *good*. These are the working principles real editors, motion designers, and explainer studios use; apply them deliberately and be able to name which one a choice serves (same spirit as the teaching principles in 0.4). Aesthetic appeal here is mandatory (see the contract above), not optional flair.
+
+**Composition & framing (the still frame):**
+- **Visual hierarchy.** Every frame has ONE clear focal point — the thing the current sentence is about. Establish it with size, contrast, color, or motion; everything else is visibly subordinate (dimmed, smaller, lower contrast). If the eye doesn't know where to land in <1s, recompose.
+- **Rule of thirds / intentional placement.** Place the focal element on a thirds line or deliberately centered — never floating at a random offset. Balance the frame (a heavy element on one side is answered by negative space or a lighter element on the other).
+- **Generous negative space.** Whitespace is a design element, not wasted room. Let the focal point breathe; crowding kills emphasis.
+- **Contrast & readable color.** Text and key marks meet WCAG-AA-ish contrast against their backdrop (add a scrim/darkened panel over busy gradients). Use a small, consistent palette; color carries meaning (the source-of-truth legend), never random decoration.
+
+**Motion & animation (the moving frame) — the "12 principles" that matter here:**
+- **Ease, never linear.** All entrances/exits/moves use easing (ease-in-out / spring), not constant-velocity slides. Linear motion reads as cheap and robotic.
+- **Anticipation & follow-through / overshoot.** Elements can slightly overshoot and settle; a small anticipation before a big move. Restrained, not bouncy-cartoonish.
+- **Staging & staggering.** Reveal one thing at a time; stagger grouped items (e.g. 60–120ms apart) so the eye is led, not ambushed by everything at once (pairs with 2.4a "sequential reveal").
+- **Continuity of motion / match cuts.** When an element persists across beats, animate it moving to its new place rather than cutting — the viewer tracks the object, not a jump. Data flows *travel* along edges; a case dot *moves* through the pipeline.
+- **Purposeful timing.** Nothing appears/disappears instantly. Transitions ~0.3–0.6s; holds long enough to read (a label stays on screen ≥ the time it takes to read it aloud). No strobing, no motion faster than the eye can follow.
+- **Camera discipline.** Subtle push-ins / pans to guide attention are fine; gratuitous constant movement is nausea, not polish. Motion must MEAN something (teaching principle 7).
+
+**Editing & pacing (the timeline — the "invisible edit"):**
+- **Rhythm matched to narration.** Cuts and reveals land on sentence/clause boundaries and natural beats, never mid-word. Vary shot length so it breathes — fast during energy, slower on the key idea.
+- **B-roll / no dead air.** The screen is never static under live narration; there's always a meaningful visual advancing the beat. Equally, no silent stretch of motion with nothing being said unless it's a deliberate beat.
+- **Transitions serve meaning.** Cut within a topic; use a distinct transition (wipe/dissolve/section title) only to signal a new section (progressive disclosure made visible). Consistent transition vocabulary across the video.
+- **Consistent, legible titling.** Lower-thirds/section titles share one style, position, and safe-area placement; on screen long enough to read; never colliding with other content (enforced by 2.4a).
+
+**Instructional-video principles (Mayer's multimedia learning — evidence-based):**
+- **Signaling.** Highlight/spotlight/arrow the exact part being discussed as it's discussed; dim the rest. Guide attention explicitly.
+- **Spatial & temporal contiguity.** Put a label next to the thing it names (not across the frame), and show a visual exactly when its words are spoken (this is the sync law of 2.3, restated as a learning principle).
+- **Coherence / redundancy.** Cut anything that doesn't serve the beat — decorative loops, filler music swells, on-screen text that merely duplicates the full narration word-for-word. Keep key phrases, not paragraphs, on screen.
+- **Segmenting & pre-training.** Break the arc into digestible beats (0.4 / 2.1); introduce a new term or icon before you build on it.
+
+**Audio-visual polish:**
+- Narration is clean (no clipping/noise), paced per 0.3, with micro-pauses at beat boundaries. If music/ambience is used, it sits far under the voice (≈ −18 to −24 dB) and never fights it. Consistent loudness across scenes.
+
+If a principle here conflicts with clarity for THIS audience, clarity wins and you name the trade-off — but "I didn't have time to make it look good" is never an acceptable reason to ship an unpolished video (see the mandatory-aesthetic contract).
+
 ### 2.5 Render pipeline (most reliable local setup)
 
 - **Primary:** deterministic time-driven scenes — each scene a pure function of `t` rendered in HTML/canvas — captured frame-by-frame via headless browser, encoded with ffmpeg. Pure-function-of-`t` means any frame can be re-rendered in isolation and crashes lose nothing (R.3).
@@ -345,11 +524,15 @@ Rich animated 2D, not slideware: gradient/glow backgrounds, glassmorphism cards,
 ### 2.6 Facts guard + full-file probes
 
 - Every on-screen number, comparison, and claim must trace to `_research/project_map.md`. **No invented metrics** — if you don't have the number, restructure the beat so it doesn't need one.
+- **Visual-density gate on the storyboard, BEFORE rendering (`scripts/gates/visual_density.py` on `_build/storyboard.json`).** This is the gate that kills the "flat text box, two shapes, no motion" video on paper. It fails the plan if any scene's `primary_visual` is just text, if any scene has no moving element (`moving_element_count < 1` — no static holds under narration), if any element has no `explains` mapping (doctrine-2 filler / random decoration), if depictions default to generic boxes where a domain form exists (doctrine-3), if scenes live only in `center` with dead margins instead of using the frame (doctrine-5), or if overall meaningful-visual density falls below the explainer-grade floor. **No storyboard pass → no render.** Redesign the storyboard here, cheaply, until it passes — that is the one-shot fix (2.1a).
 - Probe the FINAL file (`scripts/gates/media_probe.py`):
   - [ ] `ffprobe` — resolution, fps, audio stream present, container sane.
   - [ ] Duration vs total narration duration within ±10%.
   - [ ] Clean full decode: `ffmpeg -v error -i final.mp4 -f null -` produces zero errors.
   - [ ] Per-scene frame inspection — extract ≥1 frame per scene and LOOK: no empty/black scenes, no placeholder text, no overlapping elements.
+- **Layout gate — enforce the composition rules of 2.4a on the actual pixels.** Do NOT trust that the scene "should" fit; measure it. Two complementary checks, both mandatory:
+  - [ ] **Geometry probe on each scene page (`scripts/gates/layout_probe.py`).** Load `scene.html?t=<t>` in headless Chrome at 1920×1080 and read every visible element's bounding box. FAIL any element whose box crosses the frame edge or the 5% safe-area margin (overflow/clip), any element whose rendered width/height exceeds the viewport (content wider than the frame), any text-bearing box overlapping another text-bearing box (collision), and any text computed font-size below the 2.4a floors. Sample multiple `t` values per scene (entrances animate — an element can overflow only mid-transition). This is deterministic and catches what the eye misses at speed.
+  - [ ] **Then LOOK with your own vision — judge craft AND richness, not just geometry.** Extract representative frames (scene starts, mid-transitions, the busiest beat) and read them against §2.4a AND §2.4b: is there one clear focal point? is the frame balanced with real negative space? is anything cramped, scattered, misaligned, or crowding an edge? does motion ease and stage (spot-check a few mid-transition frames)? does the titling/signaling read cleanly? **And confirm the frames actually delivered the storyboard's planned richness** — the moving elements are really moving (compare frames across `t`, don't trust a single still), the primary visual is present and carries the beat, the whole frame is used, and no scene silently collapsed back into a static text box during rendering. A geometry probe passing is necessary, not sufficient — you confirm the composition *reads well, looks professionally made, and is as visually rich as planned*. If a frame is ugly, amateurish, sparse, or static, fix the scene and re-render that scene only (pure function of `t`), then re-run both checks. The aesthetic bar is mandatory (see the Deliverable-2 contract) — do not sign off on a video you wouldn't be proud to show a stranger.
 
 ---
 
@@ -363,18 +546,22 @@ Everything above is a **FLOOR, not a ceiling**. Look hard at THIS project's real
 
 | Gate | Applies to | Pass condition |
 |---|---|---|
-| Ground-truth hash | both | Snapshot hashed; hash stamped in HTML footer + video end card |
+| Self-setup first | both | `setup_env.py` ran and re-probed BEFORE any tier was declared; Tier < A only after a *verified* install failure with a specific reason |
+| Ground-truth hash | both | Snapshot hashed; hash stamped in the **HTML footer** and recorded in the rebuild guide — **never burned into a video frame** |
 | Facts trace | both | Every claim/number resolves to project_map with file:line |
 | Audience fit | both | Depth/tone/order match `_research/audience.md` for the identified reader |
 | Tree-shape | webpage | Every flow's branch/terminal counts consistent with its outcomes; no linear chains |
 | Full-terminal | webpage | Every terminal shows the complete co-published result |
 | DOM smoke | webpage | Headless render: all tabs present, counts match |
+| Visual density & relevance | both | **Mandatory.** The visual plan is built and passes BEFORE rendering (storyboard for video §2.1a; page_plan for the page §1.1a): every scene/section has a non-text **primary visual**, video scenes have real motion (`moving_element_count ≥ 1`, no static holds under narration), every visual has an `explains` mapping (no decorative filler / random stars/flowers/pigs), depictions are the most-relevant domain form (not generic boxes), the composition uses the **full frame/width** (not a centered quarter with dead margins), and overall meaningful-visual density clears the explainer-grade floor. Sparse, static, filler, or space-wasting → fail and redesign |
+| Aesthetics / composition | video | **Mandatory, non-waivable.** Geometry probe passes (nothing overflows the frame or 5% safe area, no text-box collisions, type ≥ 2.4a floors) AND the craft bar of 2.4b is met on inspection (clear focal point, balance, negative space, eased/staged motion, clean titling & signaling). An unpolished video is a failed deliverable — fix it or skip honestly; never ship ugly |
+| No meta chrome | video | No username, snapshot hash, build date, or file-path caption burned into any frame |
 | Visual inspection | both | You looked at screenshots/frames yourself and they read well |
-| Content bans | both | Sweep of final payloads: zero IDs, person names, jargon handles |
+| Content bans | both | Sweep of final payloads: zero IDs, person names, jargon handles, or capability-excuse/build-meta text |
 | Adversarial re-verify | webpage | Independent agents' sampled claims all check out; zero HIGH/MEDIUM open |
 | Beat sync | video | Sentence-vs-visible table from FINAL file: all rows pass; no visual ahead of its sentence |
 | Media probes | video | ffprobe sane; duration ±10% of narration; clean decode; no empty scenes; no truncated audio |
-| Tier honesty | both | Detected tier announced; every skipped deliverable stated with unlock path; nothing faked |
+| Tier honesty | both | Setup attempted first; detected tier announced; any skipped deliverable stated with the *specific verified* blocker + unlock path (never a vague "not supported"), and never inside the deliverables; nothing faked |
 
 A validator agent saying "confirmed" is NOT your verification — re-check every load-bearing claim yourself before calling a gate green. The bundled gate scripts are **advisory**: a script FAIL is a lead to review, and a script PASS never substitutes for your own check on a load-bearing claim.
 

@@ -71,7 +71,7 @@ Coordn8 reads everything, detects your environment, then comes back with numbere
 Both land in a `Coordn8/` folder in whatever path you run it, **auto-named after the project** — for a repo called `awesome-api` you get `Coordn8/awesome-api.html` and `Coordn8/awesome-api.mp4`.
 
 **1 — The interactive page** (`<project>.html`)
-One self-contained HTML file, zero external dependencies, opens by double-click offline. Animated architecture map, true decision-**tree** flows (every fork labeled in plain words), per-unit deep dives with a "walk an example" stepper, exhaustive outcomes tables, and a source-of-truth color legend (deterministic code vs. model judgment vs. data field vs. vision). Every node carries its `file:line`.
+One self-contained HTML file, zero external dependencies, opens by double-click offline. **A compact, read-through reference — not the video re-skinned.** It's a random-access reader, organized by an information architecture derived from *this* project (its own tabs, splits, and depth), closer to an interactive Distill/3Blue1Brown article than a slide deck: animated architecture map, true decision-**tree** flows (every fork labeled in plain words), per-unit deep dives with a "walk an example" stepper, exhaustive outcomes tables, and a source-of-truth color legend (deterministic code vs. model judgment vs. data field vs. vision). Every node carries its `file:line`. If a video was produced, it's available as an *optional* embedded player tab (with speed controls) — a guest feature, never the page's spine.
 
 **2 — The video** (`<project>.mp4`)
 ≤4–5 min, narrated, 1080p, presentation-grade. A documentary-style teaching arc: hook → what it is → why it wins → the machinery → one worked example → payoff. Every visual enters *exactly* when its sentence is spoken, verified frame-by-frame on the final file.
@@ -90,7 +90,7 @@ One self-contained HTML file, zero external dependencies, opens by double-click 
 | **Remembers your decisions** | Your course-corrections ("slow the intro", "cut that section") are written to a persistent decision log and honored across long sessions and full rebuilds — never silently reverted. |
 | **Won't melt your laptop** | The render pipeline sizes its own parallelism from real CPU + free RAM, backs off under load, and writes every frame to disk as it goes — a crash loses one frame, not the batch. |
 | **Honest about limits** | On a machine without video tooling it produces the page and says *exactly* what it skipped and how to unlock it. It never fakes a deliverable. |
-| **Verifies before it hands over** | Six deterministic checks (tree-shape, fact-tracing, content bans, DOM render, narration sync, media integrity) run on every build. |
+| **Verifies before it hands over** | Deterministic checks (tree-shape, fact-tracing, content bans, DOM render, visual density, layout/composition, narration sync, media integrity) run on every build. |
 | **Reproducible** | Stamps the exact code snapshot into both deliverables and writes a rebuild guide, so anyone can tell which version was explained and regenerate it. |
 
 ---
@@ -111,18 +111,23 @@ It applies real teaching discipline — curiosity gap first, one idea per beat, 
 
 ---
 
-## Capability tiers — platform-agnostic
+## Capability tiers — it installs what it needs first
 
-Coordn8 runs wherever it's invoked and degrades **honestly** to the richest tier the environment supports. Run `npx github:ompandey98/coordn8 detect` to see your tier.
+Coordn8's first move on any machine is to **unblock itself**: it auto-installs the tools the full pipeline needs — `ffmpeg`, a headless Chromium (sudo-free, via Playwright), and a TTS engine — *before* it decides what it can produce. Dropping to a lower tier is a last resort after a genuine, verified install failure, never a first move. On essentially any machine with a network connection — including locked-down CI and cloud shells with no root — that reaches the full page + video tier.
 
-| Tier | Environment | Page | Video | Gates |
+```bash
+npx github:ompandey98/coordn8 setup     # install missing tools (sudo-free where possible)
+npx github:ompandey98/coordn8 detect    # see the resulting tier
+```
+
+| Tier | Environment (after self-setup) | Page | Video | Gates |
 |---|---|---|---|---|
-| **A** | shell + files + `ffmpeg` + headless Chrome | ✅ | ✅ | all |
-| **B** | shell + files, no `ffmpeg`/Chrome | ✅ | ⏭️ skipped (unlock path shown) | data/content/structure |
-| **C** | file write only (artifact env) | ✅ | ⏭️ | in-model |
+| **A** | shell + files + `ffmpeg` + headless Chrome + TTS | ✅ | ✅ | all |
+| **B** | shell + files, but a video tool genuinely couldn't be installed (offline, no package manager) | ✅ | ⏭️ skipped, with the *specific* reason + one-line unlock | data/content/structure |
+| **C** | file write only (artifact env, no shell to install) | ✅ | ⏭️ | in-model |
 | **D** | chat only | code-block | ⏭️ | in-model |
 
-It **never** claims a deliverable it didn't produce. A skipped video is stated as skipped, with the exact install command to unlock it.
+It **never** fakes a deliverable, and it **never** writes "not supported here" into the page or video — the deliverables are for your audience, not a report on the build machine. If a video is skipped, that's a one-line status in the handover with the exact command to unlock it.
 
 ---
 
@@ -134,8 +139,10 @@ Nothing ships past a red gate. These run as real scripts (`scripts/gates/`) and 
 |---|---|
 | `tree_shape` | flows are real decision trees, not linear chains; forks have ≥2 labeled exits; terminals cover all outcomes |
 | `facts_trace` | every claim/number resolves to a real `file:line` |
-| `content_ban` | no customer/case IDs, emails, person names, or jargon handles in the final payload |
+| `content_ban` | no customer/case IDs, emails, person names, jargon handles, or capability-excuse text in the final payload |
 | `dom_smoke` | headless render: all tabs present, marker counts match, zero external dependencies |
+| `visual_density` | both: runs on the *plan before rendering* (video storyboard / page plan) — every scene/section has a non-text primary visual, real motion (video) or interaction (page), every visual explains something (no decorative filler), no wall of generic boxes, full-frame use — so low-effort output is caught on paper, not after burning frames |
+| `layout_probe` | video: composition on real pixels — nothing overflows the frame or 5% safe area, no text-box collisions, type above the size floor |
 | `beat_sync` | video: no visual enters ahead of its sentence; duration within tolerance; per-sentence frames extracted for inspection |
 | `media_probe` | video: resolution, fps, audio present, clean decode |
 

@@ -41,6 +41,17 @@ PATTERNS = {
         re.IGNORECASE),
     "credit_card_like": re.compile(r"\b(?:\d[ -]?){13,16}\b"),
     "phone_like": re.compile(r"\b\+?\d{1,3}[ -]?\(?\d{3}\)?[ -]?\d{3}[ -]?\d{4}\b"),
+    # Capability-excuse / build-meta text must never reach the audience. A skip
+    # is an operator status line, not deliverable content (PLAYBOOK 0.5 / 1.5).
+    "capability_excuse": re.compile(
+        r"\b(?:not\s+(?:supported|available|possible)\s+(?:in|on|for)\s+th(?:is|e)"
+        r"|video\s+(?:is\s+)?(?:unavailable|not\s+available|skipped|could\s+not)"
+        r"|unsupported\s+(?:in|on)\s+this"
+        r"|could\s+not\s+(?:be\s+)?(?:generated|produced|rendered)\s+(?:on|in|here)"
+        r"|this\s+(?:system|environment|machine)\s+(?:does\s+not|doesn't|can'?t)"
+        r"|generated\s+by\s+coordn8"
+        r"|ffmpeg\s+(?:is\s+)?(?:not|missing|unavailable))\b",
+        re.IGNORECASE),
 }
 
 # Very light "person name" heuristic: "Firstname Lastname" with both capitalized.
