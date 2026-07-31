@@ -1,1 +1,39 @@
-1
+name: coordn8-ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: verbatim-sync + gate tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Assert adapters embed the brain verbatim (no drift)
+        run: python3 build/generate_adapters.py --check
+
+      - name: Run the test suite (verbatim + gates + parallel pool)
+        run: python3 tests/run_tests.py
+
+      - name: Environment/tier detection smoke
+        run: python3 scripts/env_detect.py --json
+
+  lint-shell:
+    name: shellcheck installer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck install.sh || true   # advisory, mirrors Coordn8's own gate philosophy
+
