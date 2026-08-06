@@ -38,6 +38,27 @@ Shareability / correctness pattern classes (PLAYBOOK 0.3a / 2.2a / 0.3 / 2.6):
     — code-comment markers (TODO/FIXME/@author), version stamps (v1.2.3,
     "version 1.0"), license/copyright headers. None of it teaches; it reads as a
     machine dump (2.1a "no meta chrome"). Strong lead on narration/frames.
+  - deck_chrome: presentation/slide-deck chrome that makes a crafted explainer
+    look like a cheap exported PowerPoint (2.1a "no deck/slide chrome"). Slide or
+    page numbers ("slide 3", "3 / 12", "page 4 of 20"), pagination language, and
+    template title cards ("Agenda", "Next steps", "Thank you"). The video is one
+    continuous film — there are no slides to number. Strong lead on a storyboard
+    or on-frame text; the agent removes the numbering and conveys progress through
+    the narrative/section beats instead. (A number that TEACHES — a count, rate,
+    or value — is fine and is not what this targets.)
+  - option_letter_talk: narrating in bare enumeration labels the audience doesn't
+    share (PLAYBOOK 2.2b) — "option A does X", "approach B is faster", "in case 1
+    … in case 2". Nobody talks in bare letters; it's the most robotic phrasing
+    there is. The fix is to NAME the approach ("the cache-first approach") and let
+    the name carry the sentence. A lead; the agent confirms it's a bare label, not
+    a legitimate mention (a variable literally named `A`, an itemized list).
+  - local_file_ref: the deliverable referencing the requester's LOCAL file/temp
+    path as if the audience could see it (PLAYBOOK 2.2b / 0.3a) — "see the
+    ABC_21July_temp file", "read it from my scratch folder". That pointer exists
+    only on the requester's machine; a stranger sharing the video has no access.
+    The fix is to describe what the artifact IS and how anyone obtains it ("the
+    configuration the pipeline reads", "a snapshot you can generate"), keeping the
+    file's CONTENT and dropping only the local pointer. Strong lead on narration.
 
 Run it over the narration script too, not just the HTML, so a spoken personal
 aside, a read-aloud URL, a greeting, an invented full-form, or a leaked version
@@ -164,6 +185,50 @@ PATTERNS = {
         r"|\b(?:copyright|\(c\)|©)\s+\d{4}"
         r"|\ball\s+rights\s+reserved\b"
         r"|\blicensed\s+under\s+the\b"
+        r")",
+        re.IGNORECASE),
+    # Deck / slide chrome (PLAYBOOK 2.1a "no deck/slide chrome"). Burned-in slide
+    # or page numbers, pagination, and template title cards make a crafted film
+    # read as a cheap exported slideshow. Targets the numbering/pagination FORMS
+    # specifically — a number that teaches (a count, rate, or value) is NOT
+    # matched. Strong lead on a storyboard or on-frame text; the fix is to remove
+    # the pagination and convey progress through the narrative/section beats.
+    "deck_chrome": re.compile(
+        r"(?:"
+        r"\b(?:slide|page)\s*#?\s*\d+\s*(?:of|/)\s*\d+\b"     # "slide 3 of 12", "page 4/20"
+        r"|\b(?:slide|page)\s+(?:no\.?|number)\s*\d+\b"        # "slide no. 3"
+        r"|\bslide\s+\d+\b"                                    # "slide 3"
+        r"|\b\d+\s*/\s*\d+\b(?=\s*(?:slides?|pages?)?\s*$)"    # bare "3 / 12" as a footer
+        r"|\bnext\s+slide\b|\bprevious\s+slide\b"
+        r"|\bagenda\b|\btable\s+of\s+contents\b"
+        r"|\bthank\s+you\s*[!.]*\s*$|\bthanks\s+for\s+watching\b|\bany\s+questions\b"
+        r")",
+        re.IGNORECASE),
+    # Bare option-letter talk (PLAYBOOK 2.2b): narrating in enumeration labels the
+    # audience doesn't share — "option A does X", "approach B is faster". Match the
+    # keyword case-insensitively, but require an UPPERCASE single letter A–E (so the
+    # article "a" is never flagged) or a small digit, standing alone as a bare
+    # label. Lead: the agent NAMES the approach instead of talking in letters.
+    "option_letter_talk": re.compile(
+        r"\b(?i:option|approach|method|alternative|choice|scenario|variant|strategy|case)"
+        r"\s+(?:[A-E]|[1-9])\b(?![-:=\w])"),
+    # Local-file reference (PLAYBOOK 2.2b / 0.3a): the deliverable pointing at the
+    # requester's LOCAL/temp/scratch file or machine as if the audience could see
+    # it. Targets temp/scratch/dated-local pointers and "my/your folder"
+    # directions ONLY — NEVER normal source-citation refs (router.py:40), which
+    # are legitimate traceability. Lead: describe what the artifact IS and how
+    # anyone obtains it; keep the file's content, drop the local pointer.
+    "local_file_ref": re.compile(
+        r"(?:"
+        # temp/scratch/tmp filename with a data extension
+        r"\b[\w-]*(?:temp|tmp|scratch)[\w-]*\.(?:json|txt|csv|md|log|xml|ya?ml|dat|xlsx?)\b"
+        # "temp file", "scratch folder", etc.
+        r"|\b(?:temp|tmp|scratch)\s+(?:file|folder|dir|directory)\b"
+        # a filename token carrying a month name (the ABC_21July_temp shape)
+        r"|\b\w+_\d{0,2}\s?(?i:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*(?:_\w+)?\b"
+        # explicit local-machine directions
+        r"|\b(?:on|in|from|under)\s+(?:my|your)\s+(?:local\s+)?(?:folder|directory|machine|laptop|desktop|downloads?|home|scratch)\b"
+        r"|\b(?:my|your)\s+local\s+(?:folder|directory|files?|machine|copy|path)\b"
         r")",
         re.IGNORECASE),
 }

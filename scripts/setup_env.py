@@ -67,11 +67,41 @@ def log(msg: str) -> None:
     sys.stderr.flush()
 
 
+# A fully NON-INTERACTIVE environment for every child process. This is the fix
+# for "the install hangs waiting for input in some sessions": package managers and
+# pip must never stop at a [Y/n] prompt or an interactive pager when Coordn8 runs
+# unattended (a CI shell, a headless agent, an npx one-liner). We force the
+# batch/no-prompt mode of each tool the ONLY reliable way — through the
+# environment — in addition to the explicit -y/--noconfirm flags on each command.
+def _noninteractive_env() -> dict:
+    env = dict(os.environ)
+    env.update({
+        "DEBIAN_FRONTEND": "noninteractive",   # apt: never prompt (tzdata etc.)
+        "APT_LISTCHANGES_FRONTEND": "none",
+        "NEEDRESTART_MODE": "a",               # apt: auto-restart services, no prompt
+        "PIP_NO_INPUT": "1",                   # pip: never prompt
+        "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+        "PYTHONUNBUFFERED": "1",
+        "HOMEBREW_NO_INSTALL_CLEANUP": "1",     # brew: no interactive cleanup
+        "HOMEBREW_NO_AUTO_UPDATE": "1",
+        "HOMEBREW_NO_ENV_HINTS": "1",
+        "CI": env.get("CI", "1"),               # many tools go quiet/non-interactive under CI
+        "GIT_TERMINAL_PROMPT": "0",             # git: never prompt for creds
+        "PLAYWRIGHT_SKIP_BROWSER_GC": "1",
+    })
+    return env
+
+
 def run(cmd: list[str], timeout: int = TIMEOUT_INSTALL) -> tuple[int, str]:
-    """Run a command; return (exit_code, combined_output_tail). Never raises on
-    a normal failure — only records it."""
+    """Run a command NON-INTERACTIVELY; return (exit_code, combined_output_tail).
+
+    Never raises on a normal failure — only records it. stdin is tied to DEVNULL so
+    a tool that ignores its no-prompt flags and still tries to read from the console
+    gets EOF and aborts fast, rather than hanging the whole run forever.
+    """
     try:
-        cp = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        cp = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                            stdin=subprocess.DEVNULL, env=_noninteractive_env())
         out = ((cp.stdout or "") + (cp.stderr or "")).strip()
         return cp.returncode, out[-500:]
     except FileNotFoundError:
@@ -148,17 +178,22 @@ def os_pkg_manager() -> tuple[str | None, list[str]]:
     if have("apk"):
         if sudo is None:
             return None, []
-        return "apk", sudo + ["apk", "add"]
+        return "apk", sudo + ["apk", "add", "--no-interactive"]
     if have("winget"):
-        return "winget", ["winget", "install", "-e", "--id"]
+        return "winget", ["winget", "install", "-e", "--silent",
+                          "--accept-package-agreements",
+                          "--accept-source-agreements", "--id"]
     if have("choco"):
         return "choco", ["choco", "install", "-y"]
     return None, []
 
 
 def pip_install(pkgs: list[str]) -> tuple[bool, str]:
-    """pip install with a --user fallback for locked-down environments."""
-    base = [sys.executable, "-m", "pip", "install", "--upgrade"]
+    """pip install (non-interactive) with a --user fallback for locked-down envs.
+
+    `--no-input` is explicit here on top of PIP_NO_INPUT in the env, so pip never
+    stalls on a prompt even if the environment variable is stripped."""
+    base = [sys.executable, "-m", "pip", "install", "--no-input", "--upgrade"]
     code, out = run(base + pkgs)
     if code == 0:
         return True, out

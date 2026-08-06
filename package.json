@@ -1,6 +1,6 @@
 {
   "name": "coordn8",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Point it at any codebase; it ships an interactive page and a narrated, synced video — audience-tailored, every claim traced to the code.",
   "bin": {
     "coordn8": "bin/coordn8.js"

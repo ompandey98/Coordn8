@@ -68,6 +68,7 @@ def main() -> int:
     narration = build / "_build" / "narration.txt"
     verification = build / "_build" / "verification.json"
     jargon = build / "_research" / "jargon.txt"
+    requirements = build / "_research" / "requirements.md"
 
     # A representative rendered frame for the real-PIXEL layout probe. The
     # geometry probe reads a layout.json (which the agent must extract from the
@@ -106,6 +107,11 @@ def main() -> int:
          [str(page_plan), "--kind", "page"]),
         ("visual_density:video", GATES / "visual_density.py",
          [str(storyboard), "--kind", "video"]),
+        # Content coverage: the COMPLETENESS backstop (PLAYBOOK 0.4b / 0.7a). Reads
+        # the requirement-coverage ledger and flags any in-scope must/should ask
+        # that is not covered — content's counterpart to visual_density. This is
+        # what stops a pretty deliverable that silently dropped substance.
+        ("content_coverage", GATES / "content_coverage.py", [str(requirements)]),
         ("beat_sync", GATES / "beat_sync.py", [str(mp4), str(beatmap)]),
         # Captions must carry the exact spoken words at sane times (PLAYBOOK 2.3a).
         # Derived from the beatmap, so this should pass trivially — it catches a

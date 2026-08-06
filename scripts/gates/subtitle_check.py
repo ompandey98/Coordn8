@@ -31,8 +31,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from lib.common import (EXIT_ERROR, EXIT_PASS, EXIT_REVIEW, EXIT_SKIPPED,  # noqa: E402
-                        emit, have, load_json, run)
+from lib.common import (CAPTION_MAX_CHARS, CAPTION_MAX_CHARS_PER_LINE,  # noqa: E402
+                        CAPTION_MAX_CPS, CAPTION_MAX_CUE_SECONDS,
+                        CAPTION_MAX_LINES, EXIT_ERROR, EXIT_PASS, EXIT_REVIEW,
+                        EXIT_SKIPPED, emit, have, load_json, run)
 
 # HH:MM:SS,mmm (srt) or HH:MM:SS.mmm (vtt), also tolerating MM:SS.mmm
 _TS = r"(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{1,3})"
@@ -73,8 +75,10 @@ def parse_subtitles(path: Path) -> list[dict]:
         g = mobj.groups()
         start = _ts_to_seconds(g[0], g[1], g[2], g[3])
         end = _ts_to_seconds(g[4], g[5], g[6], g[7])
-        text = _norm(" ".join(lines[tline_i + 1:]))
-        cues.append({"start": start, "end": end, "text": text})
+        text_lines = [ln.strip() for ln in lines[tline_i + 1:] if ln.strip()]
+        text = _norm(" ".join(text_lines))
+        cues.append({"start": start, "end": end, "text": text,
+                     "lines": text_lines})
     return cues
 
 
@@ -131,20 +135,61 @@ def main() -> int:
 
     findings = []
 
-    # 1) Text fidelity: caption text == narration text, verbatim, in order.
-    cue_texts = [c["text"] for c in cues]
-    if len(cue_texts) != len(expected):
+    # 1) Text fidelity: the caption WORD STREAM equals the narration word stream,
+    #    verbatim and in order. Captions are segmented for readability (one long
+    #    narration sentence legitimately becomes several cues — see
+    #    render/subtitles.py), so we compare the concatenation of all cue words to
+    #    the concatenation of all narration words rather than cue==sentence. This
+    #    still catches any dropped, added, reordered, or paraphrased word.
+    caption_words = _norm(" ".join(c["text"] for c in cues)).split()
+    narration_words = _norm(" ".join(expected)).split()
+    if caption_words != narration_words:
+        # Locate the first divergence so the finding is actionable, not just "differ".
+        n = min(len(caption_words), len(narration_words))
+        first = next((k for k in range(n)
+                      if caption_words[k] != narration_words[k]), n)
+        ctx_c = " ".join(caption_words[max(0, first - 3):first + 4])
+        ctx_n = " ".join(narration_words[max(0, first - 3):first + 4])
         findings.append(
-            f"cue count {len(cue_texts)} != narration sentence count "
-            f"{len(expected)} — a caption line was dropped or added.")
-    for i, (got, want) in enumerate(zip(cue_texts, expected), 1):
-        if got != want:
-            findings.append(
-                f"cue {i} text differs from narration.\n"
-                f"    caption:   {got!r}\n"
-                f"    narration: {want!r}")
+            f"caption words differ from narration words "
+            f"({len(caption_words)} caption vs {len(narration_words)} narration; "
+            f"first mismatch at word {first + 1}).\n"
+            f"    caption near:   …{ctx_c}…\n"
+            f"    narration near: …{ctx_n}…")
 
-    # 2) Timing sanity.
+    # 2) Readability: no cue may be a screen-filling paragraph. Enforce the shared
+    #    caption limits (chars total, chars/line, line count, on-screen seconds,
+    #    reading speed) — this is the backstop for the "massive paragraph caption"
+    #    failure. These are the SAME constants the builder segments to.
+    for i, c in enumerate(cues, 1):
+        text = c["text"]
+        if len(text) > CAPTION_MAX_CHARS:
+            findings.append(
+                f"cue {i}: {len(text)} chars exceeds the {CAPTION_MAX_CHARS}-char "
+                f"cap — a caption must be readable at a glance, never a paragraph. "
+                f"Text: {text[:80]!r}…")
+        cue_lines = c.get("lines") or [text]
+        if len(cue_lines) > CAPTION_MAX_LINES:
+            findings.append(
+                f"cue {i}: {len(cue_lines)} lines exceeds the "
+                f"{CAPTION_MAX_LINES}-line cap.")
+        for ln in cue_lines:
+            if len(ln) > CAPTION_MAX_CHARS_PER_LINE:
+                findings.append(
+                    f"cue {i}: a line is {len(ln)} chars, over the "
+                    f"{CAPTION_MAX_CHARS_PER_LINE}-char/line width: {ln[:80]!r}")
+                break
+        span = c["end"] - c["start"]
+        if span > CAPTION_MAX_CUE_SECONDS + 0.05:
+            findings.append(
+                f"cue {i}: on screen {span:.1f}s exceeds the "
+                f"{CAPTION_MAX_CUE_SECONDS:.0f}s cap — split it.")
+        if span > 0.05 and (len(text) / span) > CAPTION_MAX_CPS:
+            findings.append(
+                f"cue {i}: {len(text) / span:.0f} chars/sec exceeds the reading-"
+                f"speed ceiling of {CAPTION_MAX_CPS:.0f} cps — too fast to read.")
+
+    # 3) Timing sanity.
     dur = video_duration(Path(args.mp4)) if args.mp4 else None
     prev_start = -1.0
     for i, c in enumerate(cues, 1):
@@ -169,11 +214,20 @@ def main() -> int:
         "cues": len(cues),
         "narration_sentences": len(expected),
         "video_duration_s": dur,
+        "caption_limits": {
+            "max_chars": CAPTION_MAX_CHARS,
+            "max_chars_per_line": CAPTION_MAX_CHARS_PER_LINE,
+            "max_lines": CAPTION_MAX_LINES,
+            "max_cue_seconds": CAPTION_MAX_CUE_SECONDS,
+            "max_cps": CAPTION_MAX_CPS,
+        },
         "findings": findings,
         "summary": (
             f"{len(findings)} subtitle issue(s) — captions may not match the "
-            f"spoken words or timings are off" if findings
-            else f"{len(cues)} cues match narration verbatim; timings sane"),
+            f"spoken words, run too long on screen, or exceed the readable size"
+            if findings
+            else f"{len(cues)} cues carry the narration verbatim; all within the "
+                 f"readable caption limits; timings sane"),
     })
     return EXIT_REVIEW if findings else EXIT_PASS
 

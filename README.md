@@ -2,7 +2,7 @@
 
 # ⚙️ Coordn8
 
-### Point it at any codebase. Get back an interactive **page** and a narrated, frame-synced **video** — audience-tailored, every claim traced to the code.
+### Point it at any codebase. Get back a narrated, frame-synced **video** — and an interactive **page** when you ask for it — audience-tailored, every claim traced to the code.
 
 [![CI](https://img.shields.io/badge/CI-passing-2ea44f)](.github/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -15,14 +15,14 @@
 
 ---
 
-**Coordn8 turns any codebase into an interactive page and a short narrated video that explain how it actually works.** Install it once and run it in any AI coding tool, pointed at any repo.
+**Coordn8 turns any codebase into a short narrated video — and an interactive page when you want one — that explain how it actually works.** Install it once and run it in any AI coding tool, pointed at any repo.
 
-It reads the whole repository, finds the *real* decision logic, and hands you two things you can put in front of a human:
+It reads the whole repository, finds the *real* decision logic, and hands you something you can put in front of a human:
 
-- an **interactive page** — one self-contained HTML file, true decision-**tree** diagrams (not slideware), every branch labeled in plain words;
-- a short **narrated video** — where every visual lands exactly on the word it belongs to, with toggle-able captions carrying the exact spoken words.
+- a short **narrated video** — where every visual lands exactly on the word it belongs to, with toggle-able captions carrying the exact spoken words;
+- an **interactive page** — one self-contained HTML file, true decision-**tree** diagrams (not slideware), every branch labeled in plain words.
 
-Every claim in both carries a `file:line` anchor back to the ground-truth code — nothing invented. You approve a plan first; the deliverables come out auto-named after the project.
+**By default it builds the video only.** Ask for "the page too" or "both" to also get the interactive page, or "page only" for just the HTML. Every claim in whatever it builds carries a `file:line` anchor back to the ground-truth code — nothing invented. You approve a plan first; the deliverables come out auto-named after the project.
 
 ---
 
@@ -36,12 +36,17 @@ npx github:ompandey98/coordn8 init all
 
 That's the whole install. It drops the right adapter into each tool's config **on your machine** (`~/.claude`, `./.cursor`, `./AGENTS.md`, …) — nothing is hardcoded to any author's path. Requires Node.js (ships with npm), which you almost certainly have if you use these tools.
 
-Want just one tool? Swap `all` for `claude`, `cursor`, `codex`, `kiro`, or `generic`. To remove it later:
+The install is **fully non-interactive** — it never stops to ask a question, so it works unattended in CI, cloud shells, and piped one-liners (no more "it hung waiting for input" in some sessions). Package-manager and pip prompts are auto-answered; a headless run just installs everything.
+
+Want just one tool? Swap `all` for `claude`, `cursor`, `codex`, `kiro`, or `generic`. To upgrade to the latest, or remove it later:
 
 ```bash
 npx github:ompandey98/coordn8 init claude    # install one tool
+npx github:ompandey98/coordn8 update         # force-refresh to the latest (clears the npx cache) + reinstall
 npx github:ompandey98/coordn8 uninstall      # remove it again
 ```
+
+> **`update` fixes stale versions.** Because `npx github:…` caches the cloned repo, a plain re-run can keep serving an old copy — so new fixes don't appear. `update` clears that cache and reinstalls, so the *next* run fetches the latest. Run it whenever an "auto-update" seems stuck.
 
 <details>
 <summary><b>No Node?</b> Clone-and-install fallback</summary>
@@ -62,19 +67,21 @@ Then **open a fresh session at the root of the repo you want explained** and inv
 | **Kiro** | include the `coordn8` steering doc |
 | **Anything else** | `npx github:ompandey98/coordn8 print` → paste the output as your first message |
 
-Coordn8 reads everything, detects your environment, then comes back with numbered questions + a build plan. Approve it, and it builds + verifies the deliverables into a `Coordn8/` folder in the current path — both files auto-named after the project (`<project>.html`, `<project>.mp4`). You name nothing.
+Coordn8 reads everything, detects your environment, then comes back with numbered questions + a build plan — including which deliverable(s) it will produce (**default: the video only**; say "page too", "both", or "page only" to change it). Approve it, and it builds + verifies the in-scope deliverable(s) into a `Coordn8/` folder in the current path — auto-named after the project (`<project>.mp4`, and `<project>.html` when the page is in scope). You name nothing.
 
 ---
 
 ## What it produces
 
-Both land in a `Coordn8/` folder in whatever path you run it, **auto-named after the project** — for a repo called `awesome-api` you get `Coordn8/awesome-api.html` and `Coordn8/awesome-api.mp4`.
+Whatever it builds lands in a `Coordn8/` folder in the path you run it, **auto-named after the project** — for a repo called `awesome-api` the default run gives you `Coordn8/awesome-api.mp4` (add the page and you also get `Coordn8/awesome-api.html`).
 
-**1 — The interactive page** (`<project>.html`)
-One self-contained HTML file, zero external dependencies, opens by double-click offline. **A compact, read-through reference — not the video re-skinned.** It's a random-access reader, organized by an information architecture derived from *this* project (its own tabs, splits, and depth), closer to an interactive Distill/3Blue1Brown article than a slide deck: animated architecture map, true decision-**tree** flows (every fork labeled in plain words), per-unit deep dives with a "walk an example" stepper, exhaustive outcomes tables, and a source-of-truth color legend (deterministic code vs. model judgment vs. data field vs. vision). Every node carries its `file:line`. If a video was produced, it's available as an *optional* embedded player tab (with speed controls) — a guest feature, never the page's spine.
+**By default: the video only.** Coordn8 builds the video and nothing else unless you ask for more — say "page too" or "both" for the interactive page as well, or "page only" for just the HTML. It never produces an unrequested deliverable, and it never skips a requested one silently. Both deliverables are described below; you get the one(s) your request scopes to.
 
-**2 — The video** (`<project>.mp4`)
+**1 — The video** (`<project>.mp4`) — *the default deliverable*
 ≤4–5 min, narrated, 1080p, presentation-grade. A documentary-style teaching arc: hook → what it is → why it wins → the machinery → one worked example → payoff. Every visual is timed to enter when its sentence is spoken — checked sentence-by-sentence against the *final* rendered file (a per-sentence frame is pulled and inspected), so no visual runs ahead of its narration. Each scene is rendered by the **best free engine for its content** — Manim (3Blue1Brown's engine) for math and precise geometry; HTML/CSS/Canvas with GSAP, D3, and Rough.js for software, flows, and graphs — all merged into one uniform timeline. Ships with **toggle-able captions**: a soft subtitle track embedded in the mp4 (off by default; switch on in VLC/QuickTime/any player) plus a sidecar `.srt`, both carrying the *exact* narrated words.
+
+**2 — The interactive page** (`<project>.html`) — *built when you ask for it*
+One self-contained HTML file, zero external dependencies, opens by double-click offline. **A compact, read-through reference — not the video re-skinned.** It's a random-access reader, organized by an information architecture derived from *this* project (its own tabs, splits, and depth), closer to an interactive Distill/3Blue1Brown article than a slide deck: animated architecture map, true decision-**tree** flows (every fork labeled in plain words), per-unit deep dives with a "walk an example" stepper, exhaustive outcomes tables, and a source-of-truth color legend (deterministic code vs. model judgment vs. data field vs. vision). Every node carries its `file:line`. If a video was also produced, it's available as an *optional* embedded player tab (with speed controls) — a guest feature, never the page's spine.
 
 ---
 
@@ -90,10 +97,11 @@ One self-contained HTML file, zero external dependencies, opens by double-click 
 | **Reads like a human made it, and learns** | An anti-slop critic runs throughout the build, not just at the end, keeping the output feeling like a crafted teaching piece rather than AI slop — and every flaw it finds is written to a per-project lessons file that's loaded first on the next rebuild, so mistakes are designed out up front. |
 | **Sentence-synced narration** | Visuals are timed to the spoken sentence and checked on the *final* rendered file, not on intermediates — a frame is pulled per sentence and inspected so nothing enters ahead of its narration. |
 | **Best free engine per scene** | Math and precise geometry are rendered by **Manim** (the engine 3Blue1Brown uses); software, flows, and graphs use HTML/CSS/Canvas with **GSAP** (eased motion), **D3** (force/tree graphs), and **Rough.js** (hand-drawn warmth) — all free, no API keys, no paid services. Every engine writes the same frame model, so they blend seamlessly on one timeline. Manim and the JS libs are *enhancements*: if one can't be installed, that scene falls back to plain HTML/Canvas and the base video still ships. |
-| **Toggle-able captions** | The video carries a soft, embedded subtitle track (off by default; enable in VLC/QuickTime/any player), plus a sidecar `.srt` and a WebVTT track for the page player. Captions are the *exact* narrated words — re-serialized from the same beatmap the voice uses, not re-transcribed — and a gate proves they never drift from the narration. |
+| **Toggle-able captions** | The video carries a soft, embedded subtitle track (off by default; enable in VLC/QuickTime/any player), plus a sidecar `.srt` and a WebVTT track for the page player. Captions are the *exact* narrated words — re-serialized from the same beatmap the voice uses, not re-transcribed — and a gate proves they never drift from the narration. A long sentence is split into **readable cues** (≤2 lines, ≤42 chars/line, capped on-screen time) rather than dumped as one screen-filling paragraph — the words stay verbatim, just broken into glance-able chunks. |
 | **Remembers your decisions** | Your course-corrections ("slow the intro", "cut that section") are written to a persistent decision log and honored across long sessions and full rebuilds — never silently reverted. |
-| **Won't melt your laptop** | The render pipeline sizes its own parallelism from real CPU + free RAM, backs off under load, and writes every frame to disk as it goes — a crash loses one frame, not the batch. |
-| **Honest about limits** | On a machine without video tooling it produces the page and says *exactly* what it skipped and how to unlock it. It never fakes a deliverable. |
+| **Fast without melting your laptop** | The render pipeline is **adaptive**: it sizes parallelism from real CPU + free RAM and then keeps re-tuning it live — ramping *up* to use idle cores when the machine has headroom, and shrinking fast the instant load or memory tightens (the same additive-increase / multiplicative-decrease discipline TCP uses). That's the fix for "renders felt painfully slow": earlier it picked one cautious worker count and only ever throttled down, so a machine that freed up mid-run stayed under-used. It also writes every frame to disk as it goes — a crash loses one frame, not the batch. |
+| **Spends effort where it counts** | Judgment-heavy work (understanding code, fact-checking, the anti-slop and clarity critics) gets full reasoning; deterministic plumbing (subtitle serialization, muxing, frame capture, byte-diffing adapters) runs on a fast, cheap, high-concurrency path. Faster and lighter on tokens, with **zero** shortcuts on anything that decides correctness — the fidelity gates run exactly as hard as before. |
+| **Honest about limits** | On a machine without video tooling it says *exactly* what it couldn't render and the one-line command to unlock it, and offers the page as a fallback rather than silently producing an unrequested deliverable. It never fakes a deliverable and never swaps in one you didn't ask for. |
 | **Verifies before it hands over** | Deterministic gate scripts (tree-shape, fact-tracing, content bans, DOM render, visual density, layout/composition, narration sync, **caption fidelity**, media integrity) run against each build, and a final verification manifest refuses to authorize any "Verified: …" claim word that isn't backed by a genuine pass. The scripts are advisory leads the agent re-checks — a gate whose input is absent skips honestly rather than faking a pass. |
 | **Tells you what it did, tested, and couldn't do** | Every run ends with a short plain-language handover: what was **added/produced**, what was **verified** (and how — which gates passed on the real files), and what **couldn't be done here** and exactly why (e.g. "Manim wasn't installed, so the math scene used the HTML engine"). No missing capability is ever hidden or written into the deliverables — it's an honest status line for you, not your audience. |
 | **Reproducible** | Stamps the exact code snapshot into both deliverables and writes a rebuild guide, so anyone can tell which version was explained and regenerate it. |
@@ -125,14 +133,16 @@ npx github:ompandey98/coordn8 setup     # install EVERYTHING missing — base to
 npx github:ompandey98/coordn8 detect    # see the resulting tier
 ```
 
-| Tier | Environment (after self-setup) | Page | Video | Gates |
+The tier is the **capability ceiling** — what the machine can physically render. It's intersected with your requested scope (video by default), and it can only ever *subtract* from that scope, never add to it: the columns below show what each tier is *able* to produce, and Coordn8 builds whichever of those you actually asked for.
+
+| Tier | Environment (after self-setup) | Can render page | Can render video | Gates |
 |---|---|---|---|---|
 | **A** | shell + files + `ffmpeg` + headless Chrome + TTS | ✅ | ✅ | all |
-| **B** | shell + files, but a video tool genuinely couldn't be installed (offline, no package manager) | ✅ | ⏭️ skipped, with the *specific* reason + one-line unlock | data/content/structure |
+| **B** | shell + files, but a video tool genuinely couldn't be installed (offline, no package manager) | ✅ | ⏭️ can't here — *specific* reason + one-line unlock | data/content/structure |
 | **C** | file write only (artifact env, no shell to install) | ✅ | ⏭️ | in-model |
 | **D** | chat only | code-block | ⏭️ | in-model |
 
-It **never** fakes a deliverable, and it **never** writes "not supported here" into the page or video — the deliverables are for your audience, not a report on the build machine. If a video is skipped, that's a one-line status in the handover with the exact command to unlock it.
+If your scope needs something the tier can't render — e.g. you asked for the video but the machine couldn't install the video tools — Coordn8 says so plainly with the exact unlock command, and **offers** the page as a fallback rather than silently producing a deliverable you didn't ask for. It **never** fakes a deliverable, **never** swaps in an unrequested one, and **never** writes "not supported here" into the page or video — the deliverables are for your audience, not a report on the build machine. A skip is a one-line status in the handover with the command to unlock it.
 
 ---
 
@@ -147,9 +157,10 @@ Each of these is a bar the deliverable must genuinely clear before it's called d
 | `content_ban` | no customer/case IDs, emails, person names, jargon handles, capability-excuse text, **requester-personal framing** ("since you already know…"), **read-aloud raw literals** (URLs/IDs a narrator shouldn't spell out), **audience role-play/greetings** ("welcome to the team"), **fabricated acronym expansions**, or **stale build/source meta** (version stamps, TODO/@author, license headers) — swept over the HTML *and* the narration script |
 | `dom_smoke` | headless render: all tabs present, marker counts match, zero external dependencies |
 | `visual_density` | both: runs on the *plan before rendering* (video storyboard / page plan) — every scene/section has a non-text primary visual, real motion (video) or interaction (page), every visual explains something (no decorative filler), no wall of generic boxes, full-frame use — so low-effort output is caught on paper, not after burning frames |
+| `content_coverage` | both, the completeness counterpart to `visual_density`: reads the requirement-coverage ledger (`_research/requirements.md`) and flags any in-scope must/should ask that isn't `covered`, or any coverage claim with no `file:line`/section anchor — so substance that was silently dropped (e.g. because it was hard to animate) is caught, not just sparse visuals |
 | `layout_probe` | video: geometry from the rendered DOM (`getBoundingClientRect`) — nothing overflows the frame or 5% safe area, no text-box collisions, type above the size floor. With `--shot` (wired automatically when captured frames exist, and where Pillow is installed) it also probes **real captured pixels**, not a self-described layout |
 | `beat_sync` | video: no visual enters ahead of its sentence; duration within tolerance; per-sentence frames extracted for inspection |
-| `subtitle_check` | video: the caption track (`.srt`/`.vtt`) carries the **exact** narrated words in order — proves captions never drifted from the voice — and cue timings are monotonic, non-negative, and within the video's duration |
+| `subtitle_check` | video: the caption track (`.srt`/`.vtt`) carries the **exact** narrated words in order — proves captions never drifted from the voice — cue timings are monotonic, non-negative, and within the video's duration, **and** every cue is within the readable limits (≤2 lines, ≤42 chars/line, ≤7 s on screen, ≤20 chars/sec) so a caption can never come back as a screen-filling paragraph |
 | `media_probe` | video: resolution, fps, audio present, clean decode |
 | `verify_manifest` | both, LAST: reads `_build/verification.json` and refuses (1) any `pass` with no evidence, (2) any end-user "Verified: …" word not backed by a genuine pass, (3) any required gate silently missing/failed/untested — emitting the only claim string that's safe to show |
 

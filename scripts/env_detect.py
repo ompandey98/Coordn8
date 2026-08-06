@@ -90,23 +90,36 @@ def load_avg() -> float | None:
 
 def parallel_budget(cores: int, free_mb: int | None) -> dict:
     """Bounded worker counts so parallel renders never swamp the machine.
-    Mirrors PLAYBOOK.md PHASE R.3."""
+    Mirrors PLAYBOOK.md PHASE R.3.
+
+    Reports BOTH a conservative starting point (cpu_bound_workers) and the hard
+    ceiling the adaptive controller (render/parallel.py) may ramp UP to when the
+    machine has spare headroom (cpu_ceiling_workers). The pool self-resizes live
+    between 1 and the ceiling — grow on slack, shrink fast under load — so renders
+    finish as quickly as the host allows without ever crashing it."""
     cpu_workers = max(1, min(cores - 2, math.ceil(cores * 0.75)))
+    cpu_ceiling = max(1, cores - 1)  # near-full utilization when the box is idle
     # A headless-Chrome frame worker can use ~600 MB; estimate high for safety.
     per_worker_mb = 600
     if free_mb is not None:
         mem_workers = max(1, free_mb // per_worker_mb)
         cpu_bound = min(cpu_workers, mem_workers)
+        cpu_ceiling = min(cpu_ceiling, mem_workers)
     else:
         cpu_bound = cpu_workers
+    cpu_ceiling = max(cpu_bound, cpu_ceiling)
     return {
         "cpu_bound_workers": cpu_bound,
+        "cpu_ceiling_workers": cpu_ceiling,
         "io_bound_workers": min(8, max(2, cores)),
         "per_worker_mb_estimate": per_worker_mb,
         "backoff_load_threshold": round(cores * 1.5, 1),
-        "note": "Spawn at most cpu_bound_workers concurrent CPU workers; pause "
-                "spawning if 1-min load exceeds backoff_load_threshold or free "
-                "RAM drops below one worker's estimate.",
+        "adaptive": True,
+        "note": "Start near cpu_bound_workers; the adaptive pool ramps live "
+                "between 1 and cpu_ceiling_workers — growing when 1-min load and "
+                "free RAM have slack, shrinking fast when either is over the "
+                "threshold. It never floods the host and never stays "
+                "under-utilized when capacity frees up.",
     }
 
 

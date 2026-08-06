@@ -246,6 +246,130 @@ def test_content_ban():
         check("names it stale_meta",
               "stale_meta" in r.stdout, r.stdout)
 
+        # deck / slide chrome makes a crafted film look like a cheap exported
+        # slideshow (PLAYBOOK 2.1a "no deck/slide chrome"). Slide/page numbers,
+        # pagination, and template title cards are banned from frames/narration.
+        deck = d / "deck.txt"
+        deck.write_text(
+            "slide 3 of 12\n"
+            "Agenda\n"
+            "Thank you!\n")
+        r = run("scripts/gates/content_ban.py", [str(deck)])
+        check("deck/slide chrome flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names it deck_chrome",
+              "deck_chrome" in r.stdout, r.stdout)
+
+        # a number that TEACHES (a count/rate/value) and the word 'step' must NOT
+        # be mistaken for slide pagination — only slide/page numbering is banned.
+        deck_ok = d / "deck_ok.txt"
+        deck_ok.write_text(
+            "The router handles about 40 thousand requests a day.\n"
+            "Step 3 of the pipeline classifies the request.\n"
+            "The cache holds 8 slots and evicts the oldest.\n")
+        r = run("scripts/gates/content_ban.py", [str(deck_ok)])
+        check("teaching numbers / 'step 3' PASSES (exit 0)",
+              r.returncode == 0, r.stdout)
+
+        # bare option-letter talk is lame robotic phrasing (PLAYBOOK 2.2b): name
+        # the approach, never narrate in enumeration letters the viewer doesn't
+        # share ("option A does X", "approach B is faster").
+        optletter = d / "optletter.txt"
+        optletter.write_text(
+            "Option A classifies the request; approach B caches it.\n"
+            "In case 1 the token is dropped.\n")
+        r = run("scripts/gates/content_ban.py", [str(optletter)])
+        check("bare option-letter talk flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names it option_letter_talk",
+              "option_letter_talk" in r.stdout, r.stdout)
+
+        # named approaches and the article 'a' must NOT be flagged — only bare
+        # enumeration labels are the failure.
+        optletter_ok = d / "optletter_ok.txt"
+        optletter_ok.write_text(
+            "The cache-first approach classifies the request, then caches it.\n"
+            "A request enters the router and is matched.\n")
+        r = run("scripts/gates/content_ban.py", [str(optletter_ok)])
+        check("named approaches / article 'a' PASSES (exit 0)",
+              r.returncode == 0, r.stdout)
+
+        # referencing the requester's LOCAL/temp file as if the audience can see
+        # it is a leak (PLAYBOOK 2.2b / 0.3a): describe what it IS, drop the local
+        # pointer. The 'ABC_21July_temp' shape is the canonical example.
+        localref = d / "localref.txt"
+        localref.write_text(
+            "The schema lives in the ABC_21July_temp file on your machine.\n"
+            "Read it from my scratch folder to see the config.\n")
+        r = run("scripts/gates/content_ban.py", [str(localref)])
+        check("local/temp file reference flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names it local_file_ref",
+              "local_file_ref" in r.stdout, r.stdout)
+
+        # a NORMAL source-code citation for traceability (router.py:40) must NOT
+        # be flagged — that is legitimate, required traceability, not a local leak.
+        localref_ok = d / "localref_ok.txt"
+        localref_ok.write_text(
+            "The routing logic is defined in router.py:40.\n"
+            "You can generate the snapshot with the build step.\n")
+        r = run("scripts/gates/content_ban.py", [str(localref_ok)])
+        check("source citation router.py:40 PASSES (exit 0)",
+              r.returncode == 0, r.stdout)
+
+
+def test_content_coverage():
+    print("\n[gate: content_coverage — requirement ledger completeness (0.4b/0.7a)]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+
+        # a COMPLETE ledger: every in-scope must/should is covered with an anchor.
+        ok = d / "req_ok.md"
+        ok.write_text(
+            "# Requirements\n\n"
+            "| id | requirement | in_scope | importance | status | where_covered | notes |\n"
+            "|----|-------------|----------|------------|--------|---------------|-------|\n"
+            "| R1 | Explain routing | yes | must | covered | Arch tab; router.py:40 | |\n"
+            "| R2 | Cover retries | yes | should | covered | scene 5; worker.py:88 | |\n"
+            "| R3 | Legacy shim deep dive | no | edge | out-of-scope | | user skipped, decisions.md#3 |\n")
+        r = run("scripts/gates/content_coverage.py", [str(ok)])
+        check("complete ledger PASSES (exit 0)", r.returncode == 0, r.stdout)
+
+        # an in-scope MUST left open must block (REVIEW) and be named a gap.
+        gap = d / "req_gap.md"
+        gap.write_text(
+            "| id | requirement | in_scope | importance | status | where_covered | notes |\n"
+            "|----|-------------|----------|------------|--------|---------------|-------|\n"
+            "| R1 | Explain routing | yes | must | open | | |\n"
+            "| R2 | Cache eviction | yes | must | covered | | anchor forgotten |\n")
+        r = run("scripts/gates/content_coverage.py", [str(gap)])
+        check("uncovered in-scope must flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names an in_scope_uncovered gap",
+              "in_scope_uncovered" in r.stdout, r.stdout)
+        check("flags covered-without-anchor",
+              "covered_without_anchor" in r.stdout, r.stdout)
+
+        # a missing ledger SKIPS honestly (exit 2), never a false pass.
+        r = run("scripts/gates/content_coverage.py", [str(d / "nope.md")])
+        check("missing ledger SKIPPED (exit 2)", r.returncode == 2, r.stdout)
+
+        # a file with no requirement table is an ERROR (exit 3), not a silent pass.
+        notable = d / "notable.md"
+        notable.write_text("# Requirements\n\nStill drafting, no table yet.\n")
+        r = run("scripts/gates/content_coverage.py", [str(notable)])
+        check("ledger with no table ERRORs (exit 3)", r.returncode == 3, r.stdout)
+
+        # lenient headers: 'Ask'/'Scope'/'Priority'/'State'/'Location' aliases parse.
+        aliased = d / "aliased.md"
+        aliased.write_text(
+            "| Ask | Scope | Priority | State | Location |\n"
+            "|-----|-------|----------|-------|----------|\n"
+            "| Explain routing | yes | must | covered | Arch tab |\n")
+        r = run("scripts/gates/content_coverage.py", [str(aliased)])
+        check("aliased column headers parse + PASS (exit 0)",
+              r.returncode == 0, r.stdout)
+
 
 def test_facts_trace():
     print("\n[gate: facts_trace catches broken references]")
@@ -675,27 +799,118 @@ def test_subtitles():
         check("subtitle_check PASSES on faithful VTT (exit 0)",
               r.returncode == 0, r.stdout)
 
-        # tamper the caption text -> gate must flag it (drift from the voice)
+        # tamper the caption text -> gate must flag it (drift from the voice).
+        # The gate compares the caption WORD STREAM to the narration word stream
+        # (captions may be segmented into multiple cues), so a changed word is
+        # caught as a word-stream divergence.
         tampered = d / "tampered.srt"
         tampered.write_text(body.replace("router", "ROUTER-X"))
         r = run("scripts/gates/subtitle_check.py", [str(tampered), str(bm)])
         check("tampered caption text flagged REVIEW (exit 1)",
               r.returncode == 1, r.stdout)
-        check("names the text-vs-narration mismatch",
-              "differs from narration" in r.stdout, r.stdout)
+        check("names the caption-vs-narration word divergence",
+              "differ from narration" in r.stdout, r.stdout)
 
-        # a dropped cue (count mismatch) must be caught
+        # a dropped cue (fewer words than the narration) must be caught by the
+        # word-stream comparison, which reports the count on each side.
         dropped = d / "dropped.srt"
         dropped.write_text("1\n00:00:00,000 --> 00:00:03,000\n"
                            "The router parses the request.\n")
         r = run("scripts/gates/subtitle_check.py", [str(dropped), str(bm)])
         check("dropped caption flagged REVIEW (exit 1)", r.returncode == 1, r.stdout)
-        check("names the cue-count mismatch", "count" in r.stdout.lower(), r.stdout)
+        check("names the dropped-word divergence",
+              "caption vs" in r.stdout.lower(), r.stdout)
 
         # missing inputs -> SKIPPED
         r = run("scripts/gates/subtitle_check.py",
                 [str(d / "nope.srt"), str(bm)])
         check("missing subtitles -> SKIPPED (exit 2)", r.returncode == 2, r.stdout)
+
+
+def test_caption_segmentation():
+    print("\n[subtitles: a long/slow sentence segments into READABLE cues, verbatim]")
+    sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+    import common as C  # noqa
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        # one screen-filling paragraph (the reported bug) + one short-but-slow
+        # sentence (must clear at its display cap, not linger for the whole pause).
+        paragraph = ("The request enters the router and is immediately classified "
+                     "by its path prefix, then handed to the matching handler which "
+                     "validates the payload, checks the cache, and either returns "
+                     "the cached value or falls through to the database for a fresh "
+                     "read.")
+        beatmap = {"fps": 30, "sentences": [
+            {"idx": 1, "text": paragraph, "start": 0.0, "end": 18.0},
+            {"idx": 2, "text": "That result is written back to the cache.",
+             "start": 18.0, "end": 30.0},   # 41 chars over a 12s pause -> must cap
+            {"idx": 3, "text": "Done.", "start": 30.0, "end": 31.2},
+        ]}
+        bm = d / "bm.json"; bm.write_text(json.dumps(beatmap))
+        srt = d / "out.srt"
+        r = run("scripts/render/subtitles.py", ["srt", str(bm), "--out", str(srt)])
+        check("segmenting subtitles srt runs (exit 0)", r.returncode == 0, r.stderr)
+        body = srt.read_text()
+
+        # 1) the paragraph did NOT become one giant cue — it split into several.
+        check("long paragraph splits into multiple cues (not one wall of text)",
+              body.count("-->") >= 4, body)
+
+        # 2) every emitted cue respects the readable limits (the whole point).
+        cues = C_parse_cues(body)
+        worst_line = max((len(ln) for c in cues for ln in c["lines"]), default=0)
+        worst_lines = max((len(c["lines"]) for c in cues), default=0)
+        worst_span = max((c["end"] - c["start"] for c in cues), default=0.0)
+        check("no cue line exceeds the width cap",
+              worst_line <= C.CAPTION_MAX_CHARS_PER_LINE,
+              f"worst line {worst_line} > {C.CAPTION_MAX_CHARS_PER_LINE}")
+        check("no cue exceeds the line-count cap",
+              worst_lines <= C.CAPTION_MAX_LINES,
+              f"worst {worst_lines} lines > {C.CAPTION_MAX_LINES}")
+        check("no cue lingers past the on-screen cap (short slow line clears)",
+              worst_span <= C.CAPTION_MAX_CUE_SECONDS + 0.05,
+              f"worst span {worst_span:.2f}s > {C.CAPTION_MAX_CUE_SECONDS}s")
+
+        # 3) VERBATIM: concatenating every cue's words reproduces the narration
+        #    exactly — segmentation must never drop, add, or reorder a word.
+        cap_words = " ".join(" ".join(c["lines"]) for c in cues).split()
+        narr_words = " ".join(s["text"] for s in beatmap["sentences"]).split()
+        check("segmented cue words equal the narration words, verbatim & in order",
+              cap_words == narr_words,
+              f"{len(cap_words)} caption vs {len(narr_words)} narration words")
+
+        # 4) and the gate agrees the whole thing is faithful AND readable.
+        r = run("scripts/gates/subtitle_check.py", [str(srt), str(bm)])
+        check("subtitle_check PASSES on the segmented SRT (exit 0)",
+              r.returncode == 0, r.stdout)
+
+        # 5) a hand-built oversize cue (the exact bug) MUST be flagged by the gate.
+        huge = d / "huge.srt"
+        huge.write_text("1\n00:00:00,000 --> 00:00:18,000\n" + paragraph + "\n")
+        r = run("scripts/gates/subtitle_check.py", [str(huge), str(bm)])
+        check("a single screen-filling paragraph cue is flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        low = r.stdout.lower()
+        check("names the oversize / unreadable caption",
+              "cap" in low or "paragraph" in low or "exceeds" in low, r.stdout)
+
+
+def C_parse_cues(srt_body: str) -> list:
+    """Tiny SRT parser for the tests: [{start,end,lines:[...]}] in file order."""
+    import re as _re
+    ts = _re.compile(r"(\d\d):(\d\d):(\d\d)[.,](\d\d\d)\s*-->\s*"
+                     r"(\d\d):(\d\d):(\d\d)[.,](\d\d\d)")
+    out = []
+    for block in _re.split(r"\n\s*\n", srt_body.strip()):
+        lines = [ln for ln in block.split("\n") if ln.strip()]
+        ti = next((i for i, ln in enumerate(lines) if ts.search(ln)), None)
+        if ti is None:
+            continue
+        g = ts.search(lines[ti]).groups()
+        start = int(g[0]) * 3600 + int(g[1]) * 60 + int(g[2]) + int(g[3]) / 1000
+        end = int(g[4]) * 3600 + int(g[5]) * 60 + int(g[6]) + int(g[7]) / 1000
+        out.append({"start": start, "end": end, "lines": lines[ti + 1:]})
+    return out
 
 
 def test_mux_in_place():
@@ -785,6 +1000,127 @@ def test_capture_scene_manim():
               len(frames) == 0, f"unexpected frames: {frames}")
 
 
+def test_mockup_shot():
+    print("\n[mockup_shot: OPTIONAL render+annotate skill — pure logic + honest skip]")
+    sys.path.insert(0, str(ROOT / "scripts" / "render"))
+    import mockup_shot as ms  # noqa
+
+    # --- pure overlay builder: deterministic, well-formed, escapes, all shapes ---
+    anns = [
+        {"type": "spotlight", "x": 100, "y": 100, "w": 300, "h": 200},
+        {"type": "circle", "x": 50, "y": 60, "w": 220, "h": 90},
+        {"type": "box", "x": 10, "y": 20, "w": 100, "h": 50},
+        {"type": "arrow", "x1": 0, "y1": 0, "x2": 200, "y2": 200},
+        {"type": "label", "x": 40, "y": 40, "text": "Totals & <stuff>"},
+        {"type": "zoom", "x": 900, "y": 300, "w": 600, "h": 400},
+    ]
+    svg = ms.build_overlay_svg("file:///tmp/x.png", 1920, 1080, anns)
+    check("overlay is a well-formed <svg> document",
+          svg.startswith("<svg") and svg.rstrip().endswith("</svg>"), svg[:80])
+    check("overlay embeds the screenshot as the background image",
+          'href="file:///tmp/x.png"' in svg, "")
+    check("overlay escapes label markup (no raw < >)",
+          "&lt;stuff&gt;" in svg and "<stuff>" not in svg, "")
+    check("overlay renders every annotation kind",
+          all(tok in svg for tok in ("<ellipse", "marker-end=",
+              "mask=\"url(#c8spot)\"", "clip-path=")), "")
+    check("overlay build is deterministic (no time/random)",
+          svg == ms.build_overlay_svg("file:///tmp/x.png", 1920, 1080, anns), "")
+
+    # --- CLI flag parsing round-trips into annotation dicts ---
+    import argparse
+    ns = argparse.Namespace(circle=["10,20,30,40"], box=None, arrow=["0,0,5,5"],
+                            spotlight=None, zoom=["1,2,3,4"],
+                            label=["5,6,hello, world"])
+    parsed = ms.parse_annotations(ns)
+    check("parse_annotations preserves order + label-with-comma",
+          [a["type"] for a in parsed] == ["circle", "arrow", "zoom", "label"]
+          and parsed[-1]["text"] == "hello, world", str(parsed))
+    threw = False
+    try:
+        ms._nums("1,2,x", 3, "circle")
+    except ValueError:
+        threw = True
+    check("malformed coordinate spec raises ValueError", threw, "")
+
+    # --- mock injection: data published + fetch stubbed before page scripts ---
+    html = "<html><head><title>t</title></head><body></body></html>"
+    inj = ms.inject_mock_html(html, {"a": 1}, "document.title='x'",
+                              stub_network=True)
+    check("mock script injected right after <head>, before page's <title>",
+          inj.index("__COORDN8_MOCK__") > inj.index("<head>")
+          and inj.index("__COORDN8_MOCK__") < inj.index("<title>"), "")
+    check("offline injection stubs fetch and carries the mock + fill",
+          "window.fetch=function" in inj and "document.title='x'" in inj
+          and ('"a": 1' in inj or '"a":1' in inj), "")
+    inj_off = ms.inject_mock_html("<div>no head</div>", None, None,
+                                  stub_network=False)
+    check("head-less html still gets the script, no stub when not offline",
+          "__COORDN8_MOCK__" in inj_off and "window.fetch=function"
+          not in inj_off, "")
+
+    # --- png_size reads real PNG headers dependency-free; None on non-PNG ---
+    import struct as _st
+    import zlib as _zl
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        png = d / "t.png"
+        ihdr = _st.pack(">IIBBBBB", 1600, 1000, 8, 2, 0, 0, 0)
+
+        def _chunk(typ, data):
+            return (_st.pack(">I", len(data)) + typ + data
+                    + _st.pack(">I", _zl.crc32(typ + data) & 0xffffffff))
+        png.write_bytes(b"\x89PNG\r\n\x1a\n" + _chunk(b"IHDR", ihdr)
+                        + _chunk(b"IEND", b""))
+        check("png_size reads real PNG dimensions from the header",
+              ms.png_size(png) == (1600, 1000), str(ms.png_size(png)))
+        notpng = d / "not.png"; notpng.write_text("hello")
+        check("png_size returns None on a non-PNG", ms.png_size(notpng) is None, "")
+
+        # --- CLI honest-skip: no browser in the test env => SKIPPED (exit 2),
+        #     never a fabricated screenshot. (If a browser IS present, a real
+        #     capture (exit 0) is also acceptable — we only forbid a fake fail.)
+        htmlf = d / "demo.html"
+        htmlf.write_text("<html><head></head><body><h1>Hi</h1></body></html>")
+        outpng = d / "shot.png"
+        r = run("scripts/render/mockup_shot.py",
+                ["shot", "--html", str(htmlf), "--out", str(outpng),
+                 "--viewport", "800,600"])
+        produced = outpng.exists()
+        check("shot either SKIPS honestly (2) or really captures (0)",
+              r.returncode in (0, 2), f"rc={r.returncode} {r.stderr[:200]}")
+        check("shot never claims a screenshot it didn't produce",
+              (r.returncode == 0) == produced,
+              f"rc={r.returncode} exists={produced}")
+        if r.returncode == 2:
+            check("shot skip names the unlock (playwright install)",
+                  "playwright" in (r.stdout + r.stderr).lower(), r.stderr)
+
+        # missing HTML is an input error (exit 1), not a skip or a fake.
+        r = run("scripts/render/mockup_shot.py",
+                ["shot", "--html", str(d / "nope.html"), "--out",
+                 str(d / "x.png")])
+        check("shot on a missing HTML fails as input error (exit 1)",
+              r.returncode == 1, r.stderr)
+
+        # annotate with no browser: SKIP (2) but ALWAYS writes the vector SVG
+        # so a later render can rasterize it; never a fake PNG.
+        aout = d / "annotated.png"
+        r = run("scripts/render/mockup_shot.py",
+                ["annotate", "--image", str(png), "--out", str(aout),
+                 "--circle", "100,100,50,50"])
+        check("annotate either SKIPS honestly (2) or really renders (0)",
+              r.returncode in (0, 2), f"rc={r.returncode} {r.stderr[:200]}")
+        check("annotate always emits the vector overlay SVG",
+              aout.with_suffix(".overlay.svg").exists(), "no overlay svg written")
+
+        # annotate with zero directions is a usage error (exit 1).
+        r = run("scripts/render/mockup_shot.py",
+                ["annotate", "--image", str(png), "--out", str(d / "z.png")])
+        check("annotate with no directions is a usage error (exit 1)",
+              r.returncode == 1, r.stderr)
+
+
 def test_env_detect():
     print("\n[env_detect: emits a valid tier + bounded worker budget]")
     r = run("scripts/env_detect.py", ["--json"])
@@ -808,24 +1144,88 @@ def test_parallel_pool():
           r.stdout + r.stderr)
 
 
+def test_adaptive_controller():
+    print("\n[render: ADAPTIVE pool — AIMD controller grows on slack, shrinks on load]")
+    sys.path.insert(0, str(ROOT / "scripts" / "render"))
+    import parallel as P  # noqa
+
+    cores = 8  # fixed cores so the decisions are deterministic regardless of host
+    ceiling = 8
+    load_ceiling = cores * 1.5  # 12.0
+    pw_mb = 600
+    min_free = pw_mb
+
+    # 1) Under pressure (load over the ceiling) it SHRINKS fast — halve, floor 1.
+    #    We can't set the real load, so drive the pure helper with a stub reader.
+    orig_load, orig_free = P._load_1m, P._free_ram_mb
+    try:
+        P._load_1m = lambda: load_ceiling + 5      # too hot
+        P._free_ram_mb = lambda: min_free * 10     # RAM fine
+        nxt, why = P._controller_decision(6, ceiling, cores, load_ceiling,
+                                          pw_mb, min_free)
+        check("shrinks (halves) when load is over the ceiling",
+              nxt == 3 and "shrink" in why, f"got {nxt} ({why})")
+
+        # 2) Under memory pressure it also shrinks (RAM below the floor).
+        P._load_1m = lambda: 0.1
+        P._free_ram_mb = lambda: min_free - 1       # too full
+        nxt, why = P._controller_decision(4, ceiling, cores, load_ceiling,
+                                          pw_mb, min_free)
+        check("shrinks when free RAM is under the floor",
+              nxt == 2 and "shrink" in why, f"got {nxt} ({why})")
+
+        # 3) With comfortable slack on BOTH signals it GROWS one at a time.
+        P._load_1m = lambda: 0.1
+        P._free_ram_mb = lambda: min_free * 10
+        nxt, why = P._controller_decision(4, ceiling, cores, load_ceiling,
+                                          pw_mb, min_free)
+        check("grows by exactly one worker when there's headroom",
+              nxt == 5 and "grow" in why, f"got {nxt} ({why})")
+
+        # 4) It never exceeds the hard ceiling — at the ceiling it HOLDS.
+        nxt, why = P._controller_decision(ceiling, ceiling, cores, load_ceiling,
+                                          pw_mb, min_free)
+        check("holds at the ceiling (never overshoots)",
+              nxt == ceiling and "hold" in why, f"got {nxt} ({why})")
+    finally:
+        P._load_1m, P._free_ram_mb = orig_load, orig_free
+
+    # 5) The ceiling is always >= the conservative start (there's room to ramp up).
+    check("worker ceiling >= conservative start (room to grow)",
+          P.compute_worker_ceiling("cpu") >= P.compute_workers("cpu"),
+          f"ceiling={P.compute_worker_ceiling('cpu')} "
+          f"start={P.compute_workers('cpu')}")
+
+    # 6) The dynamic semaphore resizes live and clamps to [1, hard_max].
+    sem = P._DynamicSemaphore(initial=2, hard_max=5)
+    check("semaphore starts at its initial capacity", sem.capacity == 2, "")
+    check("semaphore grows up to the hard max", sem.set_capacity(4) == 4, "")
+    check("semaphore clamps above the hard max", sem.set_capacity(99) == 5, "")
+    check("semaphore never drops below 1", sem.set_capacity(0) == 1, "")
+
+
 def main() -> int:
     print("Coordn8 test suite")
     print("=" * 50)
     test_verbatim()
     test_tree_shape()
     test_content_ban()
+    test_content_coverage()
     test_facts_trace()
     test_dom_smoke()
     test_layout_probe()
     test_visual_density()
     test_verify_manifest()
     test_subtitles()
+    test_caption_segmentation()
     test_mux_in_place()
     test_fetch_visual_libs()
     test_capture_scene_manim()
+    test_mockup_shot()
     test_setup_env()
     test_env_detect()
     test_parallel_pool()
+    test_adaptive_controller()
     print("=" * 50)
     print(f"RESULT: {PASS} passed, {FAIL} failed")
     if FAILURES:

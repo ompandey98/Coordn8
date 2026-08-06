@@ -39,7 +39,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from lib.common import have, load_json, run  # noqa: E402
+from lib.common import (CAPTION_MAX_CHARS, CAPTION_MAX_CHARS_PER_LINE,  # noqa: E402
+                        CAPTION_MAX_CUE_SECONDS, CAPTION_MAX_LINES, have,
+                        load_json, run)
 
 
 def _fmt_ts(seconds: float, sep: str) -> str:
@@ -65,15 +67,94 @@ def _clean_text(text: str) -> str:
     return " ".join(str(text).split())
 
 
+def _pack_lines(words: list[str], max_line: int) -> list[str]:
+    """Greedily pack VERBATIM words into display lines of ≤ `max_line` chars.
+
+    Never drops, reorders, or edits a word. A word longer than the limit takes its
+    own line (we never split inside a word — that would corrupt the text)."""
+    lines: list[str] = []
+    cur = ""
+    for w in words:
+        cand = f"{cur} {w}".strip()
+        if cur and len(cand) > max_line:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = cand
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def _segment_sentence(idx, text: str, start: float, end: float) -> list[dict]:
+    """Turn ONE narration sentence into 1+ readable cues.
+
+    A cue must be readable at a glance (≤ CAPTION_MAX_LINES lines, each ≤
+    CAPTION_MAX_CHARS_PER_LINE wide, ≤ CAPTION_MAX_CUE_SECONDS on screen). We first
+    pack the verbatim words into display lines at the per-line width, then group
+    those lines into cues of at most CAPTION_MAX_LINES lines. If a cue's time span
+    would still exceed the on-screen ceiling, we split it into more cues. Each
+    cue's timing is a proportional slice of [start, end] by character length, so
+    on-screen time tracks how much a cue has to say. Concatenating every cue's
+    words back together reproduces the sentence exactly — nothing is lost.
+    """
+    import math as _m
+    words = text.split()
+    span = max(0.0, end - start)
+    lines = _pack_lines(words, CAPTION_MAX_CHARS_PER_LINE)
+
+    # Group lines into cues of at most CAPTION_MAX_LINES lines each (the size cap).
+    groups = [lines[i:i + CAPTION_MAX_LINES]
+              for i in range(0, len(lines), CAPTION_MAX_LINES)] or [[]]
+
+    # Duration cap: if these size-bounded cues would still each linger too long
+    # (slow narration), split finer down to ONE line per cue. Proportional timing
+    # (below) can concentrate time on the wordier cue, so we size the target with
+    # ~15% headroom — the builder must never trip its own subtitle gate.
+    effective_cap = CAPTION_MAX_CUE_SECONDS * 0.85
+    if span > effective_cap and len(lines) > len(groups):
+        need = _m.ceil(span / effective_cap)
+        if need > len(groups):
+            groups = [[ln] for ln in lines]  # finest useful granularity: 1 line/cue
+
+    cue_texts = ["\n".join(g) for g in groups]
+    total_chars = sum(len(t.replace("\n", " ")) for t in cue_texts) or 1
+
+    # Timing: give each cue a slice of [start, end] proportional to how much it has
+    # to say, but CAP each cue's on-screen duration at the display cap (below the
+    # 7 s gate, with headroom). A short line must never linger for a long pause —
+    # if the narration's span for a cue exceeds the cap (e.g. the final sentence's
+    # end runs to the video's outro, or a deliberate silent beat), the caption
+    # shows for the cap and then CLEARS, leaving a blank gap until the next cue.
+    # That's standard broadcast behavior and keeps the builder from ever tripping
+    # its own subtitle gate. We do NOT stretch the last cue to `end` for the same
+    # reason. Word order/content is untouched — only display timing is bounded.
+    display_cap = CAPTION_MAX_CUE_SECONDS * 0.9
+    cues = []
+    t = start
+    for ctext in cue_texts:
+        frac = len(ctext.replace("\n", " ")) / total_chars
+        dur = min(span * frac, display_cap)
+        c_end = min(end, t + dur)
+        if c_end < t:
+            c_end = t
+        cues.append({"idx": idx, "text": ctext, "start": t, "end": c_end})
+        t = c_end
+    return cues
+
+
 def _ordered_cues(sentences: list[dict]) -> list[dict]:
     """Normalize + order sentences into renderable cues.
 
     - sort by start (the beatmap SHOULD already be monotonic, but never trust it)
+    - SEGMENT any sentence too long/slow to read at a glance into multiple cues
+      (words kept verbatim; timing split proportionally) — this is what prevents a
+      single caption from becoming a screen-filling paragraph
     - clamp a cue end to the next cue's start if they overlap (players hate
       overlapping cues; the narration itself doesn't overlap)
     - drop empty-text cues (nothing to show) but keep their timing gap
     """
-    cues = []
+    ordered = []
     for i, s in enumerate(sentences):
         text = _clean_text(s.get("text", ""))
         if not text:
@@ -82,9 +163,12 @@ def _ordered_cues(sentences: list[dict]) -> list[dict]:
         end = float(s.get("end", start))
         if end < start:
             end = start
-        cues.append({"idx": s.get("idx", i + 1), "text": text,
-                     "start": start, "end": end})
-    cues.sort(key=lambda c: c["start"])
+        ordered.append((s.get("idx", i + 1), text, start, end))
+    ordered.sort(key=lambda r: r[2])
+
+    cues = []
+    for idx, text, start, end in ordered:
+        cues.extend(_segment_sentence(idx, text, start, end))
     # de-overlap: a cue never runs past the next cue's start
     for a, b in zip(cues, cues[1:]):
         if a["end"] > b["start"]:

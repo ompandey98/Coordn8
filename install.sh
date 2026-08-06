@@ -81,14 +81,22 @@ uninstall_all() {
 
 target="${1:-}"
 if [ -z "$target" ]; then
-  echo "Coordn8 v$VERSION installer — where do you want it?"
-  echo "  1) Claude Code   2) Cursor   3) Codex   4) Kiro   5) Generic   6) All   7) Uninstall"
-  read -rp "choice [1-7]: " c
-  case "$c" in
-    1) target=claude;; 2) target=cursor;; 3) target=codex;;
-    4) target=kiro;; 5) target=generic;; 6) target=all;; 7) target=uninstall;;
-    *) warn "unknown choice"; exit 1;;
-  esac
+  # Only prompt when we actually have an interactive terminal. In a
+  # non-interactive shell (CI, an agent, a piped `npx … | bash`) `read` would
+  # hang forever waiting for input that never comes — so default to `all`.
+  if [ -t 0 ]; then
+    echo "Coordn8 v$VERSION installer — where do you want it?"
+    echo "  1) Claude Code   2) Cursor   3) Codex   4) Kiro   5) Generic   6) All   7) Uninstall"
+    read -rp "choice [1-7]: " c
+    case "$c" in
+      1) target=claude;; 2) target=cursor;; 3) target=codex;;
+      4) target=kiro;; 5) target=generic;; 6) target=all;; 7) target=uninstall;;
+      *) warn "unknown choice"; exit 1;;
+    esac
+  else
+    say "non-interactive shell detected — installing ALL adapters (pass a target to narrow)"
+    target=all
+  fi
 fi
 
 if [ "$target" = "uninstall" ]; then

@@ -20,6 +20,19 @@ EXIT_REVIEW = 1
 EXIT_SKIPPED = 2
 EXIT_ERROR = 3
 
+# ---- caption/subtitle readability limits (single source of truth) ----------
+# A subtitle cue must be READABLE at a glance — never a screen-filling paragraph.
+# The builder (render/subtitles.py) segments long narration sentences to these
+# limits; the gate (gates/subtitle_check.py) enforces them, so a regression that
+# lets a wall-of-text cue ship is caught. Values follow broadcast norms
+# (BBC/Netflix-style): ~42 chars/line, at most 2 lines, a bounded on-screen time,
+# and a reading-speed ceiling in characters-per-second.
+CAPTION_MAX_CHARS_PER_LINE = 42   # a comfortable single-line reading width
+CAPTION_MAX_LINES = 2             # never more than two stacked lines
+CAPTION_MAX_CHARS = CAPTION_MAX_CHARS_PER_LINE * CAPTION_MAX_LINES  # 84 / cue
+CAPTION_MAX_CUE_SECONDS = 7.0     # no cue lingers longer than this
+CAPTION_MAX_CPS = 20.0            # reading-speed ceiling (chars per second)
+
 
 def emit(result: dict) -> None:
     """Print a machine-readable result line the agent can parse, plus a human line."""
