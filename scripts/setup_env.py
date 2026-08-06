@@ -16,6 +16,15 @@ What it installs when missing (the full list):
   - a TTS engine        narration              (SUDO-FREE: pip edge-tts; macOS `say` is built in; piper)
   - Pillow              layout pixel-probe      (SUDO-FREE: pip)
   - numpy               misc render math        (SUDO-FREE: pip; best-effort)
+  - Manim (CE)          math/geometry scenes    (pip manim; needs cairo/pango system libs)
+  - vendored JS libs    crafted motion/graphs   (curl GSAP/D3/Rough/anime into _build/vendor)
+
+TWO TIERS OF TOOL. The first five are the BASE video pipeline — without them a
+video cannot be made, so they gate the tier. Manim and the vendored JS libraries
+are ENHANCEMENTS: they make the video look dramatically better (the 3Blue1Brown
+math look; GSAP-eased motion; D3 graphs; hand-drawn warmth), but the base video
+still ships without them. So a failed Manim/libs install is reported as an
+"enhancement unavailable" note, NEVER as something that blocks the video.
 
 Design rules:
   - Sudo-free FIRST. pip (with --user fallback) and `playwright install chromium`
@@ -95,6 +104,24 @@ def has_tts() -> bool:
 def has_pymod(mod: str) -> bool:
     code, _ = run([sys.executable, "-c", f"import {mod}"], timeout=TIMEOUT_QUICK)
     return code == 0
+
+
+def has_manim() -> bool:
+    # A runnable Manim = the module imports AND a CLI entry exists (console script
+    # or `python -m manim`). We probe the import; that's the load-bearing bit.
+    return have("manim") or has_pymod("manim")
+
+
+def has_visual_libs() -> bool:
+    """True if the vendored JS libs are present locally (offline-ready)."""
+    manifest = Path("_build/vendor/manifest.json")
+    if not manifest.exists():
+        return False
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        return bool(data.get("vendored"))
+    except Exception:  # noqa: BLE001
+        return False
 
 
 # --- package-manager discovery ---------------------------------------------
@@ -221,7 +248,79 @@ def ensure_pymod(mod: str, pip_name: str, dry: bool) -> dict:
             "verified": verified, "via": "pip", "detail": None if verified else out}
 
 
-TARGETS = ("ffmpeg", "chrome", "tts", "pillow", "numpy")
+def _manim_system_deps(dry: bool) -> dict:
+    """Install Manim's native deps (cairo/pango/pkg-config) via the OS pkg mgr.
+    Best-effort: on many systems a wheel already bundles what's needed. We never
+    fail the run over this — Manim is an enhancement."""
+    name, prefix = os_pkg_manager()
+    pkgs = {
+        "brew": ["cairo", "pango", "pkg-config"],
+        "apt": ["build-essential", "python3-dev", "libcairo2-dev",
+                "libpango1.0-dev", "pkg-config"],
+        "dnf": ["cairo-devel", "pango-devel", "pkgconf-pkg-config", "python3-devel"],
+        "pacman": ["cairo", "pango", "pkgconf"],
+        "apk": ["cairo-dev", "pango-dev", "pkgconfig", "python3-dev"],
+    }.get(name)
+    if dry:
+        return {"step": "manim-system-deps",
+                "plan": f"{name} install {' '.join(pkgs)}" if pkgs
+                        else "no OS pkg mgr for cairo/pango (may already be present)"}
+    if not name or not pkgs:
+        return {"step": "manim-system-deps", "status": "skipped",
+                "note": "no OS package manager for cairo/pango; relying on wheels"}
+    log(f"installing Manim system deps via {name} …")
+    code, out = run(prefix + pkgs)
+    return {"step": "manim-system-deps", "via": name,
+            "status": "attempted", "ok": code == 0,
+            "detail": None if code == 0 else out}
+
+
+def ensure_manim(dry: bool) -> dict:
+    if has_manim():
+        return {"tool": "manim", "status": "already-present", "verified": True,
+                "kind": "enhancement"}
+    if dry:
+        return {"tool": "manim", "status": "would-install", "kind": "enhancement",
+                "plan": "OS pkg mgr: cairo/pango/pkg-config, then pip install manim"}
+    sysdeps = _manim_system_deps(dry=False)
+    log("installing Manim (pip) …")
+    ok, out = pip_install(["manim"])
+    verified = has_manim()
+    return {"tool": "manim", "kind": "enhancement",
+            "status": "installed" if verified else "install-failed",
+            "verified": verified, "via": "pip",
+            "system_deps": sysdeps,
+            "detail": None if verified else out,
+            "note": None if verified else
+                    "Manim unavailable — math/geometry scenes fall back to the "
+                    "HTML/Canvas engine. Base video is unaffected."}
+
+
+def ensure_visual_libs(dry: bool) -> dict:
+    if has_visual_libs():
+        return {"tool": "visual_libs", "status": "already-present", "verified": True,
+                "kind": "enhancement"}
+    fetch = Path(__file__).resolve().parent / "render" / "fetch_visual_libs.py"
+    if dry:
+        return {"tool": "visual_libs", "status": "would-install", "kind": "enhancement",
+                "plan": f"python3 {fetch.name} (vendor GSAP/D3/Rough/anime into "
+                        f"_build/vendor)"}
+    if not fetch.exists():
+        return {"tool": "visual_libs", "status": "cannot-install", "verified": False,
+                "kind": "enhancement", "reason": f"{fetch} missing"}
+    log("vendoring JS visual libraries (GSAP/D3/Rough/anime) …")
+    code, out = run([sys.executable, str(fetch)])
+    verified = has_visual_libs()
+    return {"tool": "visual_libs", "kind": "enhancement",
+            "status": "installed" if verified else "install-failed",
+            "verified": verified, "via": "fetch_visual_libs.py",
+            "detail": None if verified else out,
+            "note": None if verified else
+                    "Could not vendor JS libs (likely no network). Scenes use "
+                    "plain HTML/CSS/Canvas until fetched; base video unaffected."}
+
+
+TARGETS = ("ffmpeg", "chrome", "tts", "pillow", "numpy", "manim", "visual_libs")
 
 
 def main() -> int:
@@ -245,6 +344,10 @@ def main() -> int:
         results.append(ensure_pymod("PIL", "Pillow", dry))
     if "numpy" in want:
         results.append(ensure_pymod("numpy", "numpy", dry))
+    if "manim" in want:
+        results.append(ensure_manim(dry))
+    if "visual_libs" in want:
+        results.append(ensure_visual_libs(dry))
 
     # Post-setup capability truth (re-probed, not assumed).
     caps = {
@@ -252,10 +355,14 @@ def main() -> int:
         "chrome": has_chrome(),
         "tts": has_tts(),
         "pillow": has_pymod("PIL"),
+        # Enhancements (better visuals; NOT required for a base video):
+        "manim": has_manim(),
+        "visual_libs": has_visual_libs(),
     }
     video_ready = caps["ffmpeg"] and caps["chrome"] and caps["tts"]
 
-    # What (if anything) still blocks video, stated specifically.
+    # What (if anything) still blocks video, stated specifically. Manim and the
+    # vendored libs are deliberately EXCLUDED — they enhance, never block.
     blockers = []
     if not caps["ffmpeg"]:
         blockers.append("ffmpeg/ffprobe (video encode + probes)")
@@ -264,6 +371,15 @@ def main() -> int:
     if not caps["tts"]:
         blockers.append("a TTS engine (narration)")
 
+    # Enhancements that are unavailable — a quality note, not a blocker.
+    enhancements_missing = []
+    if not caps["manim"]:
+        enhancements_missing.append(
+            "Manim (math/geometry scenes fall back to HTML/Canvas)")
+    if not caps["visual_libs"]:
+        enhancements_missing.append(
+            "vendored JS libs GSAP/D3/Rough/anime (crafted motion & graphs)")
+
     summary = {
         "gate": "setup_env",
         "dry_run": dry,
@@ -271,14 +387,19 @@ def main() -> int:
         "capabilities_after": caps,
         "video_ready": video_ready,
         "still_blocking_video": blockers,
+        "enhancements_missing": enhancements_missing,
         "guidance": (
-            "Video pipeline is fully unblocked — proceed at Tier A."
-            if video_ready else
-            "Some tools could not be installed here. Proceed at the richest tier "
-            "you CAN (the page is always full quality). Do NOT write any "
-            "'not supported' claim into the deliverables — a skipped video is an "
-            "operator status line only, with this exact unlock list: "
-            + "; ".join(blockers)
+            ("Video pipeline is fully unblocked — proceed at Tier A."
+             if video_ready else
+             "Some BASE tools could not be installed here. Proceed at the richest "
+             "tier you CAN (the page is always full quality). Do NOT write any "
+             "'not supported' claim into the deliverables — a skipped video is an "
+             "operator status line only, with this exact unlock list: "
+             + "; ".join(blockers))
+            + (
+                "" if not enhancements_missing else
+                " | Visual ENHANCEMENTS unavailable (video still ships, just less "
+                "fancy for those scene types): " + "; ".join(enhancements_missing))
         ),
     }
     print(json.dumps(summary, indent=2))

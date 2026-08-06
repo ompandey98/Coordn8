@@ -595,12 +595,194 @@ def test_setup_env():
                   len(data.get("still_blocking_video", [])) > 0, r.stdout)
         else:
             check("names specific blockers when not video-ready", True, "")
+
+        # SINGLE-COMMAND "installs EVERYTHING" contract: the default run must plan
+        # the full toolchain — base tools AND the enhancement layer (Manim + the
+        # vendored JS libs) — so `coordn8 setup` alone unlocks the best output.
+        planned_tools = {a.get("tool") for a in acts}
+        for t in ("ffmpeg", "chrome", "tts", "PIL", "numpy", "manim",
+                  "visual_libs"):
+            check(f"setup plans '{t}' (single-command installs everything)",
+                  t in planned_tools, str(planned_tools))
+        caps = data.get("capabilities_after", {})
+        check("capabilities cover base + enhancements (manim, visual_libs)",
+              {"ffmpeg", "chrome", "tts", "manim", "visual_libs"}.issubset(caps),
+              str(sorted(caps)))
+        # Enhancements are reported SEPARATELY from base blockers — a missing
+        # Manim/lib must never appear as something that blocks the video.
+        check("enhancements tracked separately from base blockers",
+              "enhancements_missing" in data, r.stdout)
+        base_blockers = " ".join(data.get("still_blocking_video", [])).lower()
+        check("Manim/visual-libs never counted as a base video blocker",
+              "manim" not in base_blockers and "gsap" not in base_blockers,
+              base_blockers)
     except Exception as e:  # noqa
         check("setup_env emits valid JSON", False, str(e))
 
     # subset flag is accepted
     r = run("scripts/setup_env.py", ["--dry-run", "--json", "--only", "pillow"])
     check("setup_env --only subset runs (exit 0)", r.returncode == 0, r.stderr)
+    # enhancement-only subset is accepted (manim + visual_libs can be requested alone)
+    r = run("scripts/setup_env.py",
+            ["--dry-run", "--json", "--only", "manim", "visual_libs"])
+    check("setup_env --only manim visual_libs runs (exit 0)",
+          r.returncode == 0, r.stderr)
+
+
+def test_subtitles():
+    print("\n[subtitles: SRT/VTT derived from the beatmap, accurate by construction]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        beatmap = {
+            "fps": 30,
+            "sentences": [
+                {"idx": 1, "text": "The router  parses the request.",
+                 "start": 0.0, "end": 3.0},
+                {"idx": 2, "text": "Then it dispatches to a handler.",
+                 "start": 3.0, "end": 6.4},
+                {"idx": 3, "text": "", "start": 6.4, "end": 6.5},   # empty -> dropped
+                {"idx": 4, "text": "The response serializes to JSON.",
+                 "start": 6.5, "end": 9.9},
+            ],
+        }
+        bm = d / "beatmap.json"; bm.write_text(json.dumps(beatmap))
+        srt = d / "out.srt"; vtt = d / "out.vtt"
+
+        r = run("scripts/render/subtitles.py", ["srt", str(bm), "--out", str(srt)])
+        check("subtitles srt runs (exit 0)", r.returncode == 0, r.stderr)
+        body = srt.read_text()
+        check("SRT has 3 cues (empty sentence dropped)",
+              body.count("-->") == 3, body)
+        check("SRT uses comma ms separator", "00:00:00,000 --> 00:00:03,000" in body,
+              body)
+        check("SRT cues renumber 1..3 sequentially",
+              body.startswith("1\n") and "\n3\n" in body, body)
+        check("SRT text is verbatim (whitespace collapsed only)",
+              "The router parses the request." in body, body)
+
+        r = run("scripts/render/subtitles.py", ["vtt", str(bm), "--out", str(vtt)])
+        check("subtitles vtt runs (exit 0)", r.returncode == 0, r.stderr)
+        vbody = vtt.read_text()
+        check("VTT starts with WEBVTT header", vbody.startswith("WEBVTT"), vbody)
+        check("VTT uses dot ms separator", "00:00:00.000 --> 00:00:03.000" in vbody,
+              vbody)
+
+        # subtitle_check gate: the emitted captions match the narration verbatim
+        r = run("scripts/gates/subtitle_check.py", [str(srt), str(bm)])
+        check("subtitle_check PASSES on faithful SRT (exit 0)",
+              r.returncode == 0, r.stdout)
+        r = run("scripts/gates/subtitle_check.py", [str(vtt), str(bm)])
+        check("subtitle_check PASSES on faithful VTT (exit 0)",
+              r.returncode == 0, r.stdout)
+
+        # tamper the caption text -> gate must flag it (drift from the voice)
+        tampered = d / "tampered.srt"
+        tampered.write_text(body.replace("router", "ROUTER-X"))
+        r = run("scripts/gates/subtitle_check.py", [str(tampered), str(bm)])
+        check("tampered caption text flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names the text-vs-narration mismatch",
+              "differs from narration" in r.stdout, r.stdout)
+
+        # a dropped cue (count mismatch) must be caught
+        dropped = d / "dropped.srt"
+        dropped.write_text("1\n00:00:00,000 --> 00:00:03,000\n"
+                           "The router parses the request.\n")
+        r = run("scripts/gates/subtitle_check.py", [str(dropped), str(bm)])
+        check("dropped caption flagged REVIEW (exit 1)", r.returncode == 1, r.stdout)
+        check("names the cue-count mismatch", "count" in r.stdout.lower(), r.stdout)
+
+        # missing inputs -> SKIPPED
+        r = run("scripts/gates/subtitle_check.py",
+                [str(d / "nope.srt"), str(bm)])
+        check("missing subtitles -> SKIPPED (exit 2)", r.returncode == 2, r.stdout)
+
+
+def test_mux_in_place():
+    print("\n[subtitles mux: in-place is safe — never corrupts the input mp4]")
+    # ffmpeg cannot read+write the same file; mux() routes in-place muxing through
+    # a temp + atomic replace. Here ffmpeg is absent, so mux SKIPS (exit 2) — the
+    # load-bearing guarantee is that the skip path leaves the original mp4 exactly
+    # as it was and drops no half-written temp. (When ffmpeg IS present, the atomic
+    # os.replace makes --out==input safe; that path is exercised on a render host.)
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        mp4 = d / "demo.mp4"
+        sentinel = b"ORIGINAL-MP4-BYTES-DO-NOT-TRUNCATE"
+        mp4.write_bytes(sentinel)
+        srt = d / "demo.srt"
+        srt.write_text("1\n00:00:00,000 --> 00:00:02,000\nHello.\n")
+
+        # --out == input mp4 (the common "captions into the final file" case)
+        r = run("scripts/render/subtitles.py",
+                ["mux", str(mp4), str(srt), "--out", str(mp4)])
+        have_ffmpeg = __import__("shutil").which("ffmpeg") is not None
+        if not have_ffmpeg:
+            check("mux SKIPS honestly without ffmpeg (exit 2)",
+                  r.returncode == 2, r.stdout + r.stderr)
+            check("in-place mux never corrupts the input mp4 on skip",
+                  mp4.exists() and mp4.read_bytes() == sentinel,
+                  "input mp4 was altered or removed")
+            leftover = list(d.glob("*.coordn8-mux.tmp.mp4"))
+            check("no leftover temp file after skip", not leftover, str(leftover))
+        else:
+            # On a render host: in-place mux must succeed and grow the file
+            # (a subtitle track was added), never leaving the temp behind.
+            check("in-place mux succeeds when ffmpeg present (exit 0)",
+                  r.returncode == 0, r.stdout + r.stderr)
+            check("in-place output still exists", mp4.exists(), "")
+            leftover = list(d.glob("*.coordn8-mux.tmp.mp4"))
+            check("no leftover temp file after success", not leftover, str(leftover))
+
+
+def test_fetch_visual_libs():
+    print("\n[fetch_visual_libs: dry-run plans free libs, downloads nothing]")
+    r = run("scripts/render/fetch_visual_libs.py", ["--dry-run"])
+    check("fetch dry-run runs (exit 0)", r.returncode == 0, r.stderr)
+    try:
+        data = json.loads(r.stdout)
+        check("dry_run flag is true", data.get("dry_run") is True, r.stdout)
+        libs = {p.get("lib") for p in data.get("plan", [])}
+        check("plan includes GSAP + D3 + Rough + anime",
+              {"gsap", "d3", "rough", "anime"}.issubset(libs), str(libs))
+        # every planned lib declares a free/commercial-OK license (no API/paywall)
+        check("every lib is free / commercial-OK",
+              all("free" in p.get("license", "").lower()
+                  for p in data.get("plan", [])), r.stdout)
+        # dry-run downloads nothing: no 'fetched'/'already-present' status keys
+        check("dry-run has a plan but no fetched files",
+              "vendored" not in data, r.stdout)
+    except Exception as e:  # noqa
+        check("fetch_visual_libs emits valid JSON", False, str(e))
+
+    # subset selection is honored
+    r = run("scripts/render/fetch_visual_libs.py", ["--dry-run", "--only", "gsap"])
+    check("fetch --only subset runs (exit 0)", r.returncode == 0, r.stderr)
+    # an unknown lib name is rejected, not silently ignored
+    r = run("scripts/render/fetch_visual_libs.py",
+            ["--dry-run", "--only", "not-a-lib"])
+    check("unknown lib name rejected (exit 2)", r.returncode == 2, r.stderr)
+
+
+def test_capture_scene_manim():
+    print("\n[capture_scene: manim subcommand degrades honestly when absent]")
+    # Manim is not installed in the test env; the subcommand must SKIP honestly
+    # (exit 2) with a specific install hint — never fake a render.
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        r = run("scripts/render/capture_scene.py",
+                ["manim", "--scene", str(d / "nope.py"), "--name", "Foo",
+                 "--out", str(d / "frames"), "--fps", "30"])
+        check("manim subcommand SKIPS honestly when unavailable (exit 2)",
+              r.returncode == 2, r.stdout + r.stderr)
+        combined = (r.stdout + r.stderr).lower()
+        check("manim skip names a concrete install/fallback path",
+              "pip install manim" in combined or "fall back" in combined
+              or "html/canvas" in combined, r.stderr)
+        frames = list((d / "frames").glob("frame_*.png")) \
+            if (d / "frames").exists() else []
+        check("manim skip never claims frames were produced",
+              len(frames) == 0, f"unexpected frames: {frames}")
 
 
 def test_env_detect():
@@ -637,6 +819,10 @@ def main() -> int:
     test_layout_probe()
     test_visual_density()
     test_verify_manifest()
+    test_subtitles()
+    test_mux_in_place()
+    test_fetch_visual_libs()
+    test_capture_scene_manim()
     test_setup_env()
     test_env_detect()
     test_parallel_pool()

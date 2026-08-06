@@ -120,17 +120,76 @@ on disk with a reference, which is what makes the whole thing resumable.
 - **Bounded retries**, then the item is recorded as failed rather than aborting
   the whole run.
 
-## 6. The render pipeline
+## 6. The render pipeline — a multi-engine blend on one timeline
 
-`scripts/render/capture_scene.py` drives deterministic scene rendering:
+The video is not rendered by a single engine. Each scene is drawn by the **best
+free tool for its content**, and every engine emits the *same* frame model
+(`frame_%06d.png` at the same fps/resolution) so the identical encode+concat path
+joins them with no special-casing. This is how Coordn8 gets a 3Blue1Brown-grade
+math look *and* crafted software/flow motion in one film, using only free,
+no-API, locally-installable tools.
+
+`scripts/render/capture_scene.py` drives it, with two front-end engines feeding
+one shared timeline:
 
 1. `capture` — headless Chrome opens `scene.html?t=<seconds>` and screenshots the
-   frame for that instant, across the bounded pool, into a frames dir.
-2. `encode` — ffmpeg turns a frames dir + per-scene audio into an intermediate
+   frame for that instant, across the bounded pool, into a frames dir. Best for
+   software / architecture / flow / graph scenes: HTML/CSS/SVG/Canvas plus the
+   vendored JS libraries — **GSAP** (professional eased timelines), **D3**
+   (force-directed dependency graphs, tree layouts, data transitions), and
+   **Rough.js** (hand-drawn warmth over corporate boxes). Each frame is a pure
+   function of `t`, so a killed capture loses only the in-flight frame.
+2. `manim` — renders a **Manim** (3Blue1Brown's engine) scene to its own mp4, then
+   ffmpeg *re-extracts* those frames into the SAME `frame_%06d.png` model at the
+   pipeline fps/resolution. Best for math, precise geometry, and continuous
+   transforms. `manim_render()` degrades honestly: if Manim (or ffmpeg) isn't
+   installed it returns a SKIP (exit 2) telling the agent to render that scene
+   with the HTML/Canvas engine instead — it never fakes frames.
+3. `encode` — ffmpeg turns a frames dir + per-scene audio into an intermediate
    mp4 with an **explicit** fps (never a default — mismatched fps is a classic
    silent corruption).
-3. `concat` — serial ffmpeg concat of scene mp4s into the final silent video;
-   audio is muxed per scene.
+4. `concat` — serial ffmpeg concat of scene mp4s into the final silent video;
+   audio is muxed per scene. Because Chrome-captured and Manim-derived scenes share
+   the exact frame model, concat joins them seamlessly.
+
+**Enhancement vs. base.** ffmpeg + headless Chrome + a TTS engine are the *base*
+video pipeline — without them no video can be made, so they gate the tier. Manim
+and the vendored JS libs are *enhancements*: they raise the ceiling dramatically,
+but a failed Manim/libs install is reported as "enhancement unavailable" and the
+scene falls back to plain HTML/Canvas — it **never** blocks the base video.
+`scripts/render/fetch_visual_libs.py` vendors the pinned, free JS libraries
+(GSAP 3.13.0, ScrollTrigger, D3 7.9.0, Rough.js 4.6.6, anime.js 3.2.2) into
+`_build/vendor/` once, recording each file's sha256 in a manifest for provenance;
+the agent then inlines the ones a scene uses so the offline/self-contained
+contract holds. `scripts/setup_env.py` installs the whole toolchain — base **and**
+enhancements — from one command, sudo-free where possible, re-probing after each
+install so it never claims a success it didn't observe.
+
+## 6a. Subtitles / captions (accurate by construction)
+
+Captions are cheap and correct here because they are a *re-serialization of the
+beat map*, not a re-transcription. The narration text and its exact per-sentence
+timings already live in `_build/beatmap.json` (built from the TTS speech marks).
+`scripts/render/subtitles.py` turns that same data into caption files, so the
+words and times are the spoken ones by construction:
+
+- `srt` — a standards-compliant `.srt` sidecar (de-overlapped, sequentially
+  renumbered).
+- `vtt` — a WebVTT `.vtt` for the page's `<video>` player.
+- `mux` — muxes the `.srt` into the mp4 as a **soft, selectable** subtitle track
+  (`mov_text`), video/audio stream-copied (no re-encode, no quality loss), with
+  the track **off by default**. The viewer toggles captions on/off in any standard
+  player (VLC, QuickTime, browsers) — exactly the VLC-style embedded-subtitle
+  behavior, plus the sidecar `.srt` for players that prefer it.
+
+`scripts/gates/subtitle_check.py` is the anti-drift backstop: it parses the emitted
+`.srt`/`.vtt` and proves every cue's text equals the corresponding narration
+sentence *verbatim* (whitespace-normalized only), that the cue set covers the
+narration with none dropped or added, and that timings are monotonic, non-negative,
+`start < end`, and within the video's duration when an mp4 is available. Since the
+captions are derived from the beatmap this passes trivially on a clean build — its
+job is to catch a hand-edit or a future regression that lets caption text diverge
+from the voice.
 
 ## 7. Sync verification
 
@@ -140,7 +199,8 @@ each sentence start + offset so the agent can confirm on-screen content matches
 the words. It structurally flags any visual scheduled to enter *before* its
 sentence, non-monotonic timestamps, and duration drift beyond tolerance.
 `scripts/gates/media_probe.py` checks resolution, fps, audio presence, and a
-clean full decode.
+clean full decode. `scripts/gates/subtitle_check.py` (§6a) proves the caption
+track carries the exact narrated words at sane times.
 
 ## 7a. Composition / layout verification
 
@@ -266,6 +326,34 @@ defense before a false "Verified" reaches a person.
   (not only at the final gate), both consuming this file and growing it. This is
   what makes Coordn8 get better at a given project over time instead of repeating
   the same mistakes.
+
+## 7e. The handover summary (what was added, tested, and couldn't be done)
+
+A build produces a lot of internal state — memory-palace files, gate reports,
+per-scene frames — that the end user doesn't need to wade through. But they *do*
+need three things stated plainly at the end, and Coordn8 always ends a run with
+them (PLAYBOOK final handover):
+
+- **Added / produced** — the concrete deliverables and their paths (`<slug>.html`,
+  `<slug>.mp4`, `<slug>.srt`), and which optional capabilities were exercised
+  (e.g. "Manim math scene", "embedded captions").
+- **Verified** — what was actually checked and *how*: which gates passed on the
+  **real emitted files** (not intermediates), tagged so a unit/lint/partial check
+  is never dressed up as end-to-end. The `verify_manifest` gate is the source of
+  truth for the "Verified:" line — no claim word appears unless it's backed by a
+  genuine pass.
+- **Couldn't be done here, and exactly why** — any capability that was
+  unavailable on this machine, named specifically with its one-line unlock (e.g.
+  "Manim not installed → the geometry scene used the HTML engine; `pip install
+  manim` to enable the 3b1b look"; "no ffmpeg → video skipped, page shipped").
+
+The discipline: showing the internal processing is *optional* (no mandate to
+surface it, no harm if it shows), but the closing summary of added/verified/
+couldn't-do is **required** and honest. A missing capability is never hidden and
+is **never** written into the deliverables themselves — the page and video are for
+the audience; the capability status is an operator line for the requester. This is
+the same anti-fraud stance the `verify_manifest` gate enforces mechanically,
+carried through to the human-facing handover.
 
 ## 8. Distribution
 

@@ -37,12 +37,13 @@ Everything below this line is addressed to the Coordn8 session.
 You will build, for THIS repository, tailored to the audience you identify:
 
 - **Deliverable 1 — the interactive page.** One self-contained HTML file (zero external dependencies, opens by double-click) that walks the whole system: what it is, why it exists, how data flows, how every decision/transformation is made, and every output it can produce — with every claim traceable to a specific function and line in the current code.
-- **Deliverable 2 — the video.** One MP4, ≤4–5 minutes, narrated, fast-paced, presentation-grade, where every visual enters exactly when its sentence is spoken. (Produced only when the environment supports it — see the tier system. Never faked.)
+- **Deliverable 2 — the video.** One MP4, ≤4–5 minutes, narrated, fast-paced, presentation-grade, where every visual enters exactly when its sentence is spoken. Its visuals are a **blend of the best free local engines** — HTML/Canvas with GSAP/D3/Rough.js for software, flow, and graph scenes; Manim (3Blue1Brown's engine) for math and geometry — merged into one seamless timeline, with **toggle-able embedded captions**. (Produced only when the environment supports it — see the tier system. Never faked.)
 
 **Auto-naming & output location (you name nothing; the project names it).** Derive a short `slug` from the project itself — repo/directory name, or the package/module name from its manifest — lowercased, spaces/underscores → hyphens (e.g. `awesome_api` → `awesome-api`). Create a **`Coordn8/` folder in the current working path** (wherever Coordn8 was invoked) and write:
 - `Coordn8/<slug>.html` — the interactive page.
-- `Coordn8/<slug>.mp4` — the video (when the tier produces one).
-- `Coordn8/_research/`, `Coordn8/_build/`, `Coordn8/video/` — working stores.
+- `Coordn8/<slug>.mp4` — the video (when the tier produces one), with a soft toggle-able caption track.
+- `Coordn8/<slug>.srt` — the sidecar subtitle file (the video also carries a `.vtt` for the page player). See 2.3a.
+- `Coordn8/_research/`, `Coordn8/_build/` (incl. `_build/vendor/` for the vendored JS libs), `Coordn8/video/` — working stores.
 
 If a `Coordn8/` folder already exists there, reuse it and overwrite the same-named deliverables (a rebuild), never spawn `Coordn8-2/`. If two projects would collide on one slug, disambiguate with a trailing short hash of the ground-truth snapshot. Never ask the user to name the output.
 
@@ -173,7 +174,7 @@ The most common quality failure is not a wrong fact — it is a **low-effort, un
 
 **8 — Creative liberty, bounded only by relevance and clarity (esp. the page).** The interactive page is NOT a corporate/shareholder document — take full liberty to represent things in whatever form teaches best: custom illustrations, spatial metaphors, invented diagram types, playful-but-relevant depictions. The ONLY bounds are: it must be relevant (rule 2), it must be the clearest option for the audience (0.3), and it must pass the gates (traceability, tree-shape, bans). Within those, be inventive — sameness and timidity are themselves defects (see the Creative Freedom Clause).
 
-**9 — Use the richest rendering primitive the environment actually supports — by default, not as a stretch.** "Visual capability not well integrated" is its own failure: shipping flat, static, box-and-arrow art when the tier can do far more. The detected tier (0.5) tells you what the medium can render; *reach for the top of it*. On the **page** that means inline **SVG** for precise diagrams, **canvas/`requestAnimationFrame`** or CSS transforms/transitions for animation, scroll- and pointer-driven interaction, and layered progressive reveal — never a wall of `<div>` boxes when a real drawn figure teaches better (all still inline, zero external deps — 1.1). In the **video** that means genuine per-frame motion authored as a pure function of `t` (2.1), eased/staged transitions (2.4b), and built-up figures — never a slideshow of static PNGs with a voiceover. A capability the environment *has* and you *didn't use* is a wasted one: pick the most expressive primitive available for each idea, and only fall back to a simpler form when it genuinely teaches better (not because it was easier to emit). This maps directly to the "best visual capabilities must be well integrated" requirement — the storyboard/page-plan names, per hero visual, the specific technique it uses (SVG path, canvas particle flow, CSS keyframe build), so the visual-density gate and visual adversaries (R.1) can see that the richest fitting primitive was chosen, not the laziest.
+**9 — Use the richest rendering primitive the environment actually supports — by default, not as a stretch.** "Visual capability not well integrated" is its own failure: shipping flat, static, box-and-arrow art when the tier can do far more. The detected tier (0.5) tells you what the medium can render; *reach for the top of it*. On the **page** that means inline **SVG** for precise diagrams, **canvas/`requestAnimationFrame`** or CSS transforms/transitions for animation, **GSAP** for eased/orchestrated motion, **D3** for data-driven graphs/charts, **Rough.js** for hand-drawn warmth, scroll- and pointer-driven interaction, and layered progressive reveal — never a wall of `<div>` boxes when a real drawn figure teaches better (all still inline / vendored, zero external deps — 1.1, 2.5). In the **video** that means the **multi-engine blend of 2.5**: genuine per-frame motion authored as a pure function of `t` (2.1), GSAP-eased/staged transitions (2.4b) and built-up figures for software scenes, and **Manim** for the math/geometry/transform scenes where it is the right tool (the "3Blue1Brown look") — never a slideshow of static PNGs with a voiceover, and never flat boxes for a scene that a better-fitting installed engine would have made beautiful. A capability the environment *has* (or that setup could install — Manim, the vendored libs) and you *didn't use* is a wasted one: pick the most expressive **fitting** primitive/engine for each idea, and only fall back to a simpler form when it genuinely teaches better (not because it was easier to emit). This maps directly to the "best visual capabilities must be well integrated" requirement — the storyboard/page-plan names, per hero visual, the specific technique AND engine it uses (SVG path, canvas particle flow, GSAP timeline, D3 force graph, Manim transform), so the visual-density gate, the engine-fit gate (2.6), and the visual adversaries (R.1) can see that the richest fitting primitive was chosen, not the laziest.
 
 This doctrine is enforced, not hoped for: the visual plan is designed and checked BEFORE rendering (2.1a for video; 1.1a for the page), and the `visual_density` gate plus dedicated visual adversaries (R.1) fail deliverables that are sparse, static, irrelevant-filler, poorly space-using, or that under-use the medium's real rendering power. "It's correct but it looks low-effort" is a failing deliverable here.
 
@@ -205,7 +206,7 @@ The tiers:
 Unblock the machine so the FULL deliverable set is producible. Never stall, never give up early, never ask permission to install standard open-source tooling. **Run the bundled auto-installer first — it does all of this and verifies each install by re-probing:**
 
 ```bash
-python3 scripts/setup_env.py         # installs ffmpeg, chromium (sudo-free via playwright), TTS, Pillow; re-probes
+python3 scripts/setup_env.py         # installs ffmpeg, chromium (sudo-free), TTS, Pillow, Manim, + vendors JS libs; re-probes
 # or, from anywhere:  npx github:ompandey98/coordn8 setup
 ```
 
@@ -215,8 +216,13 @@ If the bundled script isn't present, do the same by hand, in this priority (sudo
 - [ ] **ffmpeg + ffprobe:** OS package manager (`brew install ffmpeg` / `apt-get install -y ffmpeg` / `dnf` / `pacman` / `apk` / `winget` / `choco`). If no package manager and no root, download a static build from ffmpeg.org and put it on `PATH`. Re-check `ffmpeg -version` && `ffprobe -version` afterward.
 - [ ] **TTS (sudo-free):** `pip install edge-tts` (or piper); macOS has `say` built in. Never block on cloud TTS.
 - [ ] **Python libs (sudo-free):** `pip install Pillow numpy` (Pillow powers the layout pixel-probe; use `--user` if a plain pip is denied).
+- [ ] **Visual ENHANCEMENTS (better-looking video — install, but never block on them; see 2.5):**
+  - **Manim CE** (3Blue1Brown's engine, for math/geometry scenes): `pip install manim`, plus its native deps — macOS `brew install cairo pango pkg-config`, Debian/Ubuntu `apt-get install -y build-essential python3-dev libcairo2-dev libpango1.0-dev pkg-config` (optional `texlive-full` for LaTeX in Manim). If Manim can't install here, those scenes fall back to the HTML/Canvas engine — the base video is unaffected.
+  - **Vendored JS libraries** (GSAP / D3 / Rough.js / anime.js — free, no key): `python3 scripts/render/fetch_visual_libs.py` downloads them once into `_build/vendor/` so scenes stay self-contained/offline after the fetch. They are inlined into each scene that uses them.
 - [ ] **Cloud credentials** (premium TTS, etc.): use ONLY if the user gave you a command/profile. Otherwise use the local fallbacks above — never block on missing cloud access.
 - [ ] **Verify every install by re-running its probe.** Installed ≠ working. Report a capability as available only after you've observed it run. Then check CPU cores (`nproc` / `sysctl -n hw.ncpu`) and load for the bounded render budget (PHASE R).
+
+**Enhancements vs base — the tier line is drawn at the BASE pipeline only.** ffmpeg + Chromium + TTS are what make a video *possible*; Manim and the vendored libs make it *better*. So a failed Manim/libs install NEVER drops the tier or blocks the video — it's a quality note ("math scenes use HTML fallback", "GSAP unavailable") in your operator handover, never in the deliverables. `setup_env.py` already separates `still_blocking_video` (base) from `enhancements_missing` (quality) exactly this way.
 
 **After setup, if — and only if — a video tool is *still* missing, diagnose why specifically** (offline? no package manager? pip blocked?) and record that exact reason. That specific reason is the only acceptable basis for dropping below Tier A, and it goes in your operator handover, never in the deliverables.
 
@@ -422,7 +428,7 @@ Every claim on the page — every node, every condition, every outcome — carri
 
 ## DELIVERABLE 2 — THE VIDEO
 
-**Contract:** one MP4, ≤4–5 minutes, narrated, 1920×1080 (or user-specified), explicit fps, clean audio, every visual synced to its sentence. Produced only in a tier that supports it; otherwise skipped honestly with the unlock path.
+**Contract:** one MP4, ≤4–5 minutes, narrated, 1920×1080 (or user-specified), explicit fps, clean audio, every visual synced to its sentence, and **toggle-able captions** (a soft `mov_text` track off by default + sidecar `.srt`/`.vtt` — 2.3a). Visuals are a **multi-engine blend** (2.5): HTML/Canvas + GSAP/D3/Rough for software/flow scenes, Manim for math/geometry — one seamless timeline. Produced only in a tier that supports it; otherwise skipped honestly with the unlock path.
 
 **Aesthetic quality is MANDATORY and non-waivable — regardless of anything.** A video that is not visually polished, aligned, and composed to professional craft standards is a FAILED deliverable, exactly like a wrong fact or a broken decode — not a "nice to have," not something to trade away under time pressure, tier pressure, or a rushed build. "It's synced and it plays" is NOT the bar; "a stranger would call this well-made" is the bar. If you cannot produce a video that clears the aesthetic gate (§2.4a + §2.4b), you do not ship an ugly one — you fix it, or you honestly skip the video (Tier honesty) and say why. The alignment/composition gate (`scripts/gates/layout_probe.py`) and your own eyes both must sign off before any video is called done.
 
@@ -455,6 +461,7 @@ For every scene, the storyboard specifies (default shape; deviate if your projec
     "id": "s3",
     "beat": "machinery",
     "sentence_ids": [7, 8, 9],
+    "engine": "html+gsap",
     "primary_visual": "animated request traveling the router → cache → engine path",
     "elements": [
       {"id": "router", "kind": "component", "explains": "entry point that classifies the request",
@@ -472,6 +479,7 @@ For every scene, the storyboard specifies (default shape; deviate if your projec
 ```
 
 Requirements the storyboard must meet (these are what the gate checks — see 2.6):
+- **Every scene names its `engine`** (`html` | `html+gsap` | `html+d3` | `html+rough` | `manim`) chosen for its one idea (2.5). The engine-fit check (2.6) flags a math/geometry scene left as flat boxes when Manim was available, or a motion scene with no eased-transition engine when GSAP was vendored — choosing the laziest available engine is a defect.
 - **Every scene has a `primary_visual` that is not "text".** A scene carried only by on-screen text is rejected.
 - **Every scene has real motion** — at least one moving/animating/building element under the narration (`moving_element_count ≥ 1`, typically more). No static holds under speech.
 - **Every element has an `explains` and, where it depicts a code fact, a `ref`.** This is doctrine-2 enforcement: an element that explains nothing is filler and is cut. No element may be decorative with no referent (the "no random stars/flowers/pigs" rule).
@@ -515,6 +523,25 @@ The test is the same shareability test as 0.3a: a stranger watching this on an i
   - **A short, intentional lead is fine; a lag never is.** A visual may begin its ease-in ~100–150ms *before* the key word so it's settling as the word lands (anticipation feels crafted); the visual arriving *after* the word always reads as lag. Never let audio and picture drift apart as the video runs — re-check sync at the *end* of the timeline, not just the start, since small per-scene errors accumulate.
   - **Let it breathe at boundaries.** Insert a short beat of silence/hold (~200–400ms) between major sections rather than butting the next sentence against the last frame; a great explainer pauses to let an idea land. No wall-to-wall narration with zero air.
   - **Tighten the tolerance, then look.** The structural gate's ±window catches gross drift; for the final pass, spot-check the busiest transitions frame-by-frame and confirm the motion *resolves* on the beat (the dot arrives, the number stops, the box highlights) exactly as the sentence peaks. If it looks "close but slightly off," it is — nudge the keyframe; don't ship approximate.
+
+### 2.3a SUBTITLES / CAPTIONS — accurate by construction, toggle-able, always emitted
+
+Every video ships with captions. This costs almost nothing and is accurate *by construction*, because the caption text and its timings are just a **re-serialization of the beat map** (2.3) — the exact spoken words at the exact TTS-derived times. Subtitles are never a re-transcription and never a guess; if the beat map is right (and the sync gate proves it is), the captions are right.
+
+Emit all three forms with `scripts/render/subtitles.py`:
+
+- **Soft, embedded, toggle-able track in the mp4** (`mux`, ffmpeg `mov_text`) — exactly what the user means by "like VLC can add/remove." The captions are a *separate selectable stream*, **off by default**; the viewer turns them on/off in any standard player (VLC, QuickTime, browser). The picture is untouched — video/audio are stream-copied, so muxing subtitles is lossless and re-runnable.
+  ```bash
+  python3 scripts/render/subtitles.py srt _build/beatmap.json --out Coordn8/<slug>.srt
+  python3 scripts/render/subtitles.py mux Coordn8/<slug>.mp4 Coordn8/<slug>.srt --out Coordn8/<slug>.mp4 --lang eng
+  ```
+- **A sidecar `.srt`** next to the mp4 — the universal, portable caption file anyone can edit or re-use.
+- **A WebVTT `.vtt`** for the page's `<video>` player (the "Watch" tab, 1.1 item 6): add it as a `<track kind="captions" srclang="en" default>` so the in-page player has a real caption toggle too.
+
+Rules:
+- **Burned-in (open) captions are NOT the default.** Soft captions respect the viewer's choice and keep the frame clean (2.4a). Only burn subtitles in if the user explicitly asks, or for a platform that strips soft tracks — and then say so.
+- **Caption text is verbatim narration** — collapse whitespace only, never paraphrase or shorten (accuracy is the whole point). `subtitle_check.py` proves this held on the emitted file (2.6).
+- **De-personalization and anti-transcription (0.3a / 2.2a) apply to captions too**, because they equal the narration — if the voice was fixed to speak *meaning* not raw literals, the captions inherit that automatically. So subtitles are generated *after* the narration passes its shareability sweep, never from a raw draft.
 
 ### 2.4 Visual quality bar (what won)
 
@@ -569,16 +596,44 @@ When you invent a new visual form (Creative Freedom Clause), it still obeys ever
 
 If a principle here conflicts with clarity for THIS audience, clarity wins and you name the trade-off — but "I didn't have time to make it look good" is never an acceptable reason to ship an unpolished video (see the mandatory-aesthetic contract).
 
-### 2.5 Render pipeline (most reliable local setup)
+### 2.5 Render pipeline — a MULTI-ENGINE BLEND on one unified timeline
 
-- **Primary:** deterministic time-driven scenes — each scene a pure function of `t` rendered in HTML/canvas — captured frame-by-frame via headless browser, encoded with ffmpeg. Pure-function-of-`t` means any frame can be re-rendered in isolation and crashes lose nothing (R.3).
-- **Fallback:** manim is fine, but beware version fps traps — ALWAYS set fps explicitly in config; never trust a default.
-- Set fps explicitly everywhere (capture loop, encoder, concat) — mismatched fps between scenes is a classic silent corruption.
-- **Parallelize** frame capture and per-scene encodes across cores using the bounded queue (R.3); only the final concat is serial:
+**There is no single "best" engine — the best video BLENDS several, one chosen per scene for what that scene needs, all merged into one seamless timeline.** The question "Manim or HTML/canvas — which is superior?" is the wrong question: Manim wins decisively for math, precise geometry, and continuous transforms (it is literally what 3Blue1Brown is built on); HTML/CSS/SVG/Canvas + JS libraries win decisively for software architecture, data flows, UI, graphs, and text-rich explanation. A great explainer uses each where it's strongest and the viewer never sees the seam. Coordn8 does exactly this.
+
+**The engine roster (all free, local, no API key, no account, no paid tier — verified):**
+
+| Engine | Install | Best for (dispatch when the scene is…) |
+|---|---|---|
+| **HTML/CSS/SVG/Canvas** (headless Chrome) | already required for the page | software architecture, data flow, request/response, UI, tables, text-forward beats |
+| **GSAP 3** (+ its now-free plugins) | vendored by `fetch_visual_libs.py` | the *motion polish* layer on any HTML scene: eased/staged entrances, master timelines, morphs, count-ups — the single biggest lever from "linear-CSS" to "crafted" |
+| **D3** | vendored | force-directed dependency graphs, tree layouts, data-driven charts/transitions from real numbers |
+| **Rough.js** | vendored | hand-drawn / sketchy warmth where a clean vector box feels cold (a "napkin sketch" beat) |
+| **anime.js** | vendored | lightweight keyframe/timeline motion where GSAP is overkill |
+| **Manim CE** (3Blue1Brown's engine) | `pip install manim` + cairo/pango (see 0.6) | math, equations, precise geometry, coordinate spaces, continuous morphs/transforms — the "3b1b look" |
+
+Setup installs all of them (0.6). Manim and the vendored JS libs are **enhancements**: the base video still ships without them (HTML/Canvas alone clears the bar), they just make it dramatically better for the scene types above. A failed enhancement install is a quality note, never a video blocker (`setup_env.py` treats it exactly so).
+
+**Per-scene engine dispatch (decide in the storyboard, 2.1a).** For each scene, the storyboarder picks the engine that best serves its one idea and records it as an `engine` field (`html` | `html+gsap` | `html+d3` | `html+rough` | `manim`). The visual-density gate and the visual adversaries (R.1) then check *fit*, not just presence: a math/geometry scene rendered as flat boxes when Manim was available, or a flow scene with linear-CSS jerks when GSAP was vendored, is under-using the medium (0.4a rule 9) and gets flagged. Choosing the laziest engine when a better-fitting one was installed is a defect.
+
+**One unified timeline — the seam-free merge (this is the load-bearing mechanic).** Every engine renders into the **same** `frame_%06d.png` sequence at the **same** fps and resolution, so a single `encode` + `concat` path joins them with zero special-casing and the viewer sees one continuous piece:
+
+- **HTML/Canvas scenes** are a pure function of `t`: `scene.html?t=<seconds>` draws exactly the frame for that instant, captured frame-by-frame by headless Chrome. Pure-function-of-`t` means any frame re-renders in isolation and a crash loses nothing (R.3). Vendored libs are **inlined** into the scene HTML (not linked) so the self-contained/offline contract holds after one fetch.
   ```bash
+  python3 scripts/render/capture_scene.py capture --scene video/s1.html --duration 8 --fps 30 --out _build/frames/s1
+  ```
+- **Manim scenes** render to their own mp4, then ffmpeg **re-extracts** them into the identical `frame_%06d.png` model at the pipeline fps/resolution — so a Manim scene and a Chrome scene are indistinguishable to `encode`:
+  ```bash
+  python3 scripts/render/capture_scene.py manim --scene video/eqs.py --name FieldLines --fps 30 --out _build/frames/s2 --resolution 1920,1080
+  ```
+- **Set fps explicitly EVERYWHERE** (capture loop, Manim `--fps`, encoder, concat). Mismatched fps between scenes/engines is the classic silent corruption — and it is exactly the trap a blend invites, because Manim's default fps differs from your capture fps. Never trust a default.
+- **Encode per scene, then concat serially.** One consistent codec/pixel-format (libx264, yuv420p) across all scenes so concat is a clean stream-copy:
+  ```bash
+  python3 scripts/render/capture_scene.py encode --frames _build/frames/s2 --fps 30 --out video/s2.mp4
   ffmpeg -f concat -safe 0 -i scenes.txt -c copy video_noaudio.mp4
   ```
-- Write frames/scenes to disk as you go so a crashed worker never loses a batch; restart crashed/stalled workers immediately.
+- **Parallelize** frame capture and per-scene encodes across cores via the bounded queue (R.3); only the final concat is serial. Write frames/scenes to disk as you go so a crashed worker never loses a batch; restart crashed/stalled workers immediately.
+
+**The blend is the point.** A single video can open with a Rough.js hand-sketched hook, teach architecture with a GSAP-eased HTML flow, drop into a Manim coordinate transform for the one hard piece of math, show the dependency graph with D3, and close on a GSAP count-up — all one file, one timeline, one consistent visual system (2.4a). That is how you match the studios: not by picking their tool, but by using the right tool per idea.
 
 ### 2.6 Facts guard + full-file probes
 
@@ -591,6 +646,10 @@ If a principle here conflicts with clarity for THIS audience, clarity wins and y
   - [ ] Duration vs total narration duration within ±10%.
   - [ ] Clean full decode: `ffmpeg -v error -i final.mp4 -f null -` produces zero errors.
   - [ ] Per-scene frame inspection — extract ≥1 frame per scene and LOOK: no empty/black scenes, no placeholder text, no overlapping elements.
+- **Subtitle fidelity (`scripts/gates/subtitle_check.py`).** Prove the emitted captions (2.3a) carry the exact spoken words at sane times: every cue's text equals its narration sentence verbatim (whitespace-normalized only), cue count matches the narration, and timings are monotonic, non-negative, `start < end`, and within the video duration. Because subtitles are generated from the beat map this should pass trivially — but a hand-edit or a future regression that lets caption text diverge from the voice is exactly what this catches.
+  ```bash
+  python3 scripts/gates/subtitle_check.py Coordn8/<slug>.srt _build/beatmap.json --mp4 Coordn8/<slug>.mp4
+  ```
 - **Layout gate — enforce the composition rules of 2.4a on the actual pixels.** Do NOT trust that the scene "should" fit; measure it. Two complementary checks, both mandatory:
   - [ ] **Geometry probe on each scene page (`scripts/gates/layout_probe.py`).** Load `scene.html?t=<t>` in headless Chrome at 1920×1080 and read every visible element's bounding box. FAIL any element whose box crosses the frame edge or the 5% safe-area margin (overflow/clip), any element whose rendered width/height exceeds the viewport (content wider than the frame), any text-bearing box overlapping another text-bearing box (collision), and any text computed font-size below the 2.4a floors. Sample multiple `t` values per scene (entrances animate — an element can overflow only mid-transition). This is deterministic and catches what the eye misses at speed.
   - [ ] **Then LOOK with your own vision — judge craft AND richness, not just geometry.** Extract representative frames (scene starts, mid-transitions, the busiest beat) and read them against §2.4a AND §2.4b: is there one clear focal point? is the frame balanced with real negative space? is anything cramped, scattered, misaligned, or crowding an edge? does motion ease and stage (spot-check a few mid-transition frames)? does the titling/signaling read cleanly? **And confirm the frames actually delivered the storyboard's planned richness** — the moving elements are really moving (compare frames across `t`, don't trust a single still), the primary visual is present and carries the beat, the whole frame is used, and no scene silently collapsed back into a static text box during rendering. A geometry probe passing is necessary, not sufficient — you confirm the composition *reads well, looks professionally made, and is as visually rich as planned*. If a frame is ugly, amateurish, sparse, or static, fix the scene and re-render that scene only (pure function of `t`), then re-run both checks. The aesthetic bar is mandatory (see the Deliverable-2 contract) — do not sign off on a video you wouldn't be proud to show a stranger.
@@ -628,6 +687,8 @@ Everything above is a **FLOOR, not a ceiling**. Look hard at THIS project's real
 | Adversarial re-verify | webpage | Independent agents' sampled claims all check out; zero HIGH/MEDIUM open |
 | Beat sync | video | Sentence-vs-visible table from FINAL file: all rows pass; no visual ahead of its sentence |
 | Media probes | video | ffprobe sane; duration ±10% of narration; clean decode; no empty scenes; no truncated audio |
+| Engine fit / medium use | video | Each scene uses the best-fitting engine for its idea (2.5): math/geometry → Manim; flow/architecture/UI → HTML/Canvas with GSAP-eased motion; graphs → D3; sketch warmth → Rough.js. Flat boxes where Manim was available, or linear-CSS jerks where GSAP was vendored, = under-using the medium (0.4a rule 9) → flagged. Enhancements missing is fine (base engine ships); choosing the *laziest available* engine is not |
+| Subtitles / captions | video | Every video ships captions (2.3a): a soft toggle-able `mov_text` track (off by default) + sidecar `.srt` + `.vtt` for the page player. `subtitle_check.py` proves caption text == narration verbatim and timings are sane. Burned-in only if the user asked |
 | Tier honesty | both | Setup attempted first; detected tier announced; any skipped deliverable stated with the *specific verified* blocker + unlock path (never a vague "not supported"), and never inside the deliverables; nothing faked |
 | Final verification manifest | both | `verify_manifest.py` reads `_build/verification.json` (one entry per row above, each with status + evidence). It refuses (1) any `pass` with no evidence, (2) any end-user claim word not backed by a genuine pass, (3) any required row silently missing/failed/untested. The **only** "Verified: …" line you may show a human is the gate's `authorized_claim` (claimed ∩ passed) — never free-typed. Open items and any risk/assumption are surfaced in chat, not swept away |
 
@@ -661,6 +722,9 @@ Everything above is a **FLOOR, not a ceiling**. Look hard at THIS project's real
 **Final audit (the last thing you do).**
 - Re-verify BOTH deliverables end to end against the full gate table above — fresh, on the final files, not from memory of earlier passes.
 - **Emit the verification manifest and let it authorize the claim — never free-type "Verified".** As you run each gate and each critic, record the result to `_build/verification.json`: one item per checklist row, each with a `status` (pass/fail/untested/skipped), the `evidence` that matches the claim's strength (`[verified-live]` / `[code-traced]` / `[untested]`), and any `risk`/`assumption` you had to make. Then run `scripts/gates/verify_manifest.py`. The end-user-facing line you show ("Verified: sync, animation, explainability, …") is **only** the gate's `authorized_claim` — the intersection of what you claimed and what actually passed *with evidence*. You may NOT write a "Verified" word the manifest did not authorize; an item that is `fail`/`untested`/`missing` stays visibly open, and every recorded `risk`/`assumption` is surfaced in the chat, not swept away. This is the mechanical form of "no video ships without every checklist item validated, and you never claim what you didn't verify." A manifest that isn't READY means the deliverable isn't done — fix the open items or narrow the claim and say what remains owed.
-- Hand over: the exact absolute paths to both deliverables, the gate table with each gate's status, the manifest's `authorized_claim` (verbatim — no additions), the detected tier and any honestly-skipped deliverable with its unlock path, an explicit list of what was verified vs what (if anything) remains owed, and the rebuild instructions.
+- **Hand over with a mandatory three-part summary — this is the one thing the user must always see.** Surfacing the internal processing (memory-palace files, per-scene logs, intermediate gate output) is *optional* — there's no mandate to show it, and no harm if it shows — but the closing summary below is **required** and must be honest, in plain language, and easy to read at a glance:
+  1. **Added / produced** — the exact absolute paths to what was created (`<slug>.html`, `<slug>.mp4`, `<slug>.srt`, page `.vtt`), and which optional capabilities were actually exercised this run (e.g. "Manim math scene", "embedded toggle-able captions", "GSAP/D3/Rough visuals").
+  2. **Verified — what was tested and how** — the gate table with each gate's status, run *fresh on the final files*, plus the manifest's `authorized_claim` (verbatim — no additions). Tag the strength of each check (`[verified-live]` / `[code-traced]` / `[untested]`) so a unit/lint/partial check is never dressed up as end-to-end. Never claim a functionality was tested more strongly than it was.
+  3. **Couldn't be done here, and exactly why** — the detected tier, every honestly-skipped deliverable or enhancement with its *specific* verified blocker and one-line unlock command (e.g. "Manim not installed → geometry scene used the HTML engine; `pip install manim` to enable the 3b1b look"; "no ffmpeg → video skipped, page shipped"), and an explicit list of anything that remains owed. A missing capability is stated plainly here — **never hidden, and never written into the deliverables** (that ban is 0.5 / 1.5). Also give the rebuild instructions.
 
 Build it like someone will trace every claim — because they will.

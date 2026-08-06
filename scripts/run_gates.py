@@ -58,6 +58,7 @@ def main() -> int:
 
     html = first_glob("*.html", "index.html")
     mp4 = first_glob("*.mp4", "video.mp4")
+    srt = first_glob("*.srt", "captions.srt")
     flows = build / "_build" / "flows.json"
     claims = build / "_build" / "claims.json"
     beatmap = build / "_build" / "beatmap.json"
@@ -106,6 +107,11 @@ def main() -> int:
         ("visual_density:video", GATES / "visual_density.py",
          [str(storyboard), "--kind", "video"]),
         ("beat_sync", GATES / "beat_sync.py", [str(mp4), str(beatmap)]),
+        # Captions must carry the exact spoken words at sane times (PLAYBOOK 2.3a).
+        # Derived from the beatmap, so this should pass trivially — it catches a
+        # hand-edit or a regression that lets caption text drift from the voice.
+        ("subtitle_check", GATES / "subtitle_check.py",
+         [str(srt), str(beatmap)] + (["--mp4", str(mp4)] if mp4.exists() else [])),
         ("media_probe", GATES / "media_probe.py", [str(mp4)]),
         ("layout_probe", GATES / "layout_probe.py", layout_args),
         # LAST line of defense: the end-of-build manifest. No "Verified: …" claim
