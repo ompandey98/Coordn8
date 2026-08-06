@@ -152,6 +152,100 @@ def test_content_ban():
         check("names it a capability_excuse",
               "capability_excuse" in r.stdout, r.stdout)
 
+        # requester-personal framing must never ship — the requester is the
+        # director, not the subject (PLAYBOOK 0.3a). This narration leaks the
+        # requester's knowledge state, mood, and situation.
+        personal = d / "personal.txt"
+        personal.write_text(
+            "Since you already know the basics, we'll skip them.\n"
+            "This is the part you didn't understand in your repo.\n"
+            "Don't worry if it gave you a headache last time.\n")
+        r = run("scripts/gates/content_ban.py", [str(personal)])
+        check("requester-personal framing flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names it requester_personal_framing",
+              "requester_personal_framing" in r.stdout, r.stdout)
+
+        # generic teacherly "you" (addresses ANY reader) must NOT be flagged as
+        # personal framing — only the requester's private context is banned.
+        teacherly = d / "teacherly.txt"
+        teacherly.write_text(
+            "You'll see this pattern in the router module.\n"
+            "Notice how each request travels through the cache.\n"
+            "The system classifies, matches, then dispatches.\n")
+        r = run("scripts/gates/content_ban.py", [str(teacherly)])
+        check("generic teacherly 'you' PASSES (exit 0)",
+              r.returncode == 0, r.stdout)
+
+        # narration that reads a raw URL aloud is a transcription failure (2.2a):
+        # the voice should speak meaning, the frame carries the literal.
+        readaloud = d / "narration.txt"
+        readaloud.write_text(
+            "Open https://console.aws.amazon.com/s3/buckets/prod-data now.\n")
+        r = run("scripts/gates/content_ban.py", [str(readaloud)])
+        check("read-aloud raw URL flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names it read_aloud_literal",
+              "read_aloud_literal" in r.stdout, r.stdout)
+
+        # audience role-play / greeting must never ship — the audience tailors
+        # DESIGN, it is not a role the deliverable greets (PLAYBOOK 0.3 / 0.3a).
+        # "Welcome to the team" is nonsensical in a file a hundred strangers share.
+        greeting = d / "greeting.txt"
+        greeting.write_text(
+            "Welcome to the team! Let's look at the architecture.\n"
+            "Now that you've joined, here's how requests flow.\n")
+        r = run("scripts/gates/content_ban.py", [str(greeting)])
+        check("audience greeting flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names it audience_roleplay_greeting",
+              "audience_roleplay_greeting" in r.stdout, r.stdout)
+
+        # legit uses of the same words ('team' of services, a 'new' request)
+        # must NOT be flagged as greetings — only the salutation is banned.
+        not_greeting = d / "not_greeting.txt"
+        not_greeting.write_text(
+            "The team of services routes each new request.\n"
+            "A new request enters the pipeline and is classified.\n")
+        r = run("scripts/gates/content_ban.py", [str(not_greeting)])
+        check("'team of services' / 'new request' PASSES (exit 0)",
+              r.returncode == 0, r.stdout)
+
+        # expanding an abbreviation is flagged so EACH full-form is verified
+        # against a real source — a fabricated expansion is a factual defect
+        # (PLAYBOOK 2.6). The gate surfaces the act of expanding; it can't know
+        # the expansion is wrong, so it forces a check.
+        acro = d / "acro.txt"
+        acro.write_text(
+            "TTL stands for time to live.\n"
+            "It uses an LRU (Least Recently Used) cache.\n")
+        r = run("scripts/gates/content_ban.py", [str(acro)])
+        check("acronym expansion flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names it acronym_expansion",
+              "acronym_expansion" in r.stdout, r.stdout)
+
+        # using an abbreviation WITHOUT expanding it is fine (keep-as-is rule)
+        acro_ok = d / "acro_ok.txt"
+        acro_ok.write_text(
+            "The cache uses an LRU policy for eviction.\n"
+            "Each request hits the API before the engine.\n")
+        r = run("scripts/gates/content_ban.py", [str(acro_ok)])
+        check("abbreviation used un-expanded PASSES (exit 0)",
+              r.returncode == 0, r.stdout)
+
+        # stale build/source metadata (comment markers, version stamps) must not
+        # leak onto a frame or into narration (PLAYBOOK 2.1a "no meta chrome").
+        stale = d / "stale.txt"
+        stale.write_text(
+            "# TODO: handle the retry path\n"
+            "Running version 1.2.3 of the engine.\n")
+        r = run("scripts/gates/content_ban.py", [str(stale)])
+        check("stale meta (comment/version) flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        check("names it stale_meta",
+              "stale_meta" in r.stdout, r.stdout)
+
 
 def test_facts_trace():
     print("\n[gate: facts_trace catches broken references]")
@@ -400,6 +494,86 @@ def test_visual_density():
         check("missing plan -> SKIPPED (exit 2)", r.returncode == 2, r.stdout)
 
 
+def test_verify_manifest():
+    print("\n[gate: verify_manifest refuses overclaims, authorizes only what passed]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        # overclaim: claims 'explainability' but that item FAILED. The gate must
+        # refuse that claim word and authorize only the genuinely-passing ones.
+        bad = {
+            "deliverable": "video",
+            "claims": ["sync", "animation", "explainability"],
+            "items": [
+                {"id": "beat_sync", "status": "pass",
+                 "evidence": "42/42 rows matched [verified-live]", "claim": "sync"},
+                {"id": "layout", "status": "pass",
+                 "evidence": "0 overflow across 30 samples", "claim": "animation"},
+                {"id": "explainability", "status": "fail",
+                 "evidence": "scene 4 told-not-shown", "claim": "explainability",
+                 "risk": "scene 4 needs a better visual"},
+            ],
+        }
+        bp = d / "bad.json"; bp.write_text(json.dumps(bad))
+        r = run("scripts/gates/verify_manifest.py", [str(bp)])
+        check("overclaim flagged REVIEW (exit 1)", r.returncode == 1, r.stdout)
+        payload = json.loads(r.stdout.splitlines()[0])
+        check("refuses the unbacked claim 'explainability'",
+              payload.get("overclaimed") == ["explainability"], r.stdout)
+        check("authorizes ONLY the passing claims",
+              payload.get("authorized_claim") == "Verified: sync, animation",
+              r.stdout)
+        check("surfaces the recorded risk (not swept away)",
+              any(x.get("risk") for x in payload.get("risks_and_assumptions", [])),
+              r.stdout)
+
+        # ready: a page build where every required item passes with evidence and
+        # every claim word is backed -> PASS, full claim authorized.
+        good = {
+            "deliverable": "page",
+            "claims": ["facts", "trees", "shareability", "explainability"],
+            "items": [
+                {"id": "facts_trace", "status": "pass", "claim": "facts",
+                 "evidence": "40/40 refs resolve [code-traced]"},
+                {"id": "tree_shape", "status": "pass", "claim": "trees",
+                 "evidence": "3 flows, all branchy [verified-live]"},
+                {"id": "dom_smoke", "status": "pass", "evidence": "5 tabs, 0 deps"},
+                {"id": "content_ban", "status": "pass", "evidence": "0 hits"},
+                {"id": "visual_density", "status": "pass", "evidence": "avg 3.2"},
+                {"id": "shareability", "status": "pass", "claim": "shareability",
+                 "evidence": "critic: no personal framing"},
+                {"id": "explainability", "status": "pass", "claim": "explainability",
+                 "evidence": "critic read cold: every section clicks"},
+                {"id": "adversarial", "status": "pass", "evidence": "12 re-verified"},
+            ],
+        }
+        gp = d / "good.json"; gp.write_text(json.dumps(good))
+        r = run("scripts/gates/verify_manifest.py", [str(gp)])
+        check("fully-verified manifest PASSES (exit 0)", r.returncode == 0, r.stdout)
+        payload = json.loads(r.stdout.splitlines()[0])
+        check("authorizes the full claim when all pass",
+              payload.get("authorized_claim") ==
+              "Verified: facts, trees, shareability, explainability", r.stdout)
+
+        # a 'pass' with NO evidence is not a pass — it must be downgraded and the
+        # claim it backs refused (honesty: no claim without matching evidence).
+        noev = {"deliverable": "page", "claims": ["facts"],
+                "items": [{"id": "facts_trace", "status": "pass", "claim": "facts"}]}
+        np = d / "noev.json"; np.write_text(json.dumps(noev))
+        r = run("scripts/gates/verify_manifest.py", [str(np)])
+        check("pass-without-evidence flagged REVIEW (exit 1)",
+              r.returncode == 1, r.stdout)
+        payload = json.loads(r.stdout.splitlines()[0])
+        check("refuses to authorize an evidence-less pass",
+              payload.get("authorized_claim") == "", r.stdout)
+        check("names the missing-evidence problem",
+              any("NO evidence" in f for f in payload.get("findings", [])),
+              r.stdout)
+
+        # missing manifest -> SKIPPED (build must produce one before any claim)
+        r = run("scripts/gates/verify_manifest.py", [str(d / "missing.json")])
+        check("missing manifest -> SKIPPED (exit 2)", r.returncode == 2, r.stdout)
+
+
 def test_setup_env():
     print("\n[setup_env: dry-run plans installs and never claims false success]")
     r = run("scripts/setup_env.py", ["--dry-run", "--json"])
@@ -462,6 +636,7 @@ def main() -> int:
     test_dom_smoke()
     test_layout_probe()
     test_visual_density()
+    test_verify_manifest()
     test_setup_env()
     test_env_detect()
     test_parallel_pool()

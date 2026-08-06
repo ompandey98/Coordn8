@@ -64,15 +64,40 @@ def main() -> int:
     layout = build / "_build" / "layout.json"
     storyboard = build / "_build" / "storyboard.json"
     page_plan = build / "_build" / "page_plan.json"
+    narration = build / "_build" / "narration.txt"
+    verification = build / "_build" / "verification.json"
     jargon = build / "_research" / "jargon.txt"
+
+    # A representative rendered frame for the real-PIXEL layout probe. The
+    # geometry probe reads a layout.json (which the agent must extract from the
+    # rendered DOM, never hand-type — PLAYBOOK 2.6); the pixel probe measures an
+    # ACTUAL captured frame so overflow/crowding is caught on real pixels, not a
+    # self-description. Pick the first frame we can find under video/ or _build/.
+    def first_frame() -> Path | None:
+        for pat in ("video/**/*.png", "_build/frames/**/*.png",
+                    "_build/**/frame_*.png"):
+            hits = sorted(p for p in build.glob(pat) if p.is_file())
+            if hits:
+                return hits[0]
+        return None
+
+    frame = first_frame()
+    layout_args = [str(layout)]
+    if frame is not None:
+        layout_args += ["--shot", str(frame)]  # OC-2/REQ-11: real pixels, not JSON
 
     plan = [
         ("env_detect", HERE / "env_detect.py", ["--json"]),
         ("tree_shape", GATES / "tree_shape.py", [str(flows)]),
         ("facts_trace", GATES / "facts_trace.py", [str(claims), "--repo", "."]),
         ("dom_smoke", GATES / "dom_smoke.py", [str(html)]),
-        ("content_ban", GATES / "content_ban.py",
+        ("content_ban:html", GATES / "content_ban.py",
          [str(html)] + (["--jargon", str(jargon)] if jargon.exists() else [])),
+        # Content bans also sweep the NARRATION script (0.3a/2.2a): a spoken
+        # personal aside, a read-aloud URL, an audience greeting, an invented
+        # acronym full-form, or a leaked version stamp never appears as page text.
+        ("content_ban:narration", GATES / "content_ban.py",
+         [str(narration)] + (["--jargon", str(jargon)] if jargon.exists() else [])),
         # Visual-density runs on the PLAN, before rendering — the one-shot fix for
         # sparse/static/filler deliverables (PLAYBOOK 2.1a / 1.1a). Two invocations:
         # page plan and video storyboard, each explicitly typed.
@@ -82,7 +107,11 @@ def main() -> int:
          [str(storyboard), "--kind", "video"]),
         ("beat_sync", GATES / "beat_sync.py", [str(mp4), str(beatmap)]),
         ("media_probe", GATES / "media_probe.py", [str(mp4)]),
-        ("layout_probe", GATES / "layout_probe.py", [str(layout)]),
+        ("layout_probe", GATES / "layout_probe.py", layout_args),
+        # LAST line of defense: the end-of-build manifest. No "Verified: …" claim
+        # reaches a human unless every required item passed with evidence here
+        # (PLAYBOOK final audit / verification claim).
+        ("verify_manifest", GATES / "verify_manifest.py", [str(verification)]),
     ]
 
     print(f"\nCoordn8 gate report — {build}\n" + "=" * 60)

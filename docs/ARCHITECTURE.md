@@ -87,9 +87,15 @@ The brain runs as a graph, not a single pass (PLAYBOOK.md PHASE R):
   most-relevant depiction — no decoration-with-no-referent), a **composition/space
   critic** (the whole frame/width is used; density matches an explainer, not a
   slideshow), an **explainability critic** (would the target newcomer actually
-  *get it* — is each idea shown, not just told?), and a **medium-fit critic**
+  *get it* — is each idea shown, not just told?), a **medium-fit critic**
   (page only — is the page a genuine compact reader, or the video re-skinned?
-  bar: remove the video tab entirely and the page still fully teaches).
+  bar: remove the video tab entirely and the page still fully teaches), a
+  **shareability / de-personalization critic** (both — could a stranger share
+  this unedited? no requester-personal framing, and no narration that reads raw
+  IDs/URLs aloud instead of speaking their meaning), and a continuously-running,
+  learning **anti-slop critic** (both — does this read as a crafted teaching
+  piece or as AI slop? it runs throughout the build and feeds every confirmed
+  flaw forward via `slop_lessons.md`).
 
 The memory palace (`_research/`, `_build/`) is the shared, persistent store every
 agent reads and writes. Nothing is held only in a model's head; every fact lands
@@ -184,6 +190,82 @@ visuals checks — but must stay an optional guest, not the spine; and (2) a sec
 that self-declares it's a transcribed video beat (`not_video_scene:false`) is
 **flagged** — the medium-fit critic's bar is that removing the video entirely still
 leaves a page that fully teaches on its own.
+
+## 7c. Shareability, de-personalization, and the learning loop
+
+The deliverables are authored for a broad, anonymous audience and must be freely
+shareable — the kind of thing that gets uploaded to an internal video/streaming
+platform and *enjoyed*, not clocked as AI slop. Two failure modes used to break
+that, and both are now structurally addressed (PLAYBOOK 0.3a / 2.2a):
+
+- **The requester is the director, not the subject.** What the person says in the
+  chat sets *direction* (scope, focus, depth) but must never become *content*. A
+  line like "since you already know the basics, we'll skip them" or "don't worry
+  if this gave you a headache" leaks the requester's knowledge state or mood into
+  a video a hundred other people should be able to share unedited. The fix is three
+  operations: re-voice relevant framing into a neutral statement about the system
+  ("this covers X; the prerequisites are Y"), drop irrelevant personal detail
+  entirely, and preserve every *relevant* fact (de-personalizing never means losing
+  context). `content_ban.py` gained a `requester_personal_framing` pattern class,
+  and a **shareability/de-personalization critic** (§4) reads both deliverables
+  cold. Generic teacherly "you" ("you'll see this in `foo.py`") is explicitly not
+  flagged — only the requester's private context is.
+
+- **Voice speaks meaning; the frame carries the specific.** Narration was often a
+  transcription of the screen — reading a raw AWS account number, URL, hash, or
+  file path aloud. The frame shows the literal (labeled); the voice says what it
+  *is* ("the AWS account the pipeline deploys into"). `content_ban.py` gained a
+  `read_aloud_literal` pattern, applied to the narration script (not just the HTML),
+  and the same critic flags spoken literals.
+
+- **The audience tailors design; it is never a role the deliverable greets.**
+  Coordn8 identifies who the explanation is for and shifts depth, entry point, pace,
+  and register (PLAYBOOK 0.3) — but the audience is an *input to composition*, never
+  a person the artifact speaks to. A video generated "for a new engineer" that opens
+  "welcome to the team" is nonsensical: a hundred strangers open the same file, none
+  of them joining anyone's team. `content_ban.py` gained an
+  `audience_roleplay_greeting` pattern that flags every such salutation; the fix is
+  to state what the *system* is, greeting no one.
+
+- **Factual correctness is non-negotiable — no invented acronym expansions.** A
+  confident guess at what an abbreviation "stands for" is a factual defect, not a
+  stylistic one. Every full-form must trace to a real source (docs/code); an unknown
+  abbreviation stays as-is (PLAYBOOK 2.6). `content_ban.py` gained an
+  `acronym_expansion` pattern that surfaces the *act* of expanding an abbreviation so
+  each one is verified before it ships — a regex can't know an expansion is wrong,
+  but it guarantees a fabricated one can't slip through unreviewed.
+
+- **No stale build/source metadata on frames or in narration.** Version stamps,
+  `TODO`/`@author` comment markers, and license/copyright headers teach nothing and
+  read as a machine dump if they land on a frame or in the spoken script (PLAYBOOK
+  2.1a "no meta chrome"). `content_ban.py` gained a `stale_meta` pattern; the
+  ground-truth snapshot hash lives only in the HTML footer, never a video frame.
+
+## 7d. The final verification manifest (the anti-fraud backstop)
+
+Every gate above validates one dimension, but nothing stopped a build from *saying*
+"Verified: sync, animation, explainability" when only some of that was actually
+checked — the exact "you claim it's done, but is it?" failure. `scripts/gates/verify_manifest.py`
+closes it. The build writes `_build/verification.json` — one entry per checklist
+item, each with a `status` (pass/fail/untested/skipped) and the `evidence` behind it
+— and the gate enforces three things a model under pressure tends to violate: (1) no
+`pass` may lack evidence; (2) every end-user-facing "Verified: …" word must be backed
+by a genuine pass, and any that isn't is refused; (3) any required gate that is
+missing, failed, or untested is surfaced as still-open with its recorded
+risk/assumption. The gate emits the **only** claim string safe to show a human —
+the intersection of what was claimed and what actually passed (`authorized_claim`) —
+so the "Verified" line the user sees is never free-typed, only what the build earned.
+Advisory in exit code, but treated as blocking in spirit: it is the last line of
+defense before a false "Verified" reaches a person.
+
+- **The learning loop (`_research/slop_lessons.md`).** Every confirmed flaw —
+  from the anti-slop critic, any adversary, or the user — is appended to a
+  per-project lessons file that is loaded *first* on every later pass and every
+  future rebuild, so the same class of flaw is designed out up front rather than
+  re-caught late. The **anti-slop critic** runs continuously throughout the build
+  (not only at the final gate), both consuming this file and growing it. This is
+  what makes Coordn8 get better at a given project over time instead of repeating
+  the same mistakes.
 
 ## 8. Distribution
 

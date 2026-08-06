@@ -74,7 +74,7 @@ Both land in a `Coordn8/` folder in whatever path you run it, **auto-named after
 One self-contained HTML file, zero external dependencies, opens by double-click offline. **A compact, read-through reference — not the video re-skinned.** It's a random-access reader, organized by an information architecture derived from *this* project (its own tabs, splits, and depth), closer to an interactive Distill/3Blue1Brown article than a slide deck: animated architecture map, true decision-**tree** flows (every fork labeled in plain words), per-unit deep dives with a "walk an example" stepper, exhaustive outcomes tables, and a source-of-truth color legend (deterministic code vs. model judgment vs. data field vs. vision). Every node carries its `file:line`. If a video was produced, it's available as an *optional* embedded player tab (with speed controls) — a guest feature, never the page's spine.
 
 **2 — The video** (`<project>.mp4`)
-≤4–5 min, narrated, 1080p, presentation-grade. A documentary-style teaching arc: hook → what it is → why it wins → the machinery → one worked example → payoff. Every visual enters *exactly* when its sentence is spoken, verified frame-by-frame on the final file.
+≤4–5 min, narrated, 1080p, presentation-grade. A documentary-style teaching arc: hook → what it is → why it wins → the machinery → one worked example → payoff. Every visual is timed to enter when its sentence is spoken — checked sentence-by-sentence against the *final* rendered file (a per-sentence frame is pulled and inspected), so no visual runs ahead of its narration.
 
 ---
 
@@ -86,11 +86,13 @@ One self-contained HTML file, zero external dependencies, opens by double-click 
 | **Reads the code, not the marketing** | Where a doc and the code disagree, it trusts the code and notes the discrepancy. Every claim is anchored to a `file:line`. |
 | **True decision trees** | Branching logic is drawn as an actual tree with every fork and outcome — a linear "chain of boxes" is treated as a build failure, not an acceptable diagram. |
 | **Knows its audience** | Identifies who the explanation is for — engineers, product, leadership, or an external reader — and shifts depth, tone, section order, and video pace to fit. |
-| **Frame-accurate narration** | Visuals are synced to the spoken sentence and checked on the *final* rendered file, not on intermediates. |
+| **Shareable by anyone, exposes no one** | The person who requested it is the *director*, not the *subject*: your chat sets scope, but nothing about you leaks in. It re-voices "the part you didn't get" into "this covers X," drops irrelevant asides, and never reads raw IDs/URLs aloud — so a hundred people with the same need could each share the exact file, unedited. |
+| **Reads like a human made it, and learns** | An anti-slop critic runs throughout the build, not just at the end, keeping the output feeling like a crafted teaching piece rather than AI slop — and every flaw it finds is written to a per-project lessons file that's loaded first on the next rebuild, so mistakes are designed out up front. |
+| **Sentence-synced narration** | Visuals are timed to the spoken sentence and checked on the *final* rendered file, not on intermediates — a frame is pulled per sentence and inspected so nothing enters ahead of its narration. |
 | **Remembers your decisions** | Your course-corrections ("slow the intro", "cut that section") are written to a persistent decision log and honored across long sessions and full rebuilds — never silently reverted. |
 | **Won't melt your laptop** | The render pipeline sizes its own parallelism from real CPU + free RAM, backs off under load, and writes every frame to disk as it goes — a crash loses one frame, not the batch. |
 | **Honest about limits** | On a machine without video tooling it produces the page and says *exactly* what it skipped and how to unlock it. It never fakes a deliverable. |
-| **Verifies before it hands over** | Deterministic checks (tree-shape, fact-tracing, content bans, DOM render, visual density, layout/composition, narration sync, media integrity) run on every build. |
+| **Verifies before it hands over** | Deterministic gate scripts (tree-shape, fact-tracing, content bans, DOM render, visual density, layout/composition, narration sync, media integrity) run against each build, and a final verification manifest refuses to authorize any "Verified: …" claim word that isn't backed by a genuine pass. The scripts are advisory leads the agent re-checks — a gate whose input is absent skips honestly rather than faking a pass. |
 | **Reproducible** | Stamps the exact code snapshot into both deliverables and writes a rebuild guide, so anyone can tell which version was explained and regenerate it. |
 
 ---
@@ -133,18 +135,19 @@ It **never** fakes a deliverable, and it **never** writes "not supported here" i
 
 ## The verification gates
 
-Nothing ships past a red gate. These run as real scripts (`scripts/gates/`) and are advisory — findings are leads the agent re-checks against the code.
+Each of these is a bar the deliverable must genuinely clear before it's called done. They run as real scripts (`scripts/gates/`) and are **advisory** — a script finding is a lead the agent re-checks against the code, and a script is never a hard veto (a false-positive gate must not be able to block a correct deliverable). A gate whose input is absent **skips honestly**; it never reports a pass it didn't earn. The `verify_manifest` gate is the backstop: no "Verified" claim reaches you unless it's backed by a real pass.
 
 | Gate | Checks |
 |---|---|
 | `tree_shape` | flows are real decision trees, not linear chains; forks have ≥2 labeled exits; terminals cover all outcomes |
-| `facts_trace` | every claim/number resolves to a real `file:line` |
-| `content_ban` | no customer/case IDs, emails, person names, jargon handles, or capability-excuse text in the final payload |
+| `facts_trace` | every claim/number cites a `file:line` that resolves in the snapshot (reference resolvability — the agent still confirms each citation actually *supports* the claim) |
+| `content_ban` | no customer/case IDs, emails, person names, jargon handles, capability-excuse text, **requester-personal framing** ("since you already know…"), **read-aloud raw literals** (URLs/IDs a narrator shouldn't spell out), **audience role-play/greetings** ("welcome to the team"), **fabricated acronym expansions**, or **stale build/source meta** (version stamps, TODO/@author, license headers) — swept over the HTML *and* the narration script |
 | `dom_smoke` | headless render: all tabs present, marker counts match, zero external dependencies |
 | `visual_density` | both: runs on the *plan before rendering* (video storyboard / page plan) — every scene/section has a non-text primary visual, real motion (video) or interaction (page), every visual explains something (no decorative filler), no wall of generic boxes, full-frame use — so low-effort output is caught on paper, not after burning frames |
-| `layout_probe` | video: composition on real pixels — nothing overflows the frame or 5% safe area, no text-box collisions, type above the size floor |
+| `layout_probe` | video: geometry from the rendered DOM (`getBoundingClientRect`) — nothing overflows the frame or 5% safe area, no text-box collisions, type above the size floor. With `--shot` (wired automatically when captured frames exist, and where Pillow is installed) it also probes **real captured pixels**, not a self-described layout |
 | `beat_sync` | video: no visual enters ahead of its sentence; duration within tolerance; per-sentence frames extracted for inspection |
 | `media_probe` | video: resolution, fps, audio present, clean decode |
+| `verify_manifest` | both, LAST: reads `_build/verification.json` and refuses (1) any `pass` with no evidence, (2) any end-user "Verified: …" word not backed by a genuine pass, (3) any required gate silently missing/failed/untested — emitting the only claim string that's safe to show |
 
 Run them all against a build folder: `npx github:ompandey98/coordn8 gates path/to/Coordn8`
 
