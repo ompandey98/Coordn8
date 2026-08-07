@@ -59,7 +59,15 @@ COLUMN_ALIASES = {
     "where_covered": {"wherecovered", "where", "location", "coveredin",
                       "section", "scenesection", "anchor", "sectionscene"},
     "notes": {"notes", "note", "comment", "comments", "reason", "why"},
+    "source": {"source", "src", "origin", "from"},
 }
+
+# `source` values marking a requirement that came from the user's LIVE in-chat
+# brief (0.0) — the binding director's word that outranks memory. An uncovered
+# live-brief row is the exact failure 0.0 corrects (chat request ignored in
+# favor of the memory folder), so it gets escalated above an ordinary must-row.
+SOURCE_LIVE_BRIEF = {"livebrief", "live-brief", "chat", "userchat", "brief",
+                     "conversation", "user", "request"}
 
 # status values that count as "this requirement is genuinely handled"
 STATUS_COVERED = {"covered", "done", "complete", "completed", "yes", "y",
@@ -197,8 +205,12 @@ def evaluate(rows: list[dict]):
         status = classify_status(r.get("status", ""))
         importance = classify_importance(r.get("importance", ""))
         where = r.get("where_covered", "").strip()
+        is_live_brief = _norm(r.get("source", "")) in {_norm(x)
+                                                        for x in SOURCE_LIVE_BRIEF}
 
         stats[status] = stats.get(status, 0) + 1
+        if is_live_brief:
+            stats["live_brief"] = stats.get("live_brief", 0) + 1
 
         # a covered row must point somewhere — an anchorless "covered" is the
         # exact confident-but-empty claim 0.4b rule 5 warns about.
@@ -212,9 +224,26 @@ def evaluate(rows: list[dict]):
                        "claim that points to no section/scene is unverifiable",
             })
 
+        # A live-brief row is by definition a binding must (0.0). If one is not
+        # covered, that's the headline failure — the user's in-chat request went
+        # unbuilt — so flag it distinctly and loudly, regardless of how its
+        # importance column happened to be filled in.
+        if is_live_brief and status in ("open", "partial"):
+            stats["in_scope_uncovered"] = stats.get("in_scope_uncovered", 0) + 1
+            findings.append({
+                "id": rid, "kind": "live_brief_uncovered",
+                "importance": "must", "status": status, "in_scope": in_scope,
+                "requirement": req[:120],
+                "why": f"this came from the user's LIVE in-chat brief (0.0) and is "
+                       f"'{status}', not 'covered' — the director's explicit "
+                       f"request must be built; 'it's in memory' or 'I focused on "
+                       f"other things' is NOT an acceptable reason to skip it. "
+                       f"Blocks done until covered or the user explicitly defers.",
+            })
+
         if in_scope and importance in ("must", "should"):
             stats["in_scope_must_should"] += 1
-            if status in ("open", "partial"):
+            if status in ("open", "partial") and not is_live_brief:
                 stats["in_scope_uncovered"] += 1
                 findings.append({
                     "id": rid, "kind": "in_scope_uncovered",
@@ -225,10 +254,23 @@ def evaluate(rows: list[dict]):
                            f"user explicitly defers it (logged in decisions.md)",
                 })
 
-        # surface deferrals/out-of-scope as FYI so nothing hides there silently
+        # surface deferrals/out-of-scope as FYI so nothing hides there silently.
+        # A DEFERRED/OUT live-brief row is especially suspect — the live brief
+        # can only be set aside by an explicit user instruction, never by the
+        # engine deciding memory mattered more.
         if status in ("deferred", "out") and in_scope:
             note = r.get("notes", "").strip()
-            if not note:
+            if is_live_brief:
+                findings.append({
+                    "id": rid, "kind": "live_brief_deferred",
+                    "status": status, "requirement": req[:120],
+                    "why": f"a LIVE-BRIEF requirement (0.0) is marked '{status}' — "
+                           f"only a logged, explicit user decision in decisions.md "
+                           f"can defer/descope what the user asked for in the chat. "
+                           f"Confirm that decision exists; otherwise this must be "
+                           f"built." + ("" if note else " (no reason in notes.)"),
+                })
+            elif not note:
                 findings.append({
                     "id": rid, "kind": "deferral_without_reason",
                     "status": status, "requirement": req[:120],
@@ -270,7 +312,11 @@ def main() -> int:
         return EXIT_ERROR
 
     findings, stats = evaluate(rows)
-    blocking = [f for f in findings if f["kind"] == "in_scope_uncovered"]
+    blocking = [f for f in findings
+                if f["kind"] in ("in_scope_uncovered", "live_brief_uncovered")]
+    live_brief_gaps = [f for f in findings
+                       if f["kind"] in ("live_brief_uncovered",
+                                        "live_brief_deferred")]
 
     emit({
         "gate": "content_coverage",
@@ -279,10 +325,14 @@ def main() -> int:
         "columns_found": list(cols),
         "stats": stats,
         "blocking_in_scope_gaps": len(blocking),
+        "live_brief_gaps": len(live_brief_gaps),
         "findings": findings[:200],
         "truncated": len(findings) > 200,
         "summary": (
-            f"{stats['in_scope_uncovered']} in-scope must/should requirement(s) "
+            (f"⚠ {len(live_brief_gaps)} LIVE-BRIEF requirement(s) not covered — "
+             f"the user's in-chat request is unbuilt (0.0); fix first. "
+             if live_brief_gaps else "")
+            + f"{stats['in_scope_uncovered']} in-scope must/should requirement(s) "
             f"NOT covered, {stats['covered_no_anchor']} covered-without-anchor, "
             f"across {stats['total']} ledger rows — review each"
             if findings else

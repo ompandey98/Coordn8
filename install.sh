@@ -31,11 +31,22 @@ regen() {
 }
 
 install_claude() {
+  # SPLIT LAYOUT (see generate_adapters.py::gen_claude_code): the SKILL.md /
+  # command file are slim entry points, and the actual brain lives in the
+  # skill's sibling PLAYBOOK.md that the loader reads on its first action.
+  # This keeps the entry-point files small enough for the interactive TUI to
+  # surface them reliably, while the brain stays byte-identical. We only ship
+  # ONE brain copy — under the skill dir — because Claude Code turns every
+  # `.md` in `commands/` into a slash command, and a stray `/coordn8-brain`
+  # would pollute the slash menu. `/coordn8` reads the skill-scope brain path
+  # directly.
   local dst="${CLAUDE_HOME:-$HOME/.claude}"
   mkdir -p "$dst/skills/coordn8" "$dst/commands"
-  cp "$ADAPTERS/claude-code/SKILL.md" "$dst/skills/coordn8/SKILL.md"
+  cp "$ADAPTERS/claude-code/SKILL.md"            "$dst/skills/coordn8/SKILL.md"
+  cp "$ADAPTERS/claude-code/PLAYBOOK.md"         "$dst/skills/coordn8/PLAYBOOK.md"
   cp "$ADAPTERS/claude-code/commands/coordn8.md" "$dst/commands/coordn8.md"
-  say "Claude Code: skill -> $dst/skills/coordn8/  |  command -> /coordn8"
+  say "Claude Code: skill -> $dst/skills/coordn8/ (SKILL.md + PLAYBOOK.md)"
+  say "Claude Code: command -> $dst/commands/coordn8.md (invoke /coordn8)"
 }
 
 install_cursor() {
@@ -66,6 +77,10 @@ uninstall_all() {
   local claude_home="${CLAUDE_HOME:-$HOME/.claude}"
   rm -rf "$claude_home/skills/coordn8"
   rm -f "$claude_home/commands/coordn8.md"
+  # Older Coordn8 layouts (pre-2026-08) shipped a sibling `coordn8-brain.md`
+  # under `commands/`. Remove it if present so an upgrade doesn't leave a
+  # stray `/coordn8-brain` slash command floating around.
+  rm -f "$claude_home/commands/coordn8-brain.md"
   rm -f "$PWD/.cursor/rules/coordn8.mdc"
   rm -f "$PWD/.kiro/steering/coordn8.md"
   rm -f "$PWD/COORDN8_PROMPT.md"

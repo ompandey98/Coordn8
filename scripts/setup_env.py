@@ -154,6 +154,18 @@ def has_visual_libs() -> bool:
         return False
 
 
+def has_icons() -> bool:
+    """True if an open-licensed icon set is vendored locally (offline-ready)."""
+    manifest = Path("_build/vendor/icons/icons_manifest.json")
+    if not manifest.exists():
+        return False
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        return bool(data.get("vendored"))
+    except Exception:  # noqa: BLE001
+        return False
+
+
 # --- package-manager discovery ---------------------------------------------
 
 def os_pkg_manager() -> tuple[str | None, list[str]]:
@@ -355,7 +367,32 @@ def ensure_visual_libs(dry: bool) -> dict:
                     "plain HTML/CSS/Canvas until fetched; base video unaffected."}
 
 
-TARGETS = ("ffmpeg", "chrome", "tts", "pillow", "numpy", "manim", "visual_libs")
+def ensure_icons(dry: bool) -> dict:
+    if has_icons():
+        return {"tool": "icons", "status": "already-present", "verified": True,
+                "kind": "enhancement"}
+    fetch = Path(__file__).resolve().parent / "render" / "fetch_icons.py"
+    if dry:
+        return {"tool": "icons", "status": "would-install", "kind": "enhancement",
+                "plan": f"python3 {fetch.name} (vendor open-licensed Lucide/Tabler "
+                        f"icon sets into _build/vendor/icons)"}
+    if not fetch.exists():
+        return {"tool": "icons", "status": "cannot-install", "verified": False,
+                "kind": "enhancement", "reason": f"{fetch} missing"}
+    log("vendoring open-licensed icon library (Lucide/Tabler) …")
+    code, out = run([sys.executable, str(fetch)])
+    verified = has_icons()
+    return {"tool": "icons", "kind": "enhancement",
+            "status": "installed" if verified else "install-failed",
+            "verified": verified, "via": "fetch_icons.py",
+            "detail": None if verified else out,
+            "note": None if verified else
+                    "Could not vendor icons (likely no network). Scenes/pages use "
+                    "drawn shapes/vendored JS until fetched; base video unaffected."}
+
+
+TARGETS = ("ffmpeg", "chrome", "tts", "pillow", "numpy", "manim",
+           "visual_libs", "icons")
 
 
 def main() -> int:
@@ -383,6 +420,8 @@ def main() -> int:
         results.append(ensure_manim(dry))
     if "visual_libs" in want:
         results.append(ensure_visual_libs(dry))
+    if "icons" in want:
+        results.append(ensure_icons(dry))
 
     # Post-setup capability truth (re-probed, not assumed).
     caps = {
@@ -393,6 +432,7 @@ def main() -> int:
         # Enhancements (better visuals; NOT required for a base video):
         "manim": has_manim(),
         "visual_libs": has_visual_libs(),
+        "icons": has_icons(),
     }
     video_ready = caps["ffmpeg"] and caps["chrome"] and caps["tts"]
 
@@ -414,6 +454,9 @@ def main() -> int:
     if not caps["visual_libs"]:
         enhancements_missing.append(
             "vendored JS libs GSAP/D3/Rough/anime (crafted motion & graphs)")
+    if not caps["icons"]:
+        enhancements_missing.append(
+            "vendored icon library Lucide/Tabler (crisp inline-SVG icons)")
 
     summary = {
         "gate": "setup_env",

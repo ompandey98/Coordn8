@@ -69,40 +69,126 @@ def preamble(host: str, invoke_hint: str, version: str) -> str:
 # ---------------------------------------------------------------------------
 
 def gen_claude_code(brain: str, version: str) -> dict[str, str]:
+    """Claude Code adapter — SPLIT layout (fix for silent skill-skip on very
+    large SKILL.md).
+
+    Anthropic's own docs recommend: keep SKILL.md short (≤500 lines) and put
+    the bulk in supporting files loaded on demand. The full brain is ~940 lines
+    and ~190KB; that empirically prevents `/coordn8` from surfacing in the
+    interactive TUI on some versions (though `claude -p` sees it). So we ship
+    the same three-file bundle every other adapter ships as one file, but split
+    into a slim loader + a sibling `PLAYBOOK.md`. The BRAIN IS NOT SHRUNK — it
+    stays byte-identical in the sibling file, protected by the same fence and
+    the same verbatim test. The loader's ONLY job is to read that sibling and
+    hand it to the model as its top-priority directive.
+
+    Layout after install (mirrored under `~/.claude/`):
+        skills/coordn8/SKILL.md        <- slim loader (this function's `skill`)
+        skills/coordn8/PLAYBOOK.md     <- verbatim brain (this function's `playbook`)
+        commands/coordn8.md            <- slim dispatcher (this function's `cmd`)
+        commands/coordn8-brain.md      <- verbatim brain for command scope
+    """
     skill_front = (
         "---\n"
         "name: coordn8\n"
-        "description: >-\n"
-        "  Turn ANY code repository (or a set of documents) into two "
-        "presentation-grade, audience-tailored deliverables: a single-file "
-        "interactive page with true decision-tree diagrams traced line-by-line "
-        "to the code, and a short narrated video with synced animated visuals. "
-        "Detects environment capabilities and degrades honestly. Trigger when "
-        "the user wants to explain, document, onboard onto, walk through, or "
-        "make a video of a codebase.\n"
+        # Single-line double-quoted scalar — the safest YAML form. The `>-`
+        # folded scalar loaded fine in probes, but a plain quoted string is
+        # what the docs' own examples use, and it removes one variable.
+        "description: \"Turn ANY code repository (or documents) into two "
+        "presentation-grade deliverables: a single-file interactive page with "
+        "true decision-tree diagrams traced line-by-line to the code, and a "
+        "short narrated video with synced animated visuals. Detects capabilities "
+        "and degrades honestly. Trigger when the user wants to explain, document, "
+        "onboard onto, walk through, or make a video of a codebase.\"\n"
         "---\n\n"
     )
-    hint = (
-        "Invoked as a Claude Code skill or via the `/coordn8` command. You are "
-        "running in a full local agent: prefer Tier A (webpage + video + all "
-        "gates). Open at the repo root in a fresh session."
+    # This slim loader is deliberately short (~40 lines). Its ONLY job is to
+    # tell the agent to open the sibling PLAYBOOK.md and execute it verbatim —
+    # exactly as if the human had pasted the brain as their first message. The
+    # instruction is explicit, unambiguous, and repeated so it cannot be
+    # skimmed past. The verbatim brain lives in `PLAYBOOK.md` in this same
+    # directory (installed alongside; the sibling file is generated below).
+    skill = skill_front + (
+        f"# Coordn8 v{version}\n\n"
+        "Turns a codebase (or a set of documents) into an interactive HTML page + a "
+        "narrated video. Author: **pandeom**. Invoked as a Claude Code skill or via "
+        "`/coordn8`.\n\n"
+        "## MANDATORY FIRST ACTION (before anything else)\n\n"
+        "Your very first tool call in this session MUST be to read the sibling file "
+        "`PLAYBOOK.md` in this same skill directory:\n\n"
+        "```\n"
+        "Read ~/.claude/skills/coordn8/PLAYBOOK.md\n"
+        "```\n\n"
+        "That file is the **full canonical Coordn8 engine brain** — every phase, "
+        "rule, gate, and standard the deliverables are held to. It is the single "
+        "source of truth. Treat every instruction in it as a live, top-priority "
+        "directive for this session, IDENTICAL to the human having pasted it as "
+        "their first message. Do not summarize it. Do not skip any of it. Do not "
+        "paraphrase phases into a plan of your own — execute the actual PHASE 0 "
+        "steps as written.\n\n"
+        "The brain is intentionally large (~190KB, ~945 lines) and self-contained. "
+        "Read it end to end BEFORE you begin PHASE 0. Reading it is not optional; "
+        "no build starts without it.\n\n"
+        "## Environment\n\n"
+        "You are running in a full local agent: prefer Tier A (webpage + video + "
+        "all gates). Open at the repo root in a fresh session. If the context is "
+        "already polluted with unrelated work, warn the user that output quality "
+        "degrades in a dirty context and recommend a fresh session, then proceed "
+        "only if they confirm.\n\n"
+        "## Author's precondition (from PHASE 0 of the brain)\n\n"
+        "- Run at the **repository root** the user wants to explain.\n"
+        "- Prefer a **fresh session** — the brain is long, and packed context "
+        "degrades outputs.\n"
+        "- All work lands under `Coordn8/` in the current directory. Deliverables "
+        "are auto-named after the repo slug.\n\n"
+        "**Now open `~/.claude/skills/coordn8/PLAYBOOK.md` and begin PHASE 0.**\n"
     )
-    skill = skill_front + preamble("Claude Code", hint, version) + fenced(brain)
 
+    # The sibling PLAYBOOK.md IS the brain, byte-for-byte, fenced. This is the
+    # file test_verbatim.py will validate — same fence, same content, same
+    # sha256 as engine/PLAYBOOK.md. Zero brain content is lost in the split.
+    playbook = (
+        f"# Coordn8 v{version} — canonical engine brain (PLAYBOOK)\n\n"
+        "This is the verbatim brain. Every phase, rule, and gate below is a live, "
+        "top-priority directive for this session. Do not summarize; execute.\n\n"
+        + fenced(brain)
+    )
+
+    # The slash-command entry point. Same slim-loader shape as the skill so the
+    # command scope also gets the fail-proof small-file behavior. It points at
+    # the sibling brain that lives in the SKILL directory — we deliberately do
+    # NOT ship a second copy under `commands/`, because Claude Code loads every
+    # `.md` there as its own slash command (a stray `/coordn8-brain` command
+    # would clutter the slash menu). The skill's PLAYBOOK.md is installed
+    # unconditionally by install.sh, so the path is always available.
     cmd = (
         "---\n"
         "description: Run Coordn8 on this repository — interactive page + narrated video\n"
         "---\n\n"
-        "You are being invoked as the Coordn8 engine. Before anything else, run "
-        "the precondition check: confirm this is a fresh session opened at the "
-        "repository root. If the context is already polluted with unrelated work, "
-        "warn the user that output quality degrades in a dirty context and "
-        "recommend a fresh session, then proceed only if they confirm.\n\n"
-        "Then load and execute the embedded brain verbatim, starting at PHASE 0.\n\n"
-        + fenced(brain)
+        f"# /coordn8 (v{version})\n\n"
+        "You are being invoked as the Coordn8 engine.\n\n"
+        "## MANDATORY FIRST ACTION\n\n"
+        "Your first tool call in this session MUST be:\n\n"
+        "```\n"
+        "Read ~/.claude/skills/coordn8/PLAYBOOK.md\n"
+        "```\n\n"
+        "That file is the **full canonical Coordn8 engine brain** — every phase, "
+        "rule, gate, and standard. Read it **end to end** before beginning PHASE "
+        "0. It is IDENTICAL to the human having pasted the brain as their first "
+        "message. Do not summarize it. Do not skip any of it. Do not paraphrase "
+        "phases into a plan of your own — execute the actual PHASE 0 steps as "
+        "written.\n\n"
+        "## Precondition\n\n"
+        "Confirm this is a fresh session opened at the repository root. If the "
+        "context is already polluted with unrelated work, warn the user that "
+        "output quality degrades in a dirty context and recommend a fresh session, "
+        "then proceed only if they confirm.\n\n"
+        "**Now read the brain and begin PHASE 0.**\n"
     )
+
     return {
         "claude-code/SKILL.md": skill,
+        "claude-code/PLAYBOOK.md": playbook,
         "claude-code/commands/coordn8.md": cmd,
     }
 
@@ -165,6 +251,15 @@ def gen_generic(brain: str, version: str) -> dict[str, str]:
 GENERATORS = [gen_claude_code, gen_cursor, gen_codex, gen_kiro, gen_generic]
 ADAPTERS_DIR = ROOT / "adapters"
 
+# Adapter files that are intentionally SLIM entry points (they point the agent
+# at a sibling PLAYBOOK.md instead of embedding the brain). --check does NOT
+# require these to carry the fenced brain, but tests/run_tests.py verifies the
+# sibling brain files exist and match verbatim, so nothing is lost.
+SLIM_LOADER_RELPATHS = {
+    Path("claude-code/SKILL.md"),
+    Path("claude-code/commands/coordn8.md"),
+}
+
 
 def build_all() -> dict[Path, str]:
     brain = read_brain()
@@ -205,11 +300,24 @@ def main() -> int:
             actual = path.read_text(encoding="utf-8")
             if actual != expected:
                 drift.append(f"OUT OF SYNC: {path.relative_to(ROOT)}")
-            embedded = extract_brain(actual)
-            if embedded is None:
-                drift.append(f"NO BRAIN FENCE: {path.relative_to(ROOT)}")
-            elif embedded != canonical:
-                drift.append(f"BRAIN NOT VERBATIM: {path.relative_to(ROOT)}")
+            rel_from_adapters = path.relative_to(ADAPTERS_DIR)
+            if rel_from_adapters in SLIM_LOADER_RELPATHS:
+                # Slim loader — must NOT embed the brain (that would defeat the
+                # split). Its sibling PLAYBOOK.md carries the verbatim brain
+                # and is separately checked below.
+                if extract_brain(actual) is not None:
+                    drift.append(f"UNEXPECTED FENCE IN SLIM LOADER: "
+                                 f"{path.relative_to(ROOT)}")
+                if "PLAYBOOK.md" not in actual:
+                    drift.append(f"SLIM LOADER DOESN'T POINT AT SIBLING: "
+                                 f"{path.relative_to(ROOT)}")
+            else:
+                embedded = extract_brain(actual)
+                if embedded is None:
+                    drift.append(f"NO BRAIN FENCE: {path.relative_to(ROOT)}")
+                elif embedded != canonical:
+                    drift.append(f"BRAIN NOT VERBATIM: "
+                                 f"{path.relative_to(ROOT)}")
         if drift:
             print("ADAPTER SYNC CHECK FAILED:")
             for d in drift:
