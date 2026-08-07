@@ -44,74 +44,25 @@ def run(script: str, args: list[str]):
 
 # ---------------------------------------------------------------------------
 def test_verbatim():
-    """Every FENCED adapter file must contain the brain byte-for-byte, AND the
-    Claude Code slim loader must point the model at the sibling brain in an
-    unambiguous, unmissable way. Files that carry the brain fence go through
-    the byte-equality check; files that are intentionally slim (SKILL.md and
-    commands/coordn8.md, which fix the interactive-TUI load failure by keeping
-    the entry-point file small) go through a *structural* check that guarantees
-    they do not water down the brain — they only defer reading it."""
+    """Every generated adapter — INCLUDING the Claude Code SKILL.md and
+    command file — embeds the full brain byte-for-byte. No slim/pointer
+    loaders: a file that says "go read another file" is inferior to the raw
+    prompt, which the prime directive forbids."""
     print("\n[verbatim: adapters embed the brain byte-for-byte]")
     brain = (ROOT / "engine" / "PLAYBOOK.md").read_text(encoding="utf-8")
     sys.path.insert(0, str(ROOT / "build"))
     import generate_adapters as ga  # noqa
 
     planned = ga.build_all()
-
-    # Slim loaders — intentionally do NOT embed the brain. Their contract is to
-    # send the agent to the sibling brain and refuse to start without reading
-    # it. If a slim loader ever silently loses that instruction, this test
-    # catches it — that would be an "inferior to raw prompt" regression.
-    slim_relpaths = {
-        "adapters/claude-code/SKILL.md",
-        "adapters/claude-code/commands/coordn8.md",
-    }
-
     for path, contents in planned.items():
+        embedded = ga.extract_brain(contents)
         rel = path.relative_to(ROOT)
-        rel_str = str(rel)
-        if rel_str in slim_relpaths:
-            # Slim loader: must NOT carry the fenced brain (that would defeat
-            # the purpose of splitting), MUST tell the agent to open the
-            # sibling PLAYBOOK.md, and MUST call reading it mandatory.
-            check(f"{rel} is slim (no embedded fence)",
-                  ga.extract_brain(contents) is None,
-                  "slim loader unexpectedly embedded the fenced brain")
-            check(f"{rel} references sibling PLAYBOOK.md",
-                  "PLAYBOOK.md" in contents,
-                  "slim loader does not point at the sibling brain")
-            check(f"{rel} marks reading it as mandatory / first-action",
-                  ("MANDATORY" in contents or "mandatory" in contents)
-                  and "PHASE 0" in contents,
-                  "slim loader doesn't force the read + PHASE 0 sequence")
-            check(f"{rel} forbids summarizing / skipping",
-                  ("do not summarize" in contents.lower()
-                   or "no summariz" in contents.lower())
-                  and ("skip" in contents.lower()),
-                  "slim loader is silent on the no-summarize / no-skip rule")
-        else:
-            # Any other planned file carries the full brain, fenced, verbatim.
-            embedded = ga.extract_brain(contents)
-            check(f"{rel} embeds brain verbatim",
-                  embedded == brain,
-                  "embedded brain differs from PLAYBOOK.md")
+        check(f"{rel} embeds brain verbatim",
+              embedded == brain,
+              "embedded brain differs from PLAYBOOK.md")
         check(f"{rel} exists on disk and matches generator",
               path.exists() and path.read_text(encoding="utf-8") == contents,
               "on-disk adapter is stale — run generate_adapters.py")
-
-    # Structural check for the split: the split MUST produce a sibling
-    # PLAYBOOK.md next to SKILL.md, containing the brain byte-for-byte. This is
-    # the "no shrinking allowed" backstop.
-    claude_playbook = ROOT / "adapters" / "claude-code" / "PLAYBOOK.md"
-    check("adapters/claude-code/PLAYBOOK.md exists (skill scope brain)",
-          claude_playbook.exists(),
-          "sibling brain file missing — the slim skill loader would have "
-          "nothing to open")
-    if claude_playbook.exists():
-        embedded = ga.extract_brain(claude_playbook.read_text(encoding="utf-8"))
-        check("skill-scope sibling PLAYBOOK.md brain is byte-identical",
-              embedded == brain,
-              "skill-scope PLAYBOOK.md brain drifted from engine/PLAYBOOK.md")
 
     r = run("build/generate_adapters.py", ["--check"])
     check("generator --check passes", r.returncode == 0,

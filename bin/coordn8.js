@@ -40,35 +40,74 @@ function runPy(rel, args) {
   process.exit(r.status == null ? 1 : r.status);
 }
 
-function runSh(args) {
+// Run install.sh WITHOUT exiting the process, so callers can do follow-up work
+// (e.g. print a next-steps note) and decide the exit code themselves. Returns
+// the child's numeric status (1 if it couldn't be spawned at all).
+function runShStatus(args) {
   const r = spawnSync('bash', [path.join(ROOT, 'install.sh'), ...args], {
     stdio: 'inherit',
   });
-  process.exit(r.status == null ? 1 : r.status);
+  if (r.error) {
+    if (r.error.code === 'ENOENT') {
+      console.error('[coordn8] could not find `bash` on PATH — it is required to run the installer.\n'
+        + '          On Windows, run this from Git Bash or WSL.');
+    } else {
+      console.error('[coordn8] installer failed to start: ' + r.error.message);
+    }
+    return 1;
+  }
+  return r.status == null ? 1 : r.status;
 }
 
-// `update`: the fix for "it keeps running an old version". When Coordn8 is
-// launched via `npx github:ompandey98/coordn8`, npx caches the cloned repo and
-// will happily keep serving a STALE copy — so a plain re-run never picks up new
-// commits. This clears that cache (non-interactively) so the NEXT `npx …` call
-// re-fetches the latest, then reinstalls the adapters from whatever brain is
-// present locally right now. Never prompts; safe to run unattended.
-function runUpdate(args) {
-  const spec = 'github:ompandey98/coordn8';
-  // 1) Best-effort clear of the npx / npm exec cache so the next npx re-clones.
-  //    `npm cache clean --force` is non-interactive and safe (cache is disposable).
+function runSh(args) {
+  process.exit(runShStatus(args));
+}
+
+const NPX_SPEC = 'github:ompandey98/coordn8';
+
+// Best-effort clear of the npx / npm exec cache so the NEXT `npx github:…` call
+// re-clones the repo instead of serving a stale cached copy. This is the fix for
+// "it keeps running an old version". `npm cache clean --force` is non-interactive
+// and safe — the cache is fully disposable. Never throws; returns true on success.
+function clearNpxCache() {
   const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  const clean = spawnSync(npm, ['cache', 'clean', '--force'], { stdio: 'inherit' });
-  if (clean.status !== 0) {
+  const clean = spawnSync(npm, ['cache', 'clean', '--force'], { stdio: 'ignore' });
+  if (clean.error || clean.status !== 0) {
     console.error('[coordn8] note: could not clear the npm cache automatically. '
-      + `If you still see an old version, run:  npx --yes ${spec}@latest version`);
-  } else {
-    console.log('[coordn8] cleared the npx/npm cache — the next `npx ' + spec
-      + '` will fetch the latest.');
+      + `If a later run still shows an old version, run:  npx --yes ${NPX_SPEC}@latest version`);
+    return false;
   }
-  // 2) Reinstall adapters from the brain in THIS checkout (regen happens in install.sh).
-  console.log('[coordn8] reinstalling adapters from the current brain …');
-  runSh(args.length ? args : ['all']);  // runSh exits the process
+  return true;
+}
+
+// A short, consistent "what to do next" reminder printed after every successful
+// install/update. The #1 support issue is a stale window not showing /coordn8 —
+// so we always say it out loud.
+function printNextSteps() {
+  console.log('\n[coordn8] ✅ installed/updated to v' + VERSION + '.');
+  console.log('[coordn8] IMPORTANT: open a NEW session (Claude Code reads its command list at start) —');
+  console.log('[coordn8] a window that was already open won\'t show /coordn8 until you restart it.');
+  console.log('[coordn8] Then, at your repo root, invoke:  /coordn8');
+}
+
+// `init`: install (and always OVERWRITE) the adapter(s). It also clears the npx
+// cache up-front so this exact command, run again later, re-fetches the latest
+// from GitHub and overrides the current install — i.e. it auto-updates every
+// time with no extra flags. Errors are handled and reported, not dumped as a
+// stack trace, and never abort silently.
+function runInit(args) {
+  clearNpxCache();  // best-effort; keeps future `npx …` runs fresh
+  const status = runShStatus(args.length ? args : ['all']);
+  if (status === 0) printNextSteps();
+  else console.error('[coordn8] install did not complete cleanly (exit ' + status + '). See messages above.');
+  process.exit(status);
+}
+
+// `update`/`upgrade`: same as init today (init already clears the cache and
+// overwrites). Kept as a distinct verb for muscle memory / discoverability.
+function runUpdate(args) {
+  console.log('[coordn8] forcing a refresh to the latest and reinstalling …');
+  runInit(args);  // runInit exits the process
 }
 
 function printBrain() {
@@ -78,9 +117,9 @@ function printBrain() {
 function help() {
   console.log(`Coordn8 v${VERSION} — codebase to interactive page + narrated video (author: pandeom)
 
-Usage (no clone needed — runs straight from GitHub):
-  npx github:ompandey98/coordn8 init [target]   Install: claude|cursor|codex|kiro|generic|all
-  npx github:ompandey98/coordn8 update [target] Force-refresh to the latest (clears the npx cache) + reinstall
+Usage (no clone needed — runs straight from GitHub; add -y so npx never prompts):
+  npx -y github:ompandey98/coordn8 init [target]   Install (always overwrites w/ latest): claude|cursor|codex|kiro|generic|all
+  npx -y github:ompandey98/coordn8 update [target] Force-refresh to the latest (clears the npx cache) + reinstall
   npx github:ompandey98/coordn8 uninstall       Remove installed adapters
   npx github:ompandey98/coordn8 print           Print the raw engine brain (paste into any agent)
   npx github:ompandey98/coordn8 setup           Auto-install missing tools (ffmpeg/chromium/TTS) to unlock the video — sudo-free where possible
@@ -93,9 +132,10 @@ Then open a FRESH session at your repo root and invoke Coordn8.`);
 }
 
 const [cmd, ...rest] = process.argv.slice(2);
+try {
 switch (cmd) {
   case 'init':
-    runSh(rest.length ? rest : ['all']);
+    runInit(rest);
     break;
   case 'update':
   case 'upgrade':
@@ -134,4 +174,9 @@ switch (cmd) {
     console.error(`[coordn8] unknown command: ${cmd}\n`);
     help();
     process.exit(1);
+}
+} catch (err) {
+  // Never dump a raw stack trace at the user — report cleanly and exit non-zero.
+  console.error('[coordn8] error: ' + (err && err.message ? err.message : String(err)));
+  process.exit(1);
 }

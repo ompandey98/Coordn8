@@ -31,22 +31,26 @@ It reads the whole repository, finds the *real* decision logic, and hands you so
 **One command. No clone, no setup, no npm account.** It downloads Coordn8 straight from GitHub and installs it into every tool you have:
 
 ```bash
-npx github:ompandey98/coordn8 init all
+npx -y github:ompandey98/coordn8 init all
 ```
 
-That's the whole install. It drops the right adapter into each tool's config **on your machine** (`~/.claude`, `./.cursor`, `./AGENTS.md`, …) — nothing is hardcoded to any author's path. Requires Node.js (ships with npm), which you almost certainly have if you use these tools.
+The `-y` answers npx's own **"Ok to proceed?"** download confirmation automatically, so the command runs start-to-finish without stopping to ask you anything. (Leave it off and npx will ask you to confirm the download the first time — both work; `-y` is just hands-free.)
 
-The install is **fully non-interactive** — it never stops to ask a question, so it works unattended in CI, cloud shells, and piped one-liners (no more "it hung waiting for input" in some sessions). Package-manager and pip prompts are auto-answered; a headless run just installs everything.
+That's the whole install. It always **overwrites any previous install with the latest brain**, drops the right adapter into each tool's config **on your machine** (`~/.claude`, `./.cursor`, `./AGENTS.md`, …) — nothing is hardcoded to any author's path — and cleans up files left behind by older versions. Requires Node.js (ships with npm), which you almost certainly have if you use these tools.
+
+The install is **fully non-interactive** — it never stops to ask a question, so it works unattended in CI, cloud shells, and piped one-liners. Package-manager and pip prompts are auto-answered; a headless run just installs everything.
+
+> **⚠️ After installing, open a NEW Claude Code session.** Claude Code reads its skill/command list once, at session start. If you install (or re-install) while a session is already open, `/coordn8` won't appear **in that window** until you start a fresh session (quit and reopen, or open a new one). This is the #1 reason `/coordn8` "isn't showing up" — the files are already installed; the open window just hasn't re-read them yet. (And it's `/coordn8`, not `/coordinate`.)
 
 Want just one tool? Swap `all` for `claude`, `cursor`, `codex`, `kiro`, or `generic`. To upgrade to the latest, or remove it later:
 
 ```bash
-npx github:ompandey98/coordn8 init claude    # install one tool
-npx github:ompandey98/coordn8 update         # force-refresh to the latest (clears the npx cache) + reinstall
-npx github:ompandey98/coordn8 uninstall      # remove it again
+npx -y github:ompandey98/coordn8 init claude    # install one tool (always overwrites with the latest)
+npx -y github:ompandey98/coordn8 update         # force-refresh to the latest (clears the npx cache) + reinstall
+npx -y github:ompandey98/coordn8 uninstall      # remove it again
 ```
 
-> **`update` fixes stale versions.** Because `npx github:…` caches the cloned repo, a plain re-run can keep serving an old copy — so new fixes don't appear. `update` clears that cache and reinstalls, so the *next* run fetches the latest. Run it whenever an "auto-update" seems stuck.
+> **`update` / re-`init` fixes stale versions.** Because `npx github:…` caches the cloned repo, a plain re-run can keep serving an old copy — so new fixes don't appear. Both `update` and `init` clear that cache first, so the *next* fetch pulls the latest and force-overwrites the current install. Run either whenever an "auto-update" seems stuck.
 
 <details>
 <summary><b>No Node?</b> Clone-and-install fallback</summary>
@@ -65,7 +69,7 @@ Then **open a fresh session at the root of the repo you want explained** and inv
 | **Cursor** | `@coordn8` |
 | **Codex / any AGENTS.md CLI** | it's picked up automatically from `AGENTS.md` |
 | **Kiro** | include the `coordn8` steering doc |
-| **Anything else** | `npx github:ompandey98/coordn8 print` → paste the output as your first message |
+| **Anything else** | `npx -y github:ompandey98/coordn8 print` → paste the output as your first message |
 
 Coordn8 reads everything, detects your environment, then comes back with numbered questions + a build plan — including which deliverable(s) it will produce (**default: the video only**; say "page too", "both", or "page only" to change it). Approve it, and it builds + verifies the in-scope deliverable(s) into a `Coordn8/` folder in the current path — auto-named after the project (`<project>.mp4`, and `<project>.html` when the page is in scope). You name nothing.
 

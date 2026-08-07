@@ -31,22 +31,17 @@ regen() {
 }
 
 install_claude() {
-  # SPLIT LAYOUT (see generate_adapters.py::gen_claude_code): the SKILL.md /
-  # command file are slim entry points, and the actual brain lives in the
-  # skill's sibling PLAYBOOK.md that the loader reads on its first action.
-  # This keeps the entry-point files small enough for the interactive TUI to
-  # surface them reliably, while the brain stays byte-identical. We only ship
-  # ONE brain copy — under the skill dir — because Claude Code turns every
-  # `.md` in `commands/` into a slash command, and a stray `/coordn8-brain`
-  # would pollute the slash menu. `/coordn8` reads the skill-scope brain path
-  # directly.
+  # MONOLITHIC install: the full brain is embedded directly in SKILL.md and the
+  # /coordn8 command file (never a slim pointer — that would be inferior to the
+  # raw prompt). We also delete any leftovers from the short-lived split layout
+  # (a sibling PLAYBOOK.md / coordn8-brain.md) so an upgrade never leaves a
+  # stale, half-working install behind.
   local dst="${CLAUDE_HOME:-$HOME/.claude}"
   mkdir -p "$dst/skills/coordn8" "$dst/commands"
+  rm -f "$dst/skills/coordn8/PLAYBOOK.md" "$dst/commands/coordn8-brain.md"
   cp "$ADAPTERS/claude-code/SKILL.md"            "$dst/skills/coordn8/SKILL.md"
-  cp "$ADAPTERS/claude-code/PLAYBOOK.md"         "$dst/skills/coordn8/PLAYBOOK.md"
   cp "$ADAPTERS/claude-code/commands/coordn8.md" "$dst/commands/coordn8.md"
-  say "Claude Code: skill -> $dst/skills/coordn8/ (SKILL.md + PLAYBOOK.md)"
-  say "Claude Code: command -> $dst/commands/coordn8.md (invoke /coordn8)"
+  say "Claude Code: skill -> $dst/skills/coordn8/  |  command -> /coordn8"
 }
 
 install_cursor() {
