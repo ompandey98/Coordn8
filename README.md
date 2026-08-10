@@ -36,21 +36,21 @@ npx -y github:ompandey98/coordn8 init all
 
 The `-y` answers npx's own **"Ok to proceed?"** download confirmation automatically, so the command runs start-to-finish without stopping to ask you anything. (Leave it off and npx will ask you to confirm the download the first time — both work; `-y` is just hands-free.)
 
-That's the whole install. It always **overwrites any previous install with the latest brain**, drops the right adapter into each tool's config **on your machine** (`~/.claude`, `./.cursor`, `./AGENTS.md`, …) — nothing is hardcoded to any author's path — and cleans up files left behind by older versions. Requires Node.js (ships with npm), which you almost certainly have if you use these tools.
+That's the whole install. It drops the right adapter into each tool's config **on your machine** (`~/.claude`, `./.cursor`, `./AGENTS.md`, …) — nothing is hardcoded to any author's path — and it's safe to re-run at any time: every run installs the current brain and cleans up after itself. Requires Node.js (ships with npm), which you almost certainly have if you use these tools.
 
 The install is **fully non-interactive** — it never stops to ask a question, so it works unattended in CI, cloud shells, and piped one-liners. Package-manager and pip prompts are auto-answered; a headless run just installs everything.
 
 > **⚠️ After installing, open a NEW Claude Code session.** Claude Code reads its skill/command list once, at session start. If you install (or re-install) while a session is already open, `/coordn8` won't appear **in that window** until you start a fresh session (quit and reopen, or open a new one). This is the #1 reason `/coordn8` "isn't showing up" — the files are already installed; the open window just hasn't re-read them yet. (And it's `/coordn8`, not `/coordinate`.)
 
-Want just one tool? Swap `all` for `claude`, `cursor`, `codex`, `kiro`, or `generic`. To upgrade to the latest, or remove it later:
+Want just one tool? Swap `all` for `claude`, `cursor`, `codex`, `kiro`, or `generic`. To refresh or remove it later:
 
 ```bash
-npx -y github:ompandey98/coordn8 init claude    # install one tool (always overwrites with the latest)
-npx -y github:ompandey98/coordn8 update         # force-refresh to the latest (clears the npx cache) + reinstall
+npx -y github:ompandey98/coordn8 init claude    # install one tool
+npx -y github:ompandey98/coordn8 update         # pull the current version (clears the npx cache) + reinstall
 npx -y github:ompandey98/coordn8 uninstall      # remove it again
 ```
 
-> **`update` / re-`init` fixes stale versions.** Because `npx github:…` caches the cloned repo, a plain re-run can keep serving an old copy — so new fixes don't appear. Both `update` and `init` clear that cache first, so the *next* fetch pulls the latest and force-overwrites the current install. Run either whenever an "auto-update" seems stuck.
+> **If a run seems to be serving something stale, use `update`.** `npx github:…` caches the cloned repo, so a plain re-run can keep serving a cached copy. Both `update` and `init` clear that cache first, so the next fetch pulls straight from GitHub and overwrites what's installed.
 
 <details>
 <summary><b>No Node?</b> Clone-and-install fallback</summary>
@@ -103,10 +103,11 @@ One self-contained HTML file, zero external dependencies, opens by double-click 
 | **Best free engine per scene** | Math and precise geometry are rendered by **Manim** (the engine 3Blue1Brown uses); software, flows, and graphs use HTML/CSS/Canvas with **GSAP** (eased motion), **D3** (force/tree graphs), and **Rough.js** (hand-drawn warmth) — all free, no API keys, no paid services. Every engine writes the same frame model, so they blend seamlessly on one timeline. Manim and the JS libs are *enhancements*: if one can't be installed, that scene falls back to plain HTML/Canvas and the base video still ships. |
 | **Toggle-able captions** | The video carries a soft, embedded subtitle track (off by default; enable in VLC/QuickTime/any player), plus a sidecar `.srt` and a WebVTT track for the page player. Captions are the *exact* narrated words — re-serialized from the same beatmap the voice uses, not re-transcribed — and a gate proves they never drift from the narration. A long sentence is split into **readable cues** (≤2 lines, ≤42 chars/line, capped on-screen time) rather than dumped as one screen-filling paragraph — the words stay verbatim, just broken into glance-able chunks. |
 | **Remembers your decisions** | Your course-corrections ("slow the intro", "cut that section") are written to a persistent decision log and honored across long sessions and full rebuilds — never silently reverted. |
-| **Fast without melting your laptop** | The render pipeline is **adaptive**: it sizes parallelism from real CPU + free RAM and then keeps re-tuning it live — ramping *up* to use idle cores when the machine has headroom, and shrinking fast the instant load or memory tightens (the same additive-increase / multiplicative-decrease discipline TCP uses). That's the fix for "renders felt painfully slow": earlier it picked one cautious worker count and only ever throttled down, so a machine that freed up mid-run stayed under-used. It also writes every frame to disk as it goes — a crash loses one frame, not the batch. |
-| **Spends effort where it counts** | Judgment-heavy work (understanding code, fact-checking, the anti-slop and clarity critics) gets full reasoning; deterministic plumbing (subtitle serialization, muxing, frame capture, byte-diffing adapters) runs on a fast, cheap, high-concurrency path. Faster and lighter on tokens, with **zero** shortcuts on anything that decides correctness — the fidelity gates run exactly as hard as before. |
+| **Fast without melting your laptop** | The render pipeline is **adaptive**: it sizes parallelism from real CPU + free RAM and then keeps re-tuning it live — ramping *up* to use idle cores when the machine has headroom, and shrinking fast the instant load or memory tightens (the same additive-increase / multiplicative-decrease discipline TCP uses). So a machine that frees up mid-run gets used, instead of being stuck behind one cautious worker count. It also writes every frame to disk as it goes — a crash loses one frame, not the batch. |
+| **Spends effort where it counts** | Judgment-heavy work (understanding code, fact-checking, the anti-slop and clarity critics) gets full reasoning; deterministic plumbing (subtitle serialization, muxing, frame capture, byte-diffing adapters) runs on a fast, cheap, high-concurrency path. Faster and lighter on tokens, with **zero** shortcuts on anything that decides correctness — every fidelity gate runs at full strength regardless. |
 | **Honest about limits** | On a machine without video tooling it says *exactly* what it couldn't render and the one-line command to unlock it, and offers the page as a fallback rather than silently producing an unrequested deliverable. It never fakes a deliverable and never swaps in one you didn't ask for. |
-| **Verifies before it hands over** | Deterministic gate scripts (tree-shape, fact-tracing, content bans, DOM render, visual density, layout/composition, narration sync, **caption fidelity**, media integrity) run against each build, and a final verification manifest refuses to authorize any "Verified: …" claim word that isn't backed by a genuine pass. The scripts are advisory leads the agent re-checks — a gate whose input is absent skips honestly rather than faking a pass. |
+| **Verifies before it hands over** | Deterministic gate scripts run against each build — tree-shape, fact-tracing, content bans, DOM render, visual density, layout/composition, narration sync, caption fidelity, media integrity — plus a **semantic layer** that checks *meaning* rather than geometry: whether a frame shows what the voice is saying, whether an arrow points the way the sentence says, whether a panel shows the right example, whether a section quietly lost its visual, and whether any beat leaves half the frame empty. A final verification manifest then refuses to authorize any "Verified: …" word that isn't backed by a genuine pass. The scripts are advisory leads the agent re-checks — a gate whose input is absent skips honestly rather than faking a pass. |
+| **Says what a check actually proves** | A gate passing means "not provably broken in one mechanical way" — it never means the deliverable is good, and Coordn8 says so in the same breath instead of presenting a green board as a quality claim. Anything about meaning or craft ("does this explain well", "does this look good") can only be called done after a **frame-level review**, and every status ends with what was *not* verified. |
 | **Tells you what it did, tested, and couldn't do** | Every run ends with a short plain-language handover: what was **added/produced**, what was **verified** (and how — which gates passed on the real files), and what **couldn't be done here** and exactly why (e.g. "Manim wasn't installed, so the math scene used the HTML engine"). No missing capability is ever hidden or written into the deliverables — it's an honest status line for you, not your audience. |
 | **Reproducible** | Stamps the exact code snapshot into both deliverables and writes a rebuild guide, so anyone can tell which version was explained and regenerate it. |
 
@@ -133,8 +134,8 @@ It applies real teaching discipline — curiosity gap first, one idea per beat, 
 Coordn8's first move on any machine is to **unblock itself**: one command auto-installs everything the full pipeline can use — the **base** tools a video needs (`ffmpeg`, a headless Chromium sudo-free via Playwright, and a TTS engine) *and* the **enhancement** layer (Manim for math scenes; the vendored GSAP/D3/Rough/anime JS libs; Pillow for the pixel probe) — *before* it decides what it can produce. All of it is free and needs no API key or account. Dropping to a lower tier is a last resort after a genuine, verified install failure, never a first move. On essentially any machine with a network connection — including locked-down CI and cloud shells with no root — that reaches the full page + video tier. A failed *enhancement* install never blocks the video: that scene type falls back to the HTML/Canvas engine and the base video still ships.
 
 ```bash
-npx github:ompandey98/coordn8 setup     # install EVERYTHING missing — base tools + Manim + JS libs (sudo-free where possible)
-npx github:ompandey98/coordn8 detect    # see the resulting tier
+npx -y github:ompandey98/coordn8 setup     # install EVERYTHING missing — base tools + Manim + JS libs (sudo-free where possible)
+npx -y github:ompandey98/coordn8 detect    # see the resulting tier
 ```
 
 The tier is the **capability ceiling** — what the machine can physically render. It's intersected with your requested scope (video by default), and it can only ever *subtract* from that scope, never add to it: the columns below show what each tier is *able* to produce, and Coordn8 builds whichever of those you actually asked for.
@@ -166,38 +167,43 @@ Each of these is a bar the deliverable must genuinely clear before it's called d
 | `beat_sync` | video: no visual enters ahead of its sentence; duration within tolerance; per-sentence frames extracted for inspection |
 | `subtitle_check` | video: the caption track (`.srt`/`.vtt`) carries the **exact** narrated words in order — proves captions never drifted from the voice — cue timings are monotonic, non-negative, and within the video's duration, **and** every cue is within the readable limits (≤2 lines, ≤42 chars/line, ≤7 s on screen, ≤20 chars/sec) so a caption can never come back as a screen-filling paragraph |
 | `media_probe` | video: resolution, fps, audio present, clean decode |
-| `verify_manifest` | both, LAST: reads `_build/verification.json` and refuses (1) any `pass` with no evidence, (2) any end-user "Verified: …" word not backed by a genuine pass, (3) any required gate silently missing/failed/untested, (4) **any semantic claim** ("explainability", "shareability", "anti-slop", "looks good") that has no **frame-level** verification behind it — emitting the only claim string that's safe to show |
+| `check_semantics` | video, **S1–S8**: reads the instrumentation trace and catches what geometry can't — a non-finite alpha (an element that renders **nothing**, silently), a raw boundary index past its array, text escaping the container it's drawn *inside*, text sitting on a connector, an asset whose `subjectId` differs from the beat's (right shape, **wrong content**), a drawn direction or arrowhead contradicting the declared `from`→`to`, a **declared section that renders nothing**, and a section losing ink against the last approved cut. S1/S5/S6 are treated as blocking |
+| `check_indices` | video, **I1/I2**: every beat reference resolves for that scene's real line count — no stale helper index, no raw boundary index past the array, no `lineCount` guard that silently falls through to hardcoded timings. Also reports how much of each scene is **name-bound** (the safe form) |
+| `check_density` | video, **frame use**: ink coverage per horizontal band per spoken line, so a beat that leaves ~540px of the frame empty under live narration is a finding, not an opinion. Runs on the trace (no renderer needed) or on real frames, and always prints a **weakest-beat ranking** — the lowest-ink beat is usually what a reviewer names next |
+| `check_content` | both: every entry in `approved_strings.json` appears **byte-exact** (approved wording is frozen; a theme phrase is never a licence to rewrite it), zero repeated 5-grams across narration lines, no sentence reciting a list already carried by the frame, and an identifier/PII sweep across **frames and sidecar files** (captions, intermediate JSON, logs shipped alongside) |
+| `stage_v` | video, **the blind reverse check**: every spoken line's frame reviewed against its exact sentence by a reviewer with **no knowledge of the builder's claims**, on an artifact proved **newer than every source edit**, with the **previous cut's frame** supplied. A `contradicts` verdict blocks; an unanswered field counts as *not verified*; no render at all makes this an **open item, never a pass** |
+| `verify_manifest` | both, LAST: reads `_build/verification.json` and refuses (1) any `pass` with no evidence, (2) any end-user "Verified: …" word not backed by a genuine pass, (3) any required gate silently missing/failed/untested, (4) any `pass` whose evidence strength is `untested`, (5) **any semantic claim** ("explainability", "shareability", "anti-slop", "looks good") that has no **frame-level** verification behind it — emitting the only claim string that's safe to show |
 
 Run them all against a build folder: `npx -y github:ompandey98/coordn8 gates path/to/Coordn8`
 
 ---
 
-## The semantic layer — why a green board used to ship a rejected video (v1.5.0)
+## The semantic layer — checking MEANING, not just geometry
 
-> **Every check above measures GEOMETRY and PRESENCE. Every complaint a human makes is about MEANING.**
+> **Mechanical checks measure GEOMETRY and PRESENCE. Everything a human complains about is MEANING.**
 
-That one sentence is the most important thing in this package. A real production build — a 6-minute narrated video, 11 segments — took **4 delivered versions and 8+ full render cycles** to be accepted. On the run where *every automated gate reported PASS*, the reviewer listed **ten distinct real defects**. The gates weren't lying; they were measuring the wrong category of thing. Geometry can tell you two boxes don't overlap. It cannot tell you whether **this frame shows what the voice is saying**.
+That distinction is the most important idea in this package. Geometry can tell you two boxes don't overlap, a panel isn't too small, an index is in range. It cannot tell you whether **this frame shows what the voice is saying** — whether a section lost the visual it should have, whether an arrow points the right way, whether this is the right evidence for the thing being narrated. A frame can be geometrically perfect and semantically wrong, so a suite of geometry gates can be entirely green on a video a reviewer rejects on sight.
 
-v1.5.0 closes that gap on three levels — and the order matters, because the first level makes defects *impossible* rather than merely *detectable*:
+Coordn8 closes that gap on three levels. The order matters: the first level makes defects *impossible* rather than merely *detectable*.
 
-**1. The scene runtime (`scripts/render/scene_runtime.js`) — removes whole defect classes at the source.**
+**1. The scene runtime (`scripts/render/scene_runtime.js`) — whole defect classes removed at the source.** Video scenes are authored against it, and it refuses to let the classic failures happen:
 
-| It does this | So this can't happen |
+| The runtime guarantees | Which makes this impossible |
 |---|---|
-| **Named beats that THROW** — `beat('the-worked-example')` resolved against the script; an out-of-range index raises instead of **clamping** | **Six** of the ten observed defects came from ONE cause: a beat index going stale when the narration line count changed, silently clamped. Editing narration is the most common operation in the workflow, and it used to mistime scenes invisibly. This is the single highest-value change in the release |
-| **Non-finite alpha is fatal at the draw call** | A `NaN` opacity draws **nothing** — no error, no warning, no log. An entire section once rendered blank while the narration described its contents out loud |
-| **Bounded text by default** inside containers (`unbounded: true` is an explicit opt-in) | A caption overflowing its own card by ~45px each side. The overlap gate compares two *separate* boxes, so a child escaping its *own parent* was invisible to it |
-| **`from`/`to` required** on every connector | An arrow animating opposite to its own arrowhead, contradicting the sentence. **No geometry gate has any concept of direction** |
+| **Named beats that THROW** — `beat('the-worked-example')` resolves against the script; an out-of-range index raises (never **clamps**) | A beat reference going stale when the narration line count changes. Editing narration is the most common operation in the workflow, and a clamped index mistimes scenes *silently* — one root cause that surfaces as many unrelated-looking symptoms. Now it's one loud resolve error naming the valid beats |
+| **Non-finite alpha is fatal at the draw call** | A `NaN` opacity drawing **nothing** — no error, no warning, no log — while the narration names the missing thing |
+| **Bounded text by default** inside containers (`unbounded: true` is an explicit opt-in) | A caption overflowing its own card. A box-overlap check compares two *separate* boxes, so a child escaping its *own parent* is invisible to it |
+| **`from`/`to` required** on every connector | An arrow animating opposite to its own arrowhead, contradicting the sentence describing the flow. **Geometry has no concept of direction** |
 | **`subjectId` required** on every asset and beat | A panel showing the evidence for a *different* example — real, legible, well-cropped, and about the wrong thing |
-| **`section('name', …)`** declarations + an **instrumentation trace** | Enables everything below. Without instrumentation the semantic gates cannot be written at all |
+| **`section('name', …)`** declarations + an **instrumentation trace** (per frame: boxes, connector polylines, asset draws) | Everything below. Without instrumentation the semantic gates cannot be written at all |
 
-**2. Semantic gates that read the trace — no browser required.** `check_semantics.py` runs S1–S8 (non-finite alpha · raw boundary index · child-escape · text-on-connector · asset↔subject mismatch · flow direction · declared-but-empty section · ink regression vs the previous approved cut). `check_indices.py` catches stale beat references and `lineCount` fallback guards. `check_density.py` turns *"this looks low-effort"* into a **number** — ink per horizontal band per spoken line, because half the frame at 0.0% ink shipped repeatedly while every correctness gate passed. `check_content.py` holds `approved_strings.json` **byte-exact** (an approved title was silently replaced twice), catches repeated 5-grams, catches the voice reciting a list already on the frame, and sweeps identifiers in **sidecar files too** (retracted figures once survived in a stale caption file).
+**2. Semantic gates that read the trace — no browser required.** `check_semantics.py` runs S1–S8: non-finite alpha · raw boundary index · child-escape · text-on-connector · asset↔subject mismatch · flow direction · declared-but-empty section · ink regression against the last approved cut. `check_indices.py` catches stale beat references and `lineCount` fallback guards, and reports how much of a scene is name-bound. `check_density.py` turns *"this looks low-effort"* into a **number** — ink per horizontal band per spoken line — so half a frame at 0.0% ink under live narration is a finding instead of an opinion; it also ranks the weakest beats, which is usually what a reviewer names next. `check_content.py` holds `approved_strings.json` **byte-exact** (an approved wording is frozen until you change it — a theme phrase is never a licence to rewrite it), catches repeated 5-grams, catches the voice reciting a list already on the frame, and sweeps identifiers in **sidecar files too**, not just frames.
 
-**3. Stage V — the blind visual reverse check (`stage_v.py`), a mandatory stage.** For every spoken line, the frame at 85–90% through the line goes to a reviewer **with the exact sentence and no knowledge of the builder's claims**. A `contradicts` verdict **blocks the build**. Three rules, each learned from this stage *failing*: verifiers must be **blind** (a reviewer pointed at a checklist finds only checklist items); the artifact must be proved **newer than every source edit** (reviewing a stale render produced already-fixed "defects" that discredited the genuine findings); and the reviewer gets the **previous cut's frame** and is asked *"what used to be here?"* — the only way to find a section that silently lost its visual.
+**3. Stage V — the blind visual reverse check (`stage_v.py`), a mandatory stage.** For every spoken line, the frame at 85–90% through that line goes to a reviewer together with **the exact sentence and no knowledge of the builder's claims**. A `contradicts` verdict **blocks the build**; everything else is a ranked defect list. Three rules make it work: verifiers are **blind** (a reviewer handed a checklist finds only checklist items); the artifact must be proved **newer than every source edit** before it may be reviewed (reviewing a stale render surfaces already-fixed "defects" and discredits the real ones); and the reviewer gets the **previous cut's matching frame** and is asked *"what used to be here?"* — the only reliable way to find a section that silently lost its visual.
 
-**And the claim discipline that ties it together.** The most damaging output of that build wasn't a defect — it was the status line *"ten gates pass on all N scenes."* Every word true; ten real defects present. **A true claim that is worthless destroys trust faster than any single defect.** So: report what a gate *measures*, never what it *implies*; state in the same breath that a gate passing is **not** evidence of quality; and only frame-verified items may be called done for anything semantic — `verify_manifest.py` now **refuses** those words otherwise. Every status ends with what was **not** verified.
+**Claim discipline ties it together.** A status line like *"ten gates pass on all N scenes"* can be completely true and still worthless — and a true-but-worthless quality claim destroys trust faster than any single defect. So: report what a gate *measures*, never what it *implies*; say in the same breath that a gate passing is **not** evidence of quality; and only frame-verified items may be called done for anything semantic — `verify_manifest.py` **refuses** to authorize words like "explainability" or "looks good" without a frame-level verification behind them. Every status ends with what was **not** verified.
 
-The full doctrine — ten defect classes with root causes, seven pre-build rules, the verification fleet, and a first-go checklist — is **Phase F** in [engine/PLAYBOOK.md](engine/PLAYBOOK.md), so a fresh agent session inherits all of it.
+The full doctrine — ten defect classes with their root causes, seven pre-build rules, the verification fleet, and a first-go checklist — is **Phase F** of [engine/PLAYBOOK.md](engine/PLAYBOOK.md), so any fresh agent session inherits all of it. A worked reference scene is in [examples/example_scene.js](examples/example_scene.js).
 
 ---
 
@@ -209,9 +215,18 @@ Contributions welcome. To extend the engine or add support for a new tool:
 python3 build/generate_adapters.py         # rebuild the tool adapters from source
 python3 build/generate_adapters.py --check # sanity check (also runs in CI)
 python3 tests/run_tests.py                 # run the full suite
+node scripts/render/scene_runtime.js selftest   # prove the scene-runtime guarantees
 ```
 
-Files under `adapters/` are generated, so edit the source rather than them; adding a tool is a small, single-place change. See [`docs/ADDING_A_TOOL.md`](docs/ADDING_A_TOOL.md), and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full design.
+Files under `adapters/` are generated, so edit the source rather than them; adding a tool is a small, single-place change.
+
+| Read this | For |
+|---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | the full design |
+| [`docs/ADDING_A_TOOL.md`](docs/ADDING_A_TOOL.md) | wiring up a new host tool |
+| [`docs/TEACHING_PRINCIPLES.md`](docs/TEACHING_PRINCIPLES.md) | the pedagogy both deliverables are held to |
+| [`docs/FIRST_GO_QUALITY_ADDENDUM.md`](docs/FIRST_GO_QUALITY_ADDENDUM.md) | the field report behind the semantic layer — the ten defect classes, why mechanical checks were blind to each, and the ranked fixes. Written from a real production build; it's the reasoning behind Phase F of the playbook |
+| [`examples/example_scene.js`](examples/example_scene.js) | a worked video scene authored the safe way, gate-clean, with every pattern annotated |
 
 ---
 

@@ -119,6 +119,14 @@ def manim_render(scene: Path, name: str, fps: int, out: Path,
     Chrome-captured software scenes: after this returns, `out` holds exactly the
     frame model `encode` expects, at the same fps/resolution.
     """
+    # Validate the INPUT WE WERE GIVEN before blaming the environment. Checking
+    # tool availability first means a mistyped path gets reported as "Manim not
+    # installed", sending the caller off to install something they already have —
+    # a wrong diagnosis is worse than no diagnosis.
+    if not scene.exists():
+        sys.stderr.write(f"[manim] scene file not found: {scene} — check the "
+                         f"--scene path (this is a bad input, not a missing tool).\n")
+        return 2
     mbin = _manim_bin()
     if not mbin:
         sys.stderr.write(
@@ -131,9 +139,6 @@ def manim_render(scene: Path, name: str, fps: int, out: Path,
     if not have("ffmpeg"):
         sys.stderr.write("[manim] ffmpeg not available — needed to re-extract "
                          "Manim frames into the unified timeline.\n")
-        return 2
-    if not scene.exists():
-        sys.stderr.write(f"[manim] scene file not found: {scene}\n")
         return 2
 
     out.mkdir(parents=True, exist_ok=True)
