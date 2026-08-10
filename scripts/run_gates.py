@@ -88,6 +88,26 @@ def main() -> int:
     if frame is not None:
         layout_args += ["--shot", str(frame)]  # OC-2/REQ-11: real pixels, not JSON
 
+    # ---- Phase-F inputs (PLAYBOOK F.3–F.7) --------------------------------
+    # Instrumentation traces from scene_runtime.js — one per scene. These are what
+    # make the semantic gates possible at all, and they need NO browser, so the
+    # semantic layer runs even on a machine that cannot render.
+    traces = sorted(p for p in build.glob("_build/trace*.json") if p.is_file())
+    traces += sorted(p for p in build.glob("_build/traces/*.json") if p.is_file())
+    prev_trace = build / "_build" / "prev" / "trace.json"      # previous approved cut (S8)
+    scene_srcs = sorted(
+        p for p in list(build.glob("video/*.js")) + list(build.glob("_build/scenes/*.js"))
+        if p.is_file() and p.name != "scene_runtime.js")
+    script_json = build / "_build" / "script.json"
+    approved = build / "_research" / "approved_strings.json"    # R5 / D9
+    on_screen = build / "_build" / "on_screen_names.json"       # D10b
+    stage_v_verdicts = build / "_build" / "stage_v" / "verdicts.json"
+    # Sidecars MUST be swept for identifiers too: retracted figures once survived in
+    # a stale caption file long after being removed from the video (F.4).
+    sidecars = [p for p in (srt, build / "_build" / "captions.vtt", beatmap, narration)
+                if p.exists()]
+    sidecars += sorted(p for p in build.glob("*.vtt") if p.is_file())
+
     plan = [
         ("env_detect", HERE / "env_detect.py", ["--json"]),
         ("tree_shape", GATES / "tree_shape.py", [str(flows)]),
@@ -120,6 +140,36 @@ def main() -> int:
          [str(srt), str(beatmap)] + (["--mp4", str(mp4)] if mp4.exists() else [])),
         ("media_probe", GATES / "media_probe.py", [str(mp4)]),
         ("layout_probe", GATES / "layout_probe.py", layout_args),
+        # ---- PHASE F: the SEMANTIC layer (PLAYBOOK F.3-F.7) ----------------
+        # Everything above measures GEOMETRY and PRESENCE. Everything a human
+        # complains about is MEANING. These are the gates that see meaning.
+        # S1-S8 read the instrumentation traces emitted by scene_runtime.js.
+        ("semantics", GATES / "check_semantics.py",
+         ([str(p) for p in traces]
+          + sum((["--scene-src", str(s)] for s in scene_srcs), [])
+          + (["--prev-trace", str(prev_trace)] if prev_trace.exists() else []))
+         if traces else [str(build / "_build" / "trace.json")]),
+        # Beat-index safety (D2): the one cause behind six historical defects.
+        ("beat_index", GATES / "check_indices.py",
+         (sum((["--scene", str(s)] for s in scene_srcs), [])
+          + ["--script", str(beatmap if beatmap.exists() else script_json)])),
+        # Density (D7): "looks low-effort" as a number. Trace mode needs no
+        # renderer, so it runs at authoring time too — before minutes of render.
+        ("density", GATES / "check_density.py",
+         (["trace"] + [str(p) for p in traces]) if traces
+         else ["frames", str((frame.parent if frame is not None else build / "_build" / "frames"))]
+              + (["--beatmap", str(beatmap)] if beatmap.exists() else [])),
+        # Content integrity (D9/D10): approved strings byte-exact, zero repeated
+        # 5-grams, no screen-reading, identifier sweep over frames AND SIDECARS.
+        ("content_integrity", GATES / "check_content.py",
+         ([("--script"), str(beatmap if beatmap.exists() else script_json)]
+          + (["--approved", str(approved)] if approved.exists() else [])
+          + (["--page", str(html)] if html.exists() else [])
+          + (["--on-screen", str(on_screen)] if on_screen.exists() else [])
+          + sum((["--sidecar", str(s)] for s in sidecars), []))),
+        # Stage V (F.5): the blind frame-vs-sentence review. SKIPPED (an OPEN
+        # ITEM, never a pass) until a blind reviewer returns verdicts.
+        ("stage_v", GATES / "stage_v.py", ["check", str(stage_v_verdicts)]),
         # LAST line of defense: the end-of-build manifest. No "Verified: …" claim
         # reaches a human unless every required item passed with evidence here
         # (PLAYBOOK final audit / verification claim).

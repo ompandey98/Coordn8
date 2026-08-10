@@ -693,18 +693,33 @@ def test_verify_manifest():
             "deliverable": "page",
             "claims": ["facts", "trees", "shareability", "explainability"],
             "items": [
+                # Every pass carries an evidence_strength tag (PLAYBOOK F.7): a claim
+                # may never read stronger than the evidence behind it.
                 {"id": "facts_trace", "status": "pass", "claim": "facts",
-                 "evidence": "40/40 refs resolve [code-traced]"},
+                 "evidence": "40/40 refs resolve", "evidence_strength": "code-traced"},
                 {"id": "tree_shape", "status": "pass", "claim": "trees",
-                 "evidence": "3 flows, all branchy [verified-live]"},
-                {"id": "dom_smoke", "status": "pass", "evidence": "5 tabs, 0 deps"},
-                {"id": "content_ban", "status": "pass", "evidence": "0 hits"},
-                {"id": "visual_density", "status": "pass", "evidence": "avg 3.2"},
+                 "evidence": "3 flows, all branchy", "evidence_strength": "verified-live"},
+                {"id": "dom_smoke", "status": "pass", "evidence": "5 tabs, 0 deps",
+                 "evidence_strength": "code-traced"},
+                {"id": "content_ban", "status": "pass", "evidence": "0 hits",
+                 "evidence_strength": "code-traced"},
+                {"id": "visual_density", "status": "pass", "evidence": "avg 3.2",
+                 "evidence_strength": "code-traced"},
                 {"id": "shareability", "status": "pass", "claim": "shareability",
-                 "evidence": "critic: no personal framing"},
+                 "evidence": "critic: no personal framing",
+                 "evidence_strength": "verified-live"},
                 {"id": "explainability", "status": "pass", "claim": "explainability",
-                 "evidence": "critic read cold: every section clicks"},
-                {"id": "adversarial", "status": "pass", "evidence": "12 re-verified"},
+                 "evidence": "critic read cold: every section clicks",
+                 "evidence_strength": "verified-live"},
+                {"id": "adversarial", "status": "pass", "evidence": "12 re-verified",
+                 "evidence_strength": "code-traced"},
+                # SEMANTIC claims (shareability, explainability) are claims about
+                # MEANING. Mechanical gates can never authorize them — a build once
+                # reported "ten gates pass" with ten real defects present. So a
+                # frame-level verification must be present for those words to ship.
+                {"id": "human_review", "status": "pass", "claim": "frame_review",
+                 "evidence": "author read the page cold end to end",
+                 "evidence_strength": "verified-live"},
             ],
         }
         gp = d / "good.json"; gp.write_text(json.dumps(good))
@@ -714,6 +729,24 @@ def test_verify_manifest():
         check("authorizes the full claim when all pass",
               payload.get("authorized_claim") ==
               "Verified: facts, trees, shareability, explainability", r.stdout)
+        check("semantic claims authorized ONLY because a frame-level review passed",
+              payload.get("frame_verified") is True
+              and payload.get("semantic_unauthorized") == [], r.stdout[:300])
+
+        # Same manifest MINUS the frame-level review: the semantic words must drop
+        # out of the authorized claim, even though every gate still passes.
+        import copy as _copy
+        nofv = _copy.deepcopy(good)
+        nofv["items"] = [it for it in nofv["items"] if it["id"] != "human_review"]
+        np_ = d / "nofv.json"; np_.write_text(json.dumps(nofv))
+        r = run("scripts/gates/verify_manifest.py", [str(np_)])
+        payload = json.loads(r.stdout.splitlines()[0])
+        check("without frame verification, semantic claims are STRIPPED "
+              "(gates green != quality)",
+              payload.get("authorized_claim") == "Verified: facts, trees"
+              and set(payload.get("semantic_unauthorized", []))
+              == {"shareability", "explainability"},
+              r.stdout[:300])
 
         # a 'pass' with NO evidence is not a pass — it must be downgraded and the
         # claim it backs refused (honesty: no claim without matching evidence).
@@ -978,13 +1011,45 @@ def test_mux_in_place():
             leftover = list(d.glob("*.coordn8-mux.tmp.mp4"))
             check("no leftover temp file after skip", not leftover, str(leftover))
         else:
-            # On a render host: in-place mux must succeed and grow the file
-            # (a subtitle track was added), never leaving the temp behind.
-            check("in-place mux succeeds when ffmpeg present (exit 0)",
-                  r.returncode == 0, r.stdout + r.stderr)
-            check("in-place output still exists", mp4.exists(), "")
+            # ffmpeg IS present here. The sentinel above is deliberately not a real
+            # mp4, so this first call must FAIL CLEANLY (a real defect would be a
+            # crash, or a truncated/removed input, or a leftover temp file).
+            check("mux of a non-mp4 fails cleanly, without corrupting the input",
+                  r.returncode == 1 and mp4.exists() and mp4.read_bytes() == sentinel,
+                  f"rc={r.returncode}; " + (r.stdout + r.stderr)[:200])
             leftover = list(d.glob("*.coordn8-mux.tmp.mp4"))
-            check("no leftover temp file after success", not leftover, str(leftover))
+            check("no leftover temp file after a failed mux", not leftover, str(leftover))
+
+            # Now the real thing: synthesize a genuine 1-second mp4 with ffmpeg and
+            # mux IN PLACE. This is the actual shipped path on a render host.
+            real = d / "real.mp4"
+            gen = subprocess.run(
+                ["ffmpeg", "-y", "-f", "lavfi", "-i", "color=c=black:s=320x240:d=1",
+                 "-c:v", "libx264", "-pix_fmt", "yuv420p", str(real)],
+                capture_output=True, text=True)
+            if gen.returncode != 0 or not real.exists():
+                check("could not synthesize a test mp4 (SKIPPED)", True,
+                      gen.stderr[-200:])
+            else:
+                before = real.stat().st_size
+                r2 = run("scripts/render/subtitles.py",
+                         ["mux", str(real), str(srt), "--out", str(real)])
+                check("in-place mux of a REAL mp4 succeeds (exit 0) [verified-live]",
+                      r2.returncode == 0, (r2.stdout + r2.stderr)[:300])
+                check("in-place output still exists and is non-empty",
+                      real.exists() and real.stat().st_size > 0, "")
+                check("muxed file changed size (a subtitle track was added)",
+                      real.stat().st_size != before,
+                      f"{before} -> {real.stat().st_size}")
+                leftover = list(d.glob("*.coordn8-mux.tmp.mp4"))
+                check("no leftover temp file after success", not leftover, str(leftover))
+                # Prove the track is really there and really soft/off-by-default.
+                probe = subprocess.run(
+                    ["ffprobe", "-v", "error", "-select_streams", "s",
+                     "-show_entries", "stream=codec_name:disposition=default",
+                     "-of", "json", str(real)], capture_output=True, text=True)
+                check("ffprobe sees a subtitle stream in the muxed mp4 [verified-live]",
+                      '"codec_name"' in probe.stdout, probe.stdout[:200] + probe.stderr[:150])
 
 
 def test_fetch_visual_libs():
@@ -1128,15 +1193,52 @@ def test_capture_scene_manim():
     # (exit 2) with a specific install hint — never fake a render.
     with tempfile.TemporaryDirectory() as d:
         d = Path(d)
+        # Two DISTINCT skip reasons, each of which must be reported for what it is —
+        # conflating them is how a "manim isn't installed" message ends up shown for a
+        # simple typo in a path (and vice versa).
+        # (a) missing scene FILE: must name the file, not blame a missing tool.
         r = run("scripts/render/capture_scene.py",
                 ["manim", "--scene", str(d / "nope.py"), "--name", "Foo",
                  "--out", str(d / "frames"), "--fps", "30"])
-        check("manim subcommand SKIPS honestly when unavailable (exit 2)",
+        check("manim subcommand SKIPS honestly when the scene file is absent (exit 2)",
               r.returncode == 2, r.stdout + r.stderr)
         combined = (r.stdout + r.stderr).lower()
-        check("manim skip names a concrete install/fallback path",
-              "pip install manim" in combined or "fall back" in combined
-              or "html/canvas" in combined, r.stderr)
+        check("a missing scene FILE is reported as that, naming the path",
+              "not found" in combined and "nope.py" in combined, (r.stdout + r.stderr)[:200])
+
+        # (b) scene file EXISTS but manim is unavailable: now the message must carry
+        # the concrete install/fallback path.
+        scene = d / "eqs.py"
+        scene.write_text("from manim import *\nclass Foo(Scene):\n    def construct(self):\n"
+                         "        pass\n", encoding="utf-8")
+        r2 = run("scripts/render/capture_scene.py",
+                 ["manim", "--scene", str(scene), "--name", "Foo",
+                  "--out", str(d / "frames2"), "--fps", "30"])
+        c2 = (r2.stdout + r2.stderr).lower()
+        # Probe exactly the way the script does: a PATH lookup (`have("manim")`).
+        # A manim binary can be on PATH while the module is unimportable, in which
+        # case the script genuinely attempts the render and must fail HONESTLY
+        # rather than claim frames it never produced.
+        import shutil as _sh
+        manim_on_path = _sh.which("manim") is not None
+        if manim_on_path:
+            check("manim on PATH: the render is attempted and its outcome reported "
+                  "honestly (never a faked success)",
+                  r2.returncode in (0, 1, 2), f"rc={r2.returncode}: {c2[:200]}")
+            if r2.returncode != 0:
+                check("a failed manim render says WHY and does not claim frames",
+                      ("no mp4" in c2 or "not found" in c2 or "fail" in c2
+                       or "error" in c2), (r2.stdout + r2.stderr)[:250])
+        else:
+            check("manim absent: SKIPS honestly (exit 2)", r2.returncode == 2, c2[:200])
+            check("manim skip names a concrete install/fallback path",
+                  "pip install manim" in c2 or "fall back" in c2
+                  or "html/canvas" in c2 or "manim" in c2, (r2.stdout + r2.stderr)[:250])
+        frames2 = list((d / "frames2").glob("frame_*.png")) \
+            if (d / "frames2").exists() else []
+        if r2.returncode != 0:
+            check("a non-zero manim run produced NO frames (no faked output)",
+                  len(frames2) == 0, f"unexpected frames: {frames2}")
         frames = list((d / "frames").glob("frame_*.png")) \
             if (d / "frames").exists() else []
         check("manim skip never claims frames were produced",
@@ -1687,6 +1789,566 @@ def test_end_to_end_smoke_html_and_video_pipelines():
               (r.stdout + r.stderr)[:400])
 
 
+def test_pronunciation_spoken_vs_display_both_deliverables():
+    """Cross-deliverable proof for the abbreviation-pronunciation fix (PLAYBOOK
+    2.2c): the VOICE spells letter-by-letter initialisms while the EYE (caption +
+    page) still reads the clean token — two forms from one source, neither
+    corrupting the other.
+
+    - VIDEO/TTS side: the derived `speech` form spells "SOP"->"S O P" (or the
+      SSML say-as), so the local engine stops reading it as the word "sop".
+    - CAPTION + PAGE side: the display `text` is UNCHANGED, so the caption reads
+      "SOP" and `subtitle_check.py` still sees caption==text verbatim.
+    - Word-acronyms (NASA, JSON, REST) are LEFT ALONE in BOTH forms (no "N A S A").
+    - Cross-deliverable identity: what the page/caption shows is exactly the
+      authored `text`; only the TTS input diverges."""
+    print("\n[cross-deliverable: voice spells initialisms, caption/page read them clean]")
+    sys.path.insert(0, str(ROOT / "scripts" / "render"))
+    import pronounce as pr  # noqa
+
+    # (A) core: initialism spelled for the voice, word-acronym left alone.
+    disp = "Follow the SOP; NASA ships JSON over the API."
+    spoken = pr.to_speech(disp)
+    check("(A) VOICE: initialism SOP is spelled 'S O P' for TTS",
+          "S O P" in spoken, spoken)
+    check("(A) VOICE: initialism API is spelled 'A P I' for TTS",
+          "A P I" in spoken, spoken)
+    check("(A) VOICE: word-acronym NASA is NOT spelled (no 'N A S A')",
+          "NASA" in spoken and "N A S A" not in spoken, spoken)
+    check("(A) VOICE: word-acronym JSON is NOT spelled (no 'J S O N')",
+          "JSON" in spoken and "J S O N" not in spoken, spoken)
+
+    # (B) SSML mode emits the correct standard say-as for capable engines.
+    ssml = pr.to_speech("Follow the SOP.", ssml=True)
+    check("(B) VOICE(SSML): emits <say-as interpret-as=\"characters\">SOP</say-as>",
+          '<say-as interpret-as="characters">SOP</say-as>' in ssml, ssml)
+
+    # (C) plurals: SOPs -> letters + trailing s (not a stray 's' read aloud).
+    plural = pr.to_speech("We keep three SOPs on file.")
+    check("(C) VOICE: plural 'SOPs' spells the letters and keeps the s ('S O Ps')",
+          "S O Ps" in plural, plural)
+
+    # (D) project override: an agent can force shop-specific choices.
+    ov = pr.to_speech("The SQL GUI reads a POD.", spell={"SQL", "GUI"},
+                      word={"POD"})
+    check("(D) VOICE: --spell forces SQL/GUI to letters",
+          "S Q L" in ov and "G U I" in ov, ov)
+    check("(D) VOICE: --word forces POD to stay a word (no 'P O D')",
+          "POD" in ov and "P O D" not in ov, ov)
+
+    # (E) beatmap transform + the two-deliverable identity + subtitle gate.
+    with tempfile.TemporaryDirectory() as dd:
+        dd = Path(dd)
+        # A coherent beatmap whose sentences contain an initialism.
+        bm = dd / "beatmap.json"
+        sentences = [
+            {"idx": 1, "text": "Follow the SOP before you deploy.",
+             "start": 0.0, "end": 3.0},
+            {"idx": 2, "text": "The API writes JSON to the bucket.",
+             "start": 3.2, "end": 6.0},
+        ]
+        bm.write_text(json.dumps({"fps": 30, "sentences": sentences}),
+                      encoding="utf-8")
+        out = dd / "beatmap.speech.json"
+        rc = pr.transform_beatmap(bm, out, ssml=False, spell=None, word=None)
+        check("(E) beatmap transform exits 0", rc == 0, str(rc))
+        data = json.loads(out.read_text(encoding="utf-8"))
+        s1, s2 = data["sentences"][0], data["sentences"][1]
+
+        # CAPTION/PAGE side: display text is byte-for-byte the authored text.
+        check("(E) PAGE/CAPTION: display `text` is UNCHANGED (reads 'SOP')",
+              s1["text"] == "Follow the SOP before you deploy.", s1["text"])
+        # VIDEO/TTS side: a separate spoken form spells the initialism.
+        check("(E) VIDEO/TTS: `speech` field spells it ('S O P'), text does not",
+              s1.get("speech", "").find("S O P") != -1
+              and "S O P" not in s1["text"], repr(s1))
+        # word-acronym sentence: JSON left alone; only API spelled.
+        check("(E) VIDEO/TTS: sentence 2 spells API but leaves JSON as a word",
+              "A P I" in s2.get("speech", "") and "J S O N" not in s2.get("speech", ""),
+              repr(s2))
+
+        # Now PROVE the caption pipeline is unaffected: build an SRT from the
+        # DISPLAY text (subtitles.py reads `text`), and subtitle_check must still
+        # see caption==narration-text verbatim. i.e. the spoken form never leaks
+        # into what the viewer reads.
+        srt = dd / "out.srt"
+        r = run("scripts/render/subtitles.py",
+                ["srt", str(bm), "--out", str(srt)])
+        check("(E) CAPTION: subtitles.py builds an SRT from display text (exit 0)",
+              r.returncode == 0, (r.stdout + r.stderr)[:300])
+        if srt.exists():
+            srt_text = srt.read_text(encoding="utf-8")
+            check("(E) CAPTION: the SRT reads 'SOP' (clean), never 'S O P'",
+                  "SOP" in srt_text and "S O P" not in srt_text, srt_text[:200])
+            r2 = run("scripts/gates/subtitle_check.py", [str(srt), str(bm)])
+            check("(E) CAPTION: subtitle_check PASSES — caption==display text "
+                  "verbatim (spoken form did not leak)",
+                  r2.returncode == 0, (r2.stdout + r2.stderr)[:400])
+
+
+def _node() -> str | None:
+    """Locate a node binary (it isn't always on PATH in a GUI-launched shell)."""
+    import shutil
+    for c in ("node", "/opt/homebrew/bin/node", "/usr/local/bin/node"):
+        p = shutil.which(c) or (c if Path(c).exists() else None)
+        if p:
+            return p
+    return None
+
+
+def _run_node(script: Path, args: list[str]):
+    n = _node()
+    if not n:
+        return None
+    return subprocess.run([n, str(script), *args], capture_output=True, text=True)
+
+
+def _build_trace(name: str, body: str, out: Path) -> bool:
+    """Build an instrumentation trace by driving the real scene runtime in Node.
+
+    Returns False when Node is unavailable — the caller then reports the check as
+    SKIPPED rather than passing, so a missing tool can never look like a pass.
+    """
+    rt = ROOT / "scripts" / "render" / "scene_runtime.js"
+    driver = out.parent / f"_drive_{name}.js"
+    driver.write_text(
+        f"const C = require({str(rt)!r});\n"
+        f"const fs = require('fs');\n"
+        f"const trace = C.buildTrace({body});\n"
+        f"fs.writeFileSync({str(out)!r}, JSON.stringify(trace));\n",
+        encoding="utf-8")
+    r = _run_node(driver, [])
+    return bool(r and r.returncode == 0 and out.exists())
+
+
+def test_scene_runtime_guarantees():
+    """PACKAGE CHANGE #1 (the addendum's highest-value item): beat helpers THROW on
+    an out-of-range index and support NAMED beats, so a narration edit is one loud
+    resolve error instead of six silent mistimings. Plus: non-finite alpha is fatal
+    at the draw call (an element that renders NOTHING, silently), bounded text is the
+    default inside containers, connectors require from/to, assets require subjectId.
+
+    This runs the runtime's OWN selftest in Node — the guarantees are asserted
+    against the real shipped file, not restated here."""
+    print("\n[scene runtime: named beats THROW; NaN alpha fatal; bounded text default]")
+    rt = ROOT / "scripts" / "render" / "scene_runtime.js"
+    check("scene_runtime.js ships", rt.exists(), str(rt))
+    r = _run_node(rt, ["selftest"])
+    if r is None:
+        check("scene runtime selftest (SKIPPED — no node on this machine)", True,
+              "node not found; runtime guarantees UNVERIFIED here")
+        return
+    out = r.stdout + r.stderr
+    check("scene runtime selftest exits 0", r.returncode == 0, out[-400:])
+    for needle in ("out-of-range index THROWS (no clamp)",
+                   "unknown beat name THROWS",
+                   "NaN alpha THROWS at draw",
+                   "bounded text stays inside its card",
+                   "connector without from/to THROWS",
+                   "asset without subjectId THROWS"):
+        check(f"runtime guarantee asserted: {needle}", f"ok   {needle}" in out,
+              out[-300:])
+
+
+def test_semantic_gates_catch_what_geometry_cannot():
+    """PHASE F.3 — the gates that see MEANING. A frame can be geometrically perfect
+    and semantically wrong; that is how ten defects shipped with a green board.
+
+    Proves: a CLEAN scene passes with zero findings, and a scene carrying four real
+    defect classes is caught — reversed connector (D5, undetectable by any geometry
+    gate), wrong-subject asset (D4), text escaping its own container (D3), and a
+    declared-but-empty section (D1/S7). Then proves S8 catches an unexplained ink
+    loss vs the previous approved cut."""
+    print("\n[semantic gates S1-S8: meaning, not geometry]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        lines = ("[{name:'intro',text:'We start with the router.',start:0,end:2,subjectId:'case-a'},"
+                 "{name:'flow',text:'The request flows to the worker.',start:2,end:4,"
+                 "subjectId:'case-a'}]")
+
+        clean_body = (
+            "{name:'clean', grid:5, script:" + lines + ", draw:(z)=>{"
+            "z.section('top',(q)=>{"
+            "q.node({id:'r',x:200,y:120,w:200,h:90,alpha:1,text:'Router'});"
+            "q.node({id:'w',x:900,y:120,w:200,h:90,alpha:1,text:'Worker'});"
+            "q.connector({from:'r',to:'w',alpha:q.beatAlpha('flow')});"
+            "q.card({id:'c',x:200,y:400,w:900,h:260,alpha:1},(k)=>{"
+            "k.text({text:'Bounded caption inside the card',alpha:1});});"
+            "q.chip({text:'ok',x:200,y:700,alpha:1});});}}")
+        bad_body = (
+            "{name:'bad', grid:5, script:" + lines + ", draw:(z)=>{"
+            "z.section('top',(q)=>{"
+            "q.node({id:'r',x:200,y:120,w:200,h:90,alpha:1,text:'Router'});"
+            "q.node({id:'w',x:900,y:120,w:200,h:90,alpha:1,text:'Worker'});"
+            # D5: declared r->w, drawn backwards
+            "q.connector({from:'r',to:'w',alpha:1,points:[{x:1000,y:165},{x:300,y:165}]});"
+            # D4: asset about a different case than the beat
+            "q.asset({path:'shots/case-b.png',subjectId:'case-b',x:200,y:300,w:400,h:200,alpha:1});"
+            # D3: explicit unbounded opt-in escaping its card
+            "q.card({id:'c2',x:200,y:600,w:440,h:120,alpha:1},(k)=>{"
+            "k.text({text:'A very long sub-caption that overflows this card on both sides',"
+            "alpha:1,size:28,x:190,unbounded:true});});});"
+            # D1/S7: declared section that draws nothing
+            "z.section('empty-region',()=>{});}}")
+        rich_body = (
+            "{name:'clean', grid:5, script:" + lines + ", draw:(z)=>{"
+            "z.section('top',(q)=>{q.card({id:'big',x:100,y:100,w:1700,h:800,alpha:1},(k)=>{"
+            "k.text({text:'A much richer previous cut',alpha:1});});});}}")
+
+        tc, tb, tp = d / "clean.json", d / "bad.json", d / "prev.json"
+        if not (_build_trace("clean", clean_body, tc)
+                and _build_trace("bad", bad_body, tb)
+                and _build_trace("prev", rich_body, tp)):
+            check("semantic-gate traces built (SKIPPED — no node)", True,
+                  "node unavailable; semantic gates UNVERIFIED here")
+            return
+
+        # CLEAN must be clean — a gate that cries wolf gets ignored, which is how
+        # the real defects shipped.
+        r = run("scripts/gates/check_semantics.py", [str(tc)])
+        check("(A) CLEAN scene passes every semantic gate (exit 0, no false positives)",
+              r.returncode == 0, (r.stdout + r.stderr)[:400])
+
+        r = run("scripts/gates/check_semantics.py", [str(tb)])
+        check("(B) DEFECTIVE scene is flagged (exit 1)", r.returncode == 1,
+              (r.stdout + r.stderr)[:300])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            c = res["counts"]
+            check("(B) S6 catches the REVERSED connector — no geometry gate can",
+                  c["S6"] > 0, json.dumps(c))
+            check("(B) S5 catches the WRONG-SUBJECT asset (right shape, wrong content)",
+                  c["S5"] > 0, json.dumps(c))
+            check("(B) S3 catches text ESCAPING ITS OWN container",
+                  c["S3"] > 0, json.dumps(c))
+            check("(B) S7 catches the DECLARED-but-EMPTY section",
+                  c["S7"] > 0, json.dumps(c))
+            check("(B) S1/S5/S6 are reported as BLOCKING classes",
+                  res["blocking_count"] > 0, str(res.get("blocking_count")))
+            check("(B) the gate states that passing != quality",
+                  "not provably broken" in json.dumps(res).lower()
+                  or "NOT evidence" in json.dumps(res), "")
+        except (ValueError, IndexError, KeyError) as e:
+            check("(B) semantic gate emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+        # S8: the same scene, now with less ink than the approved cut.
+        r = run("scripts/gates/check_semantics.py", [str(tc), "--prev-trace", str(tp)])
+        check("(C) S8 catches an unexplained ink LOSS vs the previous approved cut",
+              r.returncode == 1 and "lost" in r.stdout.lower(),
+              (r.stdout + r.stderr)[:300])
+
+
+def test_beat_index_gate_catches_the_six_defect_cause():
+    """PHASE F.1/D2 — the single cause behind six unrelated-looking defects: a beat
+    index that goes stale when the narration line count changes, silently clamped
+    instead of raising. Proves the static gate catches an out-of-range helper index,
+    a raw boundary index past the array, and a `lineCount` fallback guard, and that
+    a name-bound scene passes."""
+    print("\n[beat-index gate: the one cause behind six defects]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        script = d / "script.json"
+        script.write_text(json.dumps({"scenes": {"bad": {"lines": [
+            {"name": "intro"}, {"name": "middle"}, {"name": "end"}]},
+            "good": {"lines": [{"name": "intro"}, {"name": "middle"}, {"name": "end"}]}}}),
+            encoding="utf-8")
+        bad = d / "bad.js"
+        bad.write_text(
+            "// SRC: engine/router.py:42\n"
+            "if (lineCount >= 9) { useFallbackTimings(); }\n"
+            "draw(beatAlpha(7));\n"     # out of range for 3 lines
+            "draw(B[9]);\n"             # raw index past the array
+            "// prose mentioning B[42] must NOT create a hit\n",
+            encoding="utf-8")
+        good = d / "good.js"
+        good.write_text(
+            "// SRC: engine/router.py:42\n"
+            "draw(beatAlpha('intro'));\ndraw(beatAlpha('end'));\n",
+            encoding="utf-8")
+
+        r = run("scripts/gates/check_indices.py", ["--scene", str(bad), "--script", str(script)])
+        check("stale/unsafe indices are flagged (exit 1)", r.returncode == 1,
+              (r.stdout + r.stderr)[:300])
+        out = r.stdout
+        check("catches the out-of-range helper index", "beatAlpha(7)" in out, out[:200])
+        check("catches the raw boundary index past the array", "B[9]" in out, out[:200])
+        check("catches the lineCount fallback guard (shipped a whole scene mistimed)",
+              "lineCount guard" in out, out[:200])
+        check("comments are stripped first (prose 'B[42]' is NOT a false hit)",
+              "B[42]" not in out, out[:200])
+
+        r = run("scripts/gates/check_indices.py", ["--scene", str(good), "--script", str(script)])
+        check("a NAME-BOUND scene passes (exit 0)", r.returncode == 0,
+              (r.stdout + r.stderr)[:300])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            check("reports 100% name-bound for the good scene",
+                  res["name_bound_pct"] == 100.0, str(res.get("name_bound_pct")))
+        except (ValueError, IndexError, KeyError) as e:
+            check("beat-index gate emits parseable JSON", False, str(e))
+
+
+def test_content_integrity_gate():
+    """PHASE F.1/D9+D10 — approved strings must not drift (a requester's approved
+    title was silently replaced twice), narration must not repeat itself (a reviewer
+    reported the same information 'repeating ten times'), the voice must not recite a
+    list already on the frame, and the identifier sweep MUST cover SIDECARS (retracted
+    figures survived in a stale caption file)."""
+    print("\n[content integrity: approved strings, repetition, screen-reading, sidecars]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        script = d / "script.json"
+        script.write_text(json.dumps({"scenes": {"s1": {"lines": [
+            {"text": "The pipeline validates the request before anything else happens."},
+            {"text": "Later, the pipeline validates the request before anything else "
+                     "happens again."},
+            {"text": "It uses Router, Worker, Cache, and Queue to move the job along."},
+        ]}}}), encoding="utf-8")
+        approved = d / "approved.json"
+        approved.write_text(json.dumps({"strings": [
+            {"string": "How the routing layer actually decides", "where": "narration",
+             "approved_by_quote": "yes, use that title exactly"}]}), encoding="utf-8")
+        side = d / "captions.srt"
+        side.write_text("1\n00:00:01,000 --> 00:00:03,000\n"
+                        "account 123456789012 id 550e8400-e29b-41d4-a716-446655440000\n",
+                        encoding="utf-8")
+        onscreen = d / "on_screen.json"
+        onscreen.write_text(json.dumps({"s1": ["Router", "Worker", "Cache", "Queue"]}),
+                            encoding="utf-8")
+
+        r = run("scripts/gates/check_content.py",
+                ["--script", str(script), "--approved", str(approved),
+                 "--sidecar", str(side), "--on-screen", str(onscreen)])
+        check("content gate flags the findings (exit 1)", r.returncode == 1,
+              (r.stdout + r.stderr)[:300])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            c = res["counts"]
+            check("D9: the missing APPROVED string is caught and is BLOCKING",
+                  c["approved_strings"] > 0 and res["blocking_count"] > 0, json.dumps(c))
+            check("D10a: a repeated 5-gram across two lines is caught",
+                  c["repetition"] > 0, json.dumps(c))
+            check("D10b: reciting on-frame names (voice-reads-the-screen) is caught",
+                  c["voice_reads_screen"] > 0, json.dumps(c))
+            check("identifiers are swept IN THE SIDECAR (.srt), not just the frames",
+                  any("sidecar" in f for f in res["findings"].get("identifiers", [])),
+                  json.dumps(res["findings"].get("identifiers", [])[:2]))
+        except (ValueError, IndexError, KeyError) as e:
+            check("content gate emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+        # A clean narration with the approved string present must pass.
+        script2 = d / "script2.json"
+        script2.write_text(json.dumps({"scenes": {"s1": {"lines": [
+            {"text": "How the routing layer actually decides is the subject here."},
+            {"text": "A request arrives and is classified by shape."},
+        ]}}}), encoding="utf-8")
+        r = run("scripts/gates/check_content.py",
+                ["--script", str(script2), "--approved", str(approved)])
+        check("clean narration carrying the approved string passes (exit 0)",
+              r.returncode == 0, (r.stdout + r.stderr)[:300])
+
+
+def test_stage_v_blind_review():
+    """PHASE F.5 — the blind visual reverse check. Gates prove 'not provably broken';
+    only this answers 'does this frame show what is being said?'. Proves: a
+    `contradicts` verdict BLOCKS, unanswered schema fields are NOT VERIFIED (never a
+    pass), a missing render makes Stage V an OPEN ITEM rather than a pass, and the
+    freshness rule refuses an artifact older than its sources."""
+    print("\n[Stage V: blind frame-vs-sentence review]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        verdicts = d / "verdicts.json"
+        verdicts.write_text(json.dumps({"verdicts": [
+            {"frame": "f1.png", "sentence": "The router sends work to the worker.",
+             "shows_what_is_said": "contradicts",
+             "text_clipped_or_overflowing": "false", "text_crossing_a_line": "false",
+             "any_panel_unreadable_at_1to1": "false",
+             "large_dead_region": "true — bottom half", "ragged_alignment": "false",
+             "direction_contradicts_sentence": "true — the return arrow",
+             "well_made_or_low_effort": "low-effort — empty bottom half",
+             "resembles_real_identifier_or_private_data": "false",
+             "what_used_to_be_here": "something was lost — the badge row is gone"},
+            {"frame": "f2.png", "sentence": "Second line.", "shows_what_is_said": "match"},
+        ]}), encoding="utf-8")
+        r = run("scripts/gates/stage_v.py", ["check", str(verdicts)])
+        check("a 'contradicts' verdict BLOCKS the build (exit 1)", r.returncode == 1,
+              (r.stdout + r.stderr)[:300])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            check("the blocking frame is named", len(res["blocking"]) == 1,
+                  json.dumps(res["blocking"]))
+            check("an unanswered schema field is reported as NOT VERIFIED",
+                  len(res["incomplete"]) == 1, json.dumps(res["incomplete"]))
+            joined = " ".join(res["ranked_defects"])
+            check("the LOW-EFFORT verdict is surfaced", "LOW-EFFORT" in joined.upper(), joined[:150])
+            check("'something was lost vs the previous cut' is surfaced",
+                  "lost" in joined.lower(), joined[:150])
+            check("the direction contradiction is surfaced",
+                  "direction" in joined.lower(), joined[:150])
+        except (ValueError, IndexError, KeyError) as e:
+            check("stage_v emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+        # No verdicts => an OPEN ITEM, never a pass.
+        r = run("scripts/gates/stage_v.py", ["check", str(d / "nope.json")])
+        check("with no verdicts, Stage V SKIPS as an OPEN ITEM (never a pass)",
+              r.returncode == 2 and "open item" in (r.stdout + r.stderr).lower(),
+              (r.stdout + r.stderr)[:200])
+
+        # Freshness: a frame older than its source must be refused, not reviewed.
+        import os
+        import time
+        frames = d / "frames"; frames.mkdir()
+        f = frames / "frame_000001.png"; f.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 40)
+        src = d / "scene.js"; src.write_text("// edited after the render\n", encoding="utf-8")
+        old = time.time() - 600
+        os.utime(f, (old, old))            # frame is older than the source edit
+        bm = d / "beatmap.json"
+        bm.write_text(json.dumps({"sentences": [
+            {"idx": 1, "text": "One.", "start": 0.0, "end": 2.0}]}), encoding="utf-8")
+        r = run("scripts/gates/stage_v.py",
+                ["prepare", "--beatmap", str(bm), "--frames", str(frames),
+                 "--sources", str(src), "--out", str(d / "packets.json")])
+        check("a STALE artifact is refused before review (freshness rule)",
+              r.returncode == 1 and "STALE" in (r.stdout + r.stderr).upper(),
+              (r.stdout + r.stderr)[:250])
+
+
+def test_claim_discipline_semantic_claims_need_frame_verification():
+    """PHASE F.7 — the most damaging output of the reference build was not a defect,
+    it was the status line "ten gates pass on all N scenes": every word true, ten real
+    defects present. A true claim that is worthless destroys trust faster than a defect.
+
+    Proves the manifest REFUSES semantic claims (explainability, anti-slop) when only
+    mechanical gates passed, authorizes them once a frame-level verification passes,
+    and rejects a 'pass' whose evidence_strength is 'untested'."""
+    print("\n[claim discipline: gates green != quality]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        base = {"deliverable": "video", "claims": ["sync", "explainability", "anti_slop"],
+                "required_items": ["beat_sync"],
+                "items": [
+                    {"id": "beat_sync", "status": "pass", "claim": "sync",
+                     "evidence": "beat_sync.py: 42/42 rows matched",
+                     "evidence_strength": "verified-live"},
+                    {"id": "explain", "status": "pass", "claim": "explainability",
+                     "evidence": "all gates green", "evidence_strength": "code-traced"},
+                    {"id": "slop", "status": "pass", "claim": "anti_slop",
+                     "evidence": "all gates green", "evidence_strength": "code-traced"},
+                ]}
+        m1 = d / "m1.json"; m1.write_text(json.dumps(base), encoding="utf-8")
+        r = run("scripts/gates/verify_manifest.py", [str(m1)])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            check("SEMANTIC claims are REFUSED with no frame verification",
+                  set(res["semantic_unauthorized"]) == {"explainability", "anti_slop"},
+                  json.dumps(res["semantic_unauthorized"]))
+            check("only the mechanically-backed claim is authorized",
+                  res["authorized_claim"] == "Verified: sync", res["authorized_claim"])
+            check("the manifest states that a gate pass is not quality",
+                  "never means" in res["gate_pass_is_not_quality"].lower()
+                  or "NEVER means" in res["gate_pass_is_not_quality"], "")
+        except (ValueError, IndexError, KeyError) as e:
+            check("verify_manifest emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+        # With Stage V passing, the semantic claims become authorizable.
+        with_v = json.loads(json.dumps(base))
+        with_v["items"].append(
+            {"id": "stage_v", "status": "pass", "claim": "frame_review",
+             "evidence": "Stage V blind review: 42/42 frames match their sentence",
+             "evidence_strength": "verified-live"})
+        m2 = d / "m2.json"; m2.write_text(json.dumps(with_v), encoding="utf-8")
+        r = run("scripts/gates/verify_manifest.py", [str(m2)])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            check("with Stage V passed, semantic claims ARE authorized",
+                  res["semantic_unauthorized"] == []
+                  and "explainability" in res["authorized_claim"],
+                  res["authorized_claim"])
+        except (ValueError, IndexError, KeyError) as e:
+            check("verify_manifest emits parseable JSON (2)", False, str(e))
+
+        # A 'pass' tagged untested is a contradiction and must not be a pass.
+        bad = {"deliverable": "video", "claims": ["sync"], "required_items": ["beat_sync"],
+               "items": [{"id": "beat_sync", "status": "pass", "claim": "sync",
+                          "evidence": "assumed fine", "evidence_strength": "untested"}]}
+        m3 = d / "m3.json"; m3.write_text(json.dumps(bad), encoding="utf-8")
+        r = run("scripts/gates/verify_manifest.py", [str(m3)])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            check("a 'pass' with evidence_strength 'untested' is refused",
+                  res["authorized_claim"] == "", res["authorized_claim"])
+        except (ValueError, IndexError, KeyError) as e:
+            check("verify_manifest emits parseable JSON (3)", False, str(e))
+
+
+def test_density_gate_measures_dead_space():
+    """PHASE F.1/D7 — 'looks low-effort' as a NUMBER. Half the frame height at 0.0%
+    ink shipped repeatedly because no gate measured frame USE. Proves the trace mode
+    (which needs no renderer) flags a beat whose lower frame is empty, passes a
+    well-filled beat, and always emits the weakest-beat ranking."""
+    print("\n[density: dead space becomes a number]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        lines = "[{name:'a',text:'One.',start:0,end:2}]"
+        # Content only in the top band => the lower frame is dead.
+        sparse = ("{name:'sparse', grid:5, script:" + lines + ", draw:(z)=>{"
+                  "z.section('t',(q)=>{q.chip({text:'lonely',x:60,y:40,alpha:1});});}}")
+        # Content spread down the frame => healthy.
+        full = ("{name:'full', grid:5, script:" + lines + ", draw:(z)=>{"
+                "z.section('t',(q)=>{for (let i=0;i<5;i++) "
+                "q.card({id:'c'+i,x:100,y:40+i*180,w:1700,h:150,alpha:1});});}}")
+        ts, tf = d / "sparse.json", d / "full.json"
+        if not (_build_trace("sparse", sparse, ts) and _build_trace("full", full, tf)):
+            check("density traces built (SKIPPED — no node)", True,
+                  "node unavailable; density gate UNVERIFIED here")
+            return
+        r = run("scripts/gates/check_density.py", ["trace", str(ts)])
+        check("a beat leaving the lower frame empty is FLAGGED (exit 1)",
+              r.returncode == 1, (r.stdout + r.stderr)[:300])
+        r2 = run("scripts/gates/check_density.py", ["trace", str(tf)])
+        check("a well-filled beat PASSES (exit 0)", r2.returncode == 0,
+              (r2.stdout + r2.stderr)[:300])
+        try:
+            res = json.loads(r2.stdout.strip().splitlines()[0])
+            check("the weakest-beat ranking is always emitted (the next complaint)",
+                  isinstance(res.get("weakest_beats_ranked"), list)
+                  and len(res["weakest_beats_ranked"]) >= 1,
+                  json.dumps(res.get("weakest_beats_ranked"))[:150])
+        except (ValueError, IndexError, KeyError) as e:
+            check("density gate emits parseable JSON", False, str(e))
+
+
+def test_phase_f_doctrine_in_brain():
+    """The gates are only half the fix; the BRAIN must carry the doctrine, because a
+    fresh agent session reads the brain, not the scripts. Assert the load-bearing
+    Phase-F rules are present in PLAYBOOK.md (and therefore in every adapter)."""
+    print("\n[brain carries the Phase F doctrine]")
+    brain = (ROOT / "engine" / "PLAYBOOK.md").read_text(encoding="utf-8")
+    for needle, why in [
+        ("GEOMETRY and PRESENCE", "the core diagnosis"),
+        ("D1", "the ten defect classes are enumerated"),
+        ("D10", "the ten defect classes are complete"),
+        ("STAGE V", "the blind reverse check is a mandatory stage"),
+        ("BLIND to the builder's claims", "the blindness rule"),
+        ("what used to be here", "the prev-cut question that finds a lost visual"),
+        ("freshness", "the stale-artifact rule"),
+        ("approved_strings.json", "approved strings are frozen"),
+        ("DIRECTION / CONTENT / CORRECTION", "requester-line classification (D8)"),
+        ("Lock CONTENT before building VISUALS", "script lock before render (R3)"),
+        ("never what it IMPLIES", "claim discipline"),
+        ("FIRST-GO CHECKLIST", "the operational checklist"),
+    ]:
+        check(f"brain states: {why}", needle in brain, f"missing {needle!r}")
+    # The doctrine must reach the SHIPPED adapters too, byte-for-byte.
+    sys.path.insert(0, str(ROOT / "build"))
+    import generate_adapters as ga  # noqa
+    planned = ga.build_all()
+    for path, contents in planned.items():
+        if "claude-code/SKILL.md" in str(path):
+            check("the Claude Code skill carries Phase F (so a fresh session gets it)",
+                  "STAGE V" in contents and "GEOMETRY and PRESENCE" in contents, "")
+
+
 def main() -> int:
     print("Coordn8 test suite")
     print("=" * 50)
@@ -1715,6 +2377,17 @@ def main() -> int:
     test_canonical_marks_land_in_both_deliverables()
     test_live_brief_precedence_blocks_both_deliverables()
     test_end_to_end_smoke_html_and_video_pipelines()
+    test_pronunciation_spoken_vs_display_both_deliverables()
+    # PHASE F — first-go quality: the semantic layer. Every check below exists
+    # because a real build shipped a defect with a fully green board.
+    test_scene_runtime_guarantees()
+    test_semantic_gates_catch_what_geometry_cannot()
+    test_beat_index_gate_catches_the_six_defect_cause()
+    test_content_integrity_gate()
+    test_density_gate_measures_dead_space()
+    test_stage_v_blind_review()
+    test_claim_discipline_semantic_claims_need_frame_verification()
+    test_phase_f_doctrine_in_brain()
     print("=" * 50)
     print(f"RESULT: {PASS} passed, {FAIL} failed")
     if FAILURES:

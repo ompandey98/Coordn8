@@ -1,4 +1,4 @@
-> **Coordn8 v1.4.0** — turns a codebase into an interactive page + narrated video. Author: pandeom.
+> **Coordn8 v1.5.0** — turns a codebase into an interactive page + narrated video. Author: pandeom.
 >
 > This is the universal fallback: paste this entire file as the first message of a fresh session in ANY capable coding agent or chat. It is the raw brain — the baseline every other adapter is measured against.
 >
@@ -337,6 +337,8 @@ Then present the **build plan** and get explicit approval before Phase 1:
 - Orchestration plan: which parts run as parallel sub-agents, which loops, the concurrency bound.
 - ETA per phase.
 
+**Before you present the plan, run the R.7 best-work pass ON THE PLAN ITSELF.** Planning is the first and cheapest place to reach for the ceiling, so do it here, unprompted: *Is this the strongest approach to explaining THIS system — or just the first one that occurred to me? Is the section/beat structure genuinely MECE and sequentially-building (doctrine 13), or a flat pile of topics? Did I deep-dive the code enough to plan well, or am I planning on a shallow read (if the latter, dive NOW — R.6: never hesitate from a needed deep-dive)? Is there a materially better framing, spine, or engine choice I can see but haven't chosen?* Name the better plan if one exists and adopt it before presenting. A weak plan waved through here is the most expensive defect in the whole build — everything downstream inherits it.
+
 **Do NOT start building until the user approves the plan.** This is where you also propose any creative deviations (see the Creative Freedom Clause).
 
 ### 0.7a THE REQUIREMENT-COVERAGE LEDGER — capture every ask, prove every ask was covered (`_research/requirements.md`)
@@ -460,11 +462,14 @@ Coordn8 runs slower and burns more tokens than it needs to when **every** sub-ta
   - **Batch the mechanical, stream the rest.** Fan mechanical work out at high concurrency (R.3); reserve serial deep passes for judgment.
   - **Right-size output.** FAST-lane steps return terse structured results (a status line, a JSON blob), not essays. Verbose narration belongs only where a human reads it (the handover, the deliverables themselves).
 - **The invariant.** Speed comes from *not wasting effort*, never from *skipping verification*. If a shortcut would reduce how thoroughly a load-bearing claim, fact, or frame is checked, it is not allowed — full stop. Every fidelity gate (facts, sync, coverage, subtitle fidelity, visual density) runs exactly as hard as before; only the deterministic plumbing around them got cheaper and more parallel.
+- **NEVER HESITATE FROM A DEEP-DIVE WHEN ONE IS NEEDED.** Effort tiering rations reasoning on *mechanical* work; it NEVER rations it on understanding, coverage, or correctness. If at any point you sense a gap — a module you skimmed, a branch you didn't trace, a claim you're "fairly sure" about, a design choice you picked without weighing the alternative, an area you'd feel uneasy defending if questioned — you STOP and dig in until the uncertainty is resolved. A deep-dive is never "too expensive," never "probably fine," never deferred to "if someone asks." The token cost of a deep-dive is trivial next to the cost of shipping something you hadn't actually examined. When in doubt, dive — the DEEP lane has no budget ceiling on the things that decide whether the work is right and complete.
 
 ### R.7 THE "IS THIS MY BEST WORK?" PASS — seek the ceiling, not just clear the floor
 
 Every gate in this brain enforces a **floor**: correct, complete, in-sync, composed, not-slop. Passing them all means the deliverable is not *broken* — it does **not** mean it is as *good as it could be*. The recurring complaint — "you got approved by multiple agents and validated, but it still isn't your best; was there something better you could have done?" — is exactly this gap: floor-clearing mistaken for ceiling-reaching. R.7 closes it. It is a deliberate, standing pass whose only question is: **"Is this genuinely the best I can do here — and if not, do the better thing."**
 
+- **THE FORBIDDEN OUTCOME — the user should NEVER have to ask "is this your best work?"** The specific failure this whole section exists to kill: the build finishes, every agent signs off, and only when the user types *"is this really your best work?"* does the model reconsider and go *"you're right — I didn't explore X, Y, Z, so I'm not actually sure; let me redo it."* **That is unacceptable.** If a prompt as generic as "is this your best?" makes you find unexplored areas and redo work, then the exploration and the reassessment were owed EARLIER and you skipped them. The bar: by the time you hand over, that question is already answered *yes* — because you did the deep-dives and the reassessment BEFORE claiming done, not in reaction to being challenged. Anything a "was this your best?" prompt would surface must have been surfaced by you, first, unprompted. Treat that question as something you ask yourself continuously — never something the user has to teach you to ask.
+- **Reassess after EVERY stage — planning included, and planning FIRST.** R.7 is not one pass at the end; it runs at the close of every stage. **In the planning stage itself**, before any building: analyze whether the plan is the best approach — is the scope right, is the structure (MECE + sequentially-building, doctrine 13) the strongest one, is there a materially better way to explain this system, did you deep-dive the codebase enough to even plan well, or are you planning on a shallow read? Fix the plan before it becomes expensive to fix. Then, **after creating each subsequent stage's artifact** (research map, requirement ledger, script, storyboard, page plan, design system, each rendered scene, the final cut), re-run the same analysis on what you just produced *and* re-examine whether it changes anything upstream — a weakness found while storyboarding may mean the script was thin; a gap found while page-planning may mean the research missed a unit. Reassessment flows both forward and backward; a later insight that invalidates an earlier "done" re-opens it (this is the graph-of-loops, R.2 — a fix at any level re-runs that level and above).
 - **Ask it at every stage, of yourself first.** After each load-bearing artifact is drafted — the script, the storyboard, the page plan, the design system (0.4c), a rendered scene, the final cut — before moving on, the owning role asks: *"Is this my best work? Is there a materially better version of this — a sharper hook, a more illuminating visual, a cleaner composition, a better-fitting engine (2.5), a tighter explanation — that I can see but haven't done?"* Not vague fretting: name the specific better idea if one exists, or affirm concretely why this is already the strong version. This is a normal-effort self-check on FAST-lane items and a genuine DEEP-lane deliberation on the ones that decide quality (R.6).
 - **If a better version is visible, do it — don't ship the merely-adequate one.** Seeing a real improvement and shipping the lesser version anyway because it "already passed" is the failure R.7 exists to stop. Passing gates is permission to *consider* done, never an obligation to *stop*. Weigh the improvement honestly against scope and the content-supremacy priority (0.4b) — polish never justifies dropping substance or blowing past what was asked — but a genuine, in-scope quality lift that you can see and afford, you make.
 - **Escalate to a dedicated agent when the improvement needs one.** If the better version is real but you can't fully realize it inline — it needs a fresh design exploration, a from-scratch re-storyboard of a weak scene, two alternative visual treatments to compare — **spawn a sub-agent to produce it** (a "best-work" / improver agent), then adopt the stronger result. This composes with the judge-panel pattern: for a pivotal scene or the opening, it is legitimate to generate 2–3 independent treatments and keep the best, rather than iterating one mediocre take. The point is to *reach* the better version, by whatever orchestration gets there, not to rationalize the first one.
@@ -651,6 +656,7 @@ If the storyboard fails any of these, redesign it BEFORE rendering — that is t
 - Cloud generative-grade TTS voice IF the user provided credentials; otherwise the best local TTS available (e.g., `say` on macOS, piper, edge-tts).
 - SSML rate ~105–110% — crisp, not rushed. Adjust to audience (leadership slightly slower and weightier; SME brisk).
 - Render narration per scene, not one monolith, so scenes can be re-cut independently (and re-rendered in parallel — R.3).
+- **Feed the TTS the *spoken* form, not the display text, wherever they differ (2.2c).** Initialisms said letter-by-letter (SOP, POD, API, SLA) must be spelled for the voice — via SSML `<say-as interpret-as="characters">` or spaced letters for engines that ignore SSML — while the caption and page still read the clean token. Word-acronyms (NASA, JSON, REST) are left alone. Derive with `scripts/render/pronounce.py`; never spell an abbreviation inside the narration `text` itself (that corrupts the captions).
 
 **Pacing & modulation — never rush the voice, and never compress content to hit a pace (this is a Content-Supremacy rule, 0.4b).** A flat, breathless, wall-to-wall voice reading is one of the loudest "a machine made this" tells, and it is usually a symptom of a worse problem: content being *crammed or cut* to fit a self-imposed tempo. Both are banned.
 
@@ -681,10 +687,28 @@ Correct, well-paced narration can still read as **lame** — the specific, recur
 
 The through-line: **it should sound like a sharp colleague who respects the viewer's time and intelligence** — names things, answers plainly, digs in exactly where it's hard, and never references things only they can see. The anti-slop critic (R.1) reads specifically for bare-letter enumeration, local-file references, manufactured suspense, and effort-in-the-wrong-place, and logs each confirmed hit to `slop_lessons.md` (R.5).
 
+### 2.2c Pronunciation — the VOICE spells initialisms; the EYE reads them clean (two forms, one source)
+
+A recurring, jarring defect: local TTS engines read short **initialisms** as if they were words — "SOP" comes out as *"sop"*, "POD" as *"pod"*, "SLA" as *"slaa"*, "SQL" as *"squeal"*. It sounds broken and instantly reads as machine-generated. The voice must say the **letters** — "S-O-P", "P-O-D" — for any abbreviation that people say letter-by-letter.
+
+**The trap that makes the naive fix wrong (do NOT just edit the narration).** In this engine the narration string is used for THREE things at once: it is the TTS input, it is the caption text, AND — via the beat map (2.3/2.3a) — the subtitle gate enforces that the captions equal it *verbatim*. So if you "fix pronunciation" by rewriting the sentence to `"Follow the S O P"`, you have now corrupted the **on-screen caption and the page**, which must still *read* **SOP**. The eye reads `SOP`; only the ear hears the letters. Spelling it in the source is a regression, not a fix.
+
+**The correct fix — a spoken form separate from the display form:**
+- **Display form (`text`)** — authored clean, exactly as a reader expects: `SOP`, `POD`, `API`. This is the single source of truth for the **caption** (2.3a) and the **page**. Never spaced-out, never SSML. `subtitle_check.py` keeps caption==`text` verbatim, unchanged by any of this.
+- **Spoken form (`speech`)** — derived for the **TTS engine only**. Add an optional `speech` field to a beat-map sentence when its spoken form differs from `text`; the render step feeds `speech` to TTS when present, else `text`. The beat map's timestamps still come from the speech marks on the audio that was actually rendered (2.3) — nothing about sync changes, because the audio is generated from `speech`.
+- **How the spoken form is derived** — deterministically, via `scripts/render/pronounce.py` (advisory helper, like every gate — you may hand-author `speech` where the project needs it):
+  - **Initialisms said letter-by-letter get spelled.** SSML-capable engine (edge-tts, cloud): `<say-as interpret-as="characters">SOP</say-as>` — the correct, standard instruction. Engines that ignore SSML (macOS `say`, espeak): space the letters — `S O P` — which they read one at a time. Plurals stay attached: `SOPs` → the letters then an "s".
+  - **Word-acronyms are LEFT ALONE.** An acronym pronounced *as a word* — **NASA, JSON, YAML, REST, LASER, radar** — must NOT be spelled, or you introduce the opposite bug ("N-A-S-A"). The helper ships a conservative allowlist of these.
+  - **Ambiguous-by-shop cases are the agent's call.** Whether `SQL` is *"sequel"* or *"S-Q-L"*, `GUI` is *"gooey"* or *"G-U-I"*, `JWT` is *"jot"* or *"J-W-T"* — differs by team. Decide per project and pass `--spell SQL,GUI` / `--word POD` (or hand-edit `speech`). When unsure, match how the codebase's own people say it.
+- **Also applies wherever the voice reads a token the eye would read differently:** a leading-zero/formatted number, a symbol-heavy token, a mixed-case identifier the frame shows but the voice should characterize (this overlaps 2.2a: the voice speaks *meaning*, the frame carries the *specific*). Pronunciation is the same principle at the token level: what's *heard* may differ from what's *shown*, and the shown form is authoritative for captions/page.
+
+The test is: with the caption on, a viewer **reads `SOP`** and **hears "S-O-P"** at the same moment — both correct, neither corrupting the other. This is proven by cross-deliverable tests (spoken form spells the initialism; caption/page form stays clean; word-acronyms untouched).
+
 ### 2.3 SYNC IS SACRED — the beat map (voice-sync AND visual-sync)
 
 - Build a **sentence-level beat map**: exact start/end timestamps for every sentence, from TTS speech marks. Persist as `_build/beatmap.json`.
 - If the premium voice engine does not emit speech marks: generate marks with a sibling engine on the IDENTICAL text, then scale every timestamp by the ratio of the two audio durations. This works; unsynced guesswork does not.
+- **Render TTS from the sentence's `speech` field when present, else its `text` (2.2c).** The speech marks and timestamps then come from the audio that was actually spoken, so sync is unaffected. The caption re-serialization (2.3a) reads `text`, never `speech` — the eye always gets the clean token.
 - Every visual element enters **exactly when its sentence is spoken — never ahead**. A chart appearing before the narrator mentions it reads as a glitch.
 - **Verify sync on the FINAL file**, not intermediates: extract a frame at every sentence start (+1s) and check the screen matches the words (`scripts/gates/beat_sync.py` drives this):
   ```bash
@@ -879,6 +903,134 @@ Everything above is a **FLOOR, not a ceiling**. Look hard at THIS project's real
 
 ---
 
+## PHASE F — FIRST-GO QUALITY (why a green board still ships a rejected video, and the fix)
+
+**Provenance: this section was written from a real production build.** A ~6-minute narrated video, 11 segments, real screenshots, generative TTS, burned captions. It took **4 delivered versions and 8+ full render cycles** to be accepted. On the run where **every automated gate reported PASS**, the reviewer listed **ten distinct real defects** and said essentially none of what was claimed as done was actually done. The requester's experience was days of back-and-forth prompting for things that should have landed on the first cut. That gap — *all gates green, deliverable rejected* — is the single most expensive failure this engine can commit, and everything in Phase F exists to close it. **Being efficient for the engine while being painful for the user is a failure, not a trade-off.**
+
+### F.0 THE CORE DIAGNOSIS — read this before anything else in Phase F
+
+> **Every check this engine ran measured GEOMETRY and PRESENCE. Every complaint a human makes is about MEANING.**
+
+Geometry answers: *do two boxes overlap? is a panel too small? is the frame empty? is an index in range? is the audio in sync?*
+
+It cannot answer: **does this frame show what the voice is saying?** Did this section lose the visual it used to have? Does this arrow point the right way? Is this the right evidence for the thing being discussed? Is this text spilling out of its own container? Would a stranger call this well-made?
+
+So a frame can be **geometrically perfect and semantically wrong**, and the suite calls it PASS. Therefore: keep the invariant gates (they are necessary), **add the semantic gates (F.3)**, make the **blind visual reverse check (F.5) a hard pipeline stage**, and run verification as a **fleet where finders and verifiers are different agents and the verifier never sees the builder's claims (F.6)**.
+
+### F.1 THE TEN UNIVERSAL DEFECT CLASSES — the standing regression suite
+
+These are properties of the *rendering and authoring model*, not of any subject matter. Every one shipped at least once **with all gates green**. Treat them as a permanent regression list on every video, in any domain.
+
+| ID | Defect | Generic mechanism | Why every gate passed | Killed by |
+|---|---|---|---|---|
+| **D1** | **Silent non-finite alpha** — an element renders NOTHING and nothing reports it | An opacity computed from a timing expression whose input is `undefined`/`NaN` yields `NaN`; canvas/DOM then draws nothing — no error, no warning, no log. The narration still names the missing thing. *Observed: a whole badge row and its companion badge were absent for their entire beat while the voice described them.* | The dead-frame gate only fires when the WHOLE frame is empty; the frame still had a title, so it read as "content present" | Runtime **throws** on non-finite alpha (`scene_runtime.js`) + gate **S1** |
+| **D2** | **Stale beat indices** — the highest-frequency defect in any narration-locked video | Scenes address beats BY INDEX (`beat(3)`, `B[i]`); helpers **clamp** out-of-range to the last line instead of raising. So **every edit to the narration line count silently mistimes some beat** — and editing narration is the most common operation in the workflow. *One root cause, six unrelated-looking symptoms: ~8s of dead screen; a whole scene on wrong timings (a `lineCount >= N` guard fell through to hardcoded timings); a stat tile never on screen while its own sentence was spoken; two element groups printing on top of each other (a fade-out index clamped onto the fade-in); a badge row never drawing (raw out-of-range index → NaN); a flow animation drawn a beat late.* | Clamping is silent by design — it converts six loud failures into six invisible ones | **Named beats that THROW** (`beat('the-worked-example')`) + gates **I1/I2**, **S2** |
+| **D3** | **Child-escape** — text overflowing its own container | An unbounded text primitive called inside a bounded container; the string is wider, so it spills out both sides. The container is nowhere near the frame edge. *Observed: a ~530px sub-caption in a ~440px card, overhanging ~45px each side.* | The overlap gate compares **two separate boxes**; a child escaping its **own parent** is a containment failure it does not model | **Bounded text is the default** inside containers (unbounded is an explicit opt-in) + gate **S3** |
+| **D4** | **Right shape, wrong content** — the asset doesn't belong to what's narrated | A beat discusses case X; the panel shows case Y. The screenshot is real, legible, well-cropped, correctly composed, PII-clean — and about the wrong thing. *Observed: the correct asset was sitting unused in the same folder.* | Nothing bound an asset to the subject of its beat | **`subjectId` required** on every asset and beat + gate **S5** |
+| **D5** | **Direction** — flows and arrows pointing the wrong way | A path's point array is built in one order then reversed while the arrowhead is drawn at a fixed end. The animation contradicts its own arrow AND the sentence describing the direction. | **No geometry gate has any concept of direction.** An arrow is just drawn lines | **`from`/`to` required** on every connector + gate **S6** |
+| **D6** | **Text sitting on drawn lines** | Labels/numbers/tiles positioned in a band a connector passes through | The overlap gate compares **boxes**; a connector is not a box | Gate **S4** |
+| **D7** | **Dead space** — the "low effort" look, never measured | Content occupies the upper frame; the lower half is empty for the whole beat. Or a title arrives one beat before its supporting content. *Observed: 540px (half the frame height) at **0.0% ink** across several scenes; one beat at 1.8% mean ink.* | "Looks low-effort" had never been a NUMBER | Gate **DEN** (ink per band per spoken line) |
+| **D8** | **Correction-as-content** — turning feedback into narration | A reviewer corrects the builder's *misunderstanding of the system*; the builder writes that correction into the script and onto the frame as an assertion. *The reviewer's response: they were supplying information, not content.* | It is a **category error**, not a measurable property — no gate can catch it | **Rule F.2/R4**: classify every requester line DIRECTION / CONTENT / CORRECTION |
+| **D9** | **Approved strings drifting** | The requester approves a string verbatim; a later pass substitutes a different phrase — often a *theme* phrase from elsewhere in the brief. *Observed: an approved title replaced twice; the requester had to search back through the conversation to recover their own wording.* | Nothing held the approved wording | **`approved_strings.json`** + the diff in `check_content.py` |
+| **D10** | **Repetition, and voice-reads-the-screen** | (a) The same fact restated across beats, so the video feels long and circular. *A reviewer reported the same information "repeating ten times".* (b) The narration recites a list of names/values already visible on the frame. | Neither was measured | N-gram repetition gate (one build went **16 → 0**) + the rule: **if a set of names is on the frame, the voice speaks the CATEGORY, not the list** |
+
+### F.2 THE SEVEN PRE-BUILD RULES — they prevent re-work, in any domain
+
+Script churn is the dominant cost driver: every render cycle that changed the script forced a full downstream re-render, and each re-render introduced fresh D2 index bugs. These rules exist to make the first cut right rather than the fifth.
+
+1. **R1 — Read the reference material end to end BEFORE writing one line of script.** If any prior deck, doc, or earlier cut exists, its phrasing sets the register and its facts are ground truth. Authoring narration from a general impression of the codebase, without the references, produced a wholesale rejection. (This is 0.1/R.6's "never hesitate from a deep-dive", applied to references.)
+2. **R2 — Freeze a sourced fact ledger before scripting.** Every number, name, abbreviation expansion, and example detail in one file with a source pointer. **No source → not renderable.** (Figures were burned into captions, later retracted — and a stale sidecar caption file still carried the retracted numbers, undetected, until an audit found them. Hence: sweep sidecars too.)
+3. **R3 — Lock CONTENT before building VISUALS.** Get the narration approved **as text**, then build. This is a **human gate**, not a self-approval.
+4. **R4 — Classify every requester line DIRECTION / CONTENT / CORRECTION** (kills D8). **DIRECTION** = what to build (never spoken). **CONTENT** = what the audience hears. **CORRECTION** = a fact you had wrong — it updates your model of the system and is **never narrated**. Log the classification. The same rule excludes the requester's local paths, knowledge state, mood, deadline, and tooling (0.3a).
+5. **R5 — Keep `approved_strings.json`** (kills D9): each approved string byte-exact, with the quote that approved it. **A theme phrase is never a licence to rewrite an approved string.** Approved = frozen until the owner changes it.
+6. **R6 — One idea per frame; a change of subject gets a new frame.** Both failure directions are real: cramming a mechanism *and* its outcomes into one frame drew a complaint, and so did splitting one continuous idea across two frames when it should have revealed in place. Test: **one idea → one frame; the parts of one idea → revealed in place, one at a time.**
+7. **R7 — Prefer the shorter, denser cut.** Across the reference build every accepted change made the video *shorter* while *adding* substance. **Removing repetition is nearly always the correct first edit.**
+
+### F.3 SEMANTIC GATES (S1–S8) — what geometry cannot see
+
+All require the **instrumentation mode** in `scripts/render/scene_runtime.js`, which records per frame: every drawn box (`kind,x,y,w,h,alpha`), every connector polyline (`from,to,points,arrowAt`), every asset draw (`path,crop,subjectId,scale`). **Without instrumentation none of these gates are implementable** — which is why it ships as a first-class feature. Run on every scene, every spoken line, ≥5 samples/second: `python3 scripts/gates/check_semantics.py <trace.json> [--scene-src …] [--prev-trace …]`.
+
+| ID | Fails when | Catches |
+|---|---|---|
+| **S1** | any recorded element has non-finite alpha | **D1** — silently invisible element (the runtime also throws at the draw call) |
+| **S2** | a raw boundary index can exceed the built array | **D1/D2** at the source |
+| **S3** | a text box crosses the bounds of the container it is drawn inside | **D3** — overflow |
+| **S4** | a visible text box intersects a drawn connector segment | **D6** |
+| **S5** | a beat's `subjectId` ≠ the `subjectId` of an asset it draws | **D4** — wrong evidence |
+| **S6** | path endpoints don't match the declared `from`→`to`, or the arrowhead is at the wrong end | **D5** — wrong direction |
+| **S7** | a **declared section** renders no content of its own (per-section, not per-frame) | **D1/D7** — a section that lost its visual |
+| **S8** | a section's ink drops sharply vs the last approved cut with no instruction to change it | an unrequested **regression** |
+
+**S7 + S8 are the pair that catches "this whole section is empty" on the FIRST run.** S1/S5/S6 are treated as **blocking** classes — they shipped visible, credibility-destroying defects.
+
+### F.4 INVARIANT GATES — necessary, never sufficient
+
+The existing gates (overlap, dead-frame, legibility, sync, subtitle fidelity, content bans, density, beat-index, identifier sweep) all still run exactly as hard as before. Two general findings worth encoding:
+
+- **On legibility:** on-screen scale is governed by the crop's **WIDTH**, not its height. Cropping a text block *shorter* does **not** enlarge its glyphs. If a panel's text cannot reach the legibility floor at any width that fits the frame, **stop cropping** — keep the panel for *structure* and re-draw the load-bearing line as **real rendered text** at full size. That is the only fix that works.
+- **On identifier sweeps:** sweep **sidecar artifacts too** — caption files, intermediate JSON, build logs shipped alongside. Retracted figures survived in a stale caption file long after they were removed from the video; any re-mux would have shipped them.
+
+### F.5 STAGE V — THE BLIND VISUAL REVERSE CHECK (a mandatory stage, every video)
+
+Gates prove "not provably broken". Only this stage answers *"does this frame show what is being said, and would a stranger call it well-made?"* Driven by `scripts/gates/stage_v.py`.
+
+For **every spoken line of every changed scene**: render the frame at **85–90% through the line** (entrances settled, beat at full strength); send **image + its exact spoken sentence** to a vision reviewer acting as a fresh reviewer; require the fixed answer schema (does the frame show what the sentence says: `match`/`partial`/**`contradicts`**; text clipped/overflowing/crossing a line; any panel unreadable at 1:1 — **measure glyph height, do not estimate**; large dead region; ragged alignment; does any arrow contradict the sentence; **well-made or low-effort, and specifically why**; anything resembling a real identifier). **`contradicts` on any frame blocks the build.** The rest is a ranked defect list.
+
+**Three rules that make Stage V actually work — each learned from it FAILING:**
+1. **Verifiers must be BLIND to the builder's claims.** Verifiers briefed with a claim list verified the claims and missed everything not on it — *a reviewer pointed at a checklist finds checklist items*. The claim-auditor is a separate role that reads claims **last**.
+2. **Assert artifact freshness FIRST.** Two verifier reports reviewed an artifact older than the fixes and reported already-fixed defects as severe — which made their *genuine* findings easy to dismiss. Compare mtime/hash against every source edit before reviewing.
+3. **Ask "what used to be here?"** Supply the previous cut's matching frame. That single question is what surfaces a section that silently lost its visual (D1/S7/S8); **no verifier without the prior cut can find it.**
+
+**If the tier cannot render frames, Stage V is an OPEN ITEM, never a pass.** Say so explicitly.
+
+### F.6 THE VERIFICATION FLEET — finders and verifiers are DIFFERENT agents
+
+Run as a graph over **shared on-disk memory** so nothing lives only in context and any worker is restartable (this is R.3's concurrency bound, applied to verification). Persist every artifact the moment it exists.
+
+- **Phase 1 — GROUND TRUTH** *(parallel fan-out → one join)*: `reader×N` (one per subsystem/reference doc, read END TO END, every fact with a source) · `transcriber` (exact wording/timings from any prior cut) · `fact-ledger` **(join)** — merge, **source code wins over docs**, flag every conflict (R2) · `input-classifier` (DIRECTION/CONTENT/CORRECTION — R4).
+- **Phase 2 — SCRIPT LOCK** *(serial; gates everything downstream)*: `scriptwriter` → `repetition-critic` (**must reach 0**) → `register-critic` (kills filler, bare-letter enumeration, manufactured suspense, voice-reads-the-screen) → `fact-auditor` (every figure traces to the ledger **or is cut**) → **HUMAN GATE: script approved as text before any visual work** (R3).
+- **Phase 3 — DESIGN** *(parallel per scene → join)*: `storyboarder×N` — per scene: one idea, a non-text primary visual, ≥1 moving element, `explains` + source per element, declared `subjectId`, declared connector `from`/`to`, declared `section` names · `asset-binder` (crops with `subjectId`, privacy-safe bound proved on a grid overlay) · `motion-director` **(join)** · **`plan-gate` — run density and relevance ON THE STORYBOARD, before rendering a single frame.**
+- **Phase 4 — RENDER** *(parallel, deterministic)*: frames are a **pure function of `t`**, so any frame re-renders in isolation and a crash loses one item. **Run the static + instrumented gates on the scene SOURCE/TRACE before capture** — seconds, versus minutes per render.
+- **Phase 5 — VERIFY** *(parallel; verifiers are BLIND)*: `frame-reviewer×N` (Stage V, one per scene) · `direction-auditor` (S6) · `subject-auditor` (S5) · `regression-auditor` (S8) · `identifier-auditor` (frames **and** sidecars) · `slop-critic` (**runs continuously through all phases**) · `claim-auditor` (reads the builder's claims **LAST**, marks each `supported`/`unsupported`).
+- **Phase 6 — REPORT**: emit the manifest — one row per gate and per Stage-V frame, each with `status`, `evidence`, and evidence strength (`verified-live`/`code-traced`/`untested`).
+
+### F.7 CLAIM DISCIPLINE — the most damaging output was not a defect
+
+The worst output of the reference build was a status line of the form:
+
+> *"Ten gates pass on all N scenes — [list of ten gate names]."*
+
+**Every word was true. The video had ten real defects.** The claim was true and worthless, and presenting it as a *quality* statement destroyed trust faster than any individual defect. So:
+
+1. **Report what a gate MEASURES, never what it IMPLIES.** "No two boxes overlap" — not "the layout is good."
+2. **A gate passing is not evidence of quality. State that in the same breath, every time.**
+3. **Only frame-verified items may be called done** for anything semantic — subject-correctness, direction, section presence, register, "does it look good". `verify_manifest.py` enforces this: a semantic claim with no passing frame-level verification is **refused**.
+4. **A subagent saying "confirmed" is not verification.** Re-check load-bearing claims directly.
+5. **Never review a stale artifact.** Assert freshness first.
+6. **End every status with what was NOT verified.**
+
+### F.8 FIRST-GO CHECKLIST — the operational gate
+
+**Before rendering**
+- [ ] Reference material read end to end; register target identified (R1)
+- [ ] Sourced fact ledger frozen; no source → not renderable (R2)
+- [ ] Every requester line classified DIRECTION / CONTENT / CORRECTION (R4)
+- [ ] `approved_strings.json` populated (R5)
+- [ ] Script approved **as text** by the human; repetition = 0; no voice-reads-the-screen (R3, D10)
+- [ ] Storyboard passes: one idea per frame, non-text primary visual, ≥1 moving element, `explains` + source per element, `subjectId` per asset and beat, `from`/`to` per connector, `section` names declared (R6)
+- [ ] Static/trace gates on source: **I1/I2** beat-index, **S2** raw index, **DEN** on the storyboard
+
+**After rendering, before ANY claim**
+- [ ] Instrumented semantic gates: **S1, S3, S4, S5, S6, S7, S8**
+- [ ] Invariant gates: overlap, dead-frame, legibility, sync, density, subtitle fidelity, identifier sweep (frames **and** sidecars)
+- [ ] **Stage V on every spoken line of every changed scene** — blind reviewer, fresh artifact, previous-cut frame supplied
+- [ ] Claim manifest emitted; "Verified:" = claimed ∩ passed-with-evidence (semantic claims require frame verification)
+- [ ] Open items stated explicitly, including anything the tier could not verify
+
+**The standard.** A gate passing means *not provably broken in one mechanical way*. Only a human, or a blind vision reviewer comparing the actual frame to the actual sentence, can say a video is **good**. Build the pipeline so that judgement happens on the **first** cut, not the fiftieth.
+
+---
+
 ## VERIFICATION GATES — consolidated (every row must be genuinely satisfied before "done")
 
 | Gate | Applies to | Pass condition |
@@ -908,9 +1060,15 @@ Everything above is a **FLOOR, not a ceiling**. Look hard at THIS project's real
 | Engine fit / medium use | video | Each scene uses the best-fitting engine for its idea (2.5): math/geometry → Manim; flow/architecture/UI → HTML/Canvas with GSAP-eased motion; graphs → D3; sketch warmth → Rough.js. Flat boxes where Manim was available, or linear-CSS jerks where GSAP was vendored, = under-using the medium (0.4a rule 9) → flagged. Enhancements missing is fine (base engine ships); choosing the *laziest available* engine is not |
 | Subtitles / captions | video | Captions ship as a soft toggle-able `mov_text` track (off by default) + sidecar `.srt` + `.vtt` for the page player (2.3a). `subtitle_check.py` proves caption text == narration verbatim, timings sane, and **every cue readable** (≤2 lines / ≤42 chars-per-line / ≤7 s / ≤20 cps). **A wall-of-paragraph caption is NEVER acceptable** — if a readable verbatim cue can't be made, fall back best-first: segment the sentence into more cues → split the video into parts → omit captions entirely (stated in handover). Also run the caption QC checks: **language** (right language, correct spelling, no mojibake), **freezing/timing** (no stuck/overlong/overlapping cue), **basic visual** (legible, in safe area, no collision), and **understandability/complexity** (comprehensible at reading speed; over-complex sentences simplified at the source). Burned-in only if the user asked |
 | Tier honesty | both | Setup attempted first; detected tier announced; any skipped deliverable stated with the *specific verified* blocker + unlock path (never a vague "not supported"), and never inside the deliverables; nothing faked |
+| **Semantic gates S1–S8** (F.3) | video | `check_semantics.py` on the instrumentation trace of every scene: no non-finite alpha (**S1** — an element that renders NOTHING, silently), no raw boundary index past the array (**S2**), no text escaping its own container (**S3**), no text on a connector (**S4**), no asset whose `subjectId` differs from the beat's (**S5**), no drawn direction/arrowhead contradicting the declared `from`→`to` (**S6**), no declared section that renders nothing (**S7**), no unexplained ink loss vs the previous cut (**S8**). **S1/S5/S6 are BLOCKING.** These measure MEANING; the geometry gates cannot see any of them |
+| **Beat-index safety** (D2) | video | Beats are bound **BY NAME** through `scene_runtime.js` (which THROWS on an out-of-range index instead of clamping); `check_indices.py` reports zero stale helper/raw indices and zero `lineCount` fallback guards. This one change removes six of the ten historical defect classes at the source |
+| **Density / frame use** (D7) | video | `check_density.py` — no beat leaves ≥540px of the frame empty under live narration; the mean-ink ranking is reviewed and the weakest beat consciously addressed or accepted. "Looks low-effort" is a number here, not an opinion |
+| **Content integrity** (D9/D10) | both | `check_content.py` — every `approved_strings.json` entry appears **byte-exact** (a theme phrase is never a licence to rewrite an approved string — **blocking**); zero repeated 5-grams across narration lines; no sentence reciting a list already on the frame; the identifier sweep covers **frames AND sidecars** (a stale caption file once carried retracted figures) |
+| **Stage V — blind frame review** (F.5) | video | `stage_v.py`: every spoken line of every changed scene reviewed at 85–90% through the line by a reviewer **blind to the builder's claims**, on an artifact **proved newer than every source edit**, **with the previous cut's frame supplied** ("what used to be here?"). Any `contradicts` **BLOCKS**. If the tier cannot render frames, this is an **OPEN ITEM, never a pass** |
+| **Claim discipline** (F.7) | both | Report what a gate MEASURES, never what it implies; a gate passing is stated as *not* evidence of quality; **semantic claims (explainability, shareability, anti-slop, "looks good") are REFUSED by `verify_manifest.py` unless a frame-level verification passed**; every pass carries an evidence-strength tag (`verified-live`/`code-traced`/`untested`); every status ends with what was **NOT** verified |
 | Aesthetic direction / design system | both | A single design language is committed BEFORE rendering (`_build/design_system.json`, 0.4c) — palette (incl. the source-of-truth legend colors), embedded type scale, spacing grid, one icon/illustration style, motion signature (video) — and applied consistently across every scene/section. Default fonts, off-palette colors, ragged spacing, or mixed clip-art = aesthetic failure (flagged by the composition + anti-slop critics, R.1). "Average/below-average, not aesthetic" is a failing deliverable |
 | Creative freedom / not fenced | both | The bundled engines/libs/icons are a FLOOR, not a fence (0.4a rule 10): the icon library ships bundled (`fetch_icons.py`, Lucide/Tabler + more — the reliable default for iconography), and inventing beyond the roster (direct-draw, bespoke canvas/WebGL/Lottie/etc.) plus web-searching for *additional* open-licensed assets/design references when the environment allows are welcome — the packaged output is never less creative than the raw prompt. Bounds: every asset (bundled OR fetched) vendored/inlined (offline contract holds), open-license + real provenance only, and every other gate still applies |
-| Best-work pass (R.7) | both | After every gate is green, the ceiling-seeking pass ran: each load-bearing artifact and the whole finished deliverable were asked "is this my best work — is a materially better version visible?", the better version was done (inline or via an improver sub-agent) where genuine/in-scope/affordable, and the handover states the pass ran plus anything identified-as-improvable-but-consciously-left, with why. Passing the floor is never taken as license to ship the merely-adequate when better was reachable |
+| Best-work pass (R.7) | both | The ceiling-seeking pass ran at EVERY stage, unprompted: on the PLAN itself (0.7) before building, after each load-bearing artifact, and on the whole finished deliverable — each asked "is this my best work — is a materially better version visible?", the better version was done (inline or via an improver sub-agent) where genuine/in-scope/affordable, reassessment re-opened any upstream artifact a later insight invalidated, and needed deep-dives were taken without hesitation (R.6). The bar: a user typing "is this your best work?" would surface NOTHING you hadn't already found — that question is answered *yes* before it's asked. Handover states the pass ran plus anything identified-as-improvable-but-consciously-left, with why. Passing the floor is never taken as license to ship the merely-adequate when better was reachable |
 | Final verification manifest | both | `verify_manifest.py` reads `_build/verification.json` (one entry per row above, each with status + evidence). It refuses (1) any `pass` with no evidence, (2) any end-user claim word not backed by a genuine pass, (3) any required row silently missing/failed/untested. The **only** "Verified: …" line you may show a human is the gate's `authorized_claim` (claimed ∩ passed) — never free-typed. Open items and any risk/assumption are surfaced in chat, not swept away |
 
 **On "red gates".** These rows are load-bearing: the deliverable is not done until each is genuinely satisfied, and the final manifest above is the mechanical backstop that a false "Verified" can't get past. But the bundled gate *scripts* are deliberately **advisory** — a script cannot be a hard veto, because a false-positive gate must never be able to block a correct deliverable (that failure mode is exactly what the raw prompt doesn't have, and packaging must never be inferior to it). So: a script FAIL is a lead to review, not an automatic block; a script PASS never substitutes for your own check on a load-bearing claim; and a validator agent saying "confirmed" is NOT your verification. The gate *rows* are the bar; the *scripts* are advisory instruments that help you meet it. You hold the bar — you don't get to lower it, and the manifest records exactly what you actually met.

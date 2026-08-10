@@ -1,7 +1,7 @@
 {
   "name": "coordn8",
-  "version": "1.4.0",
-  "description": "Point it at any codebase; it ships an interactive page and a narrated, synced video — audience-tailored, every claim traced to the code.",
+  "version": "1.5.0",
+  "description": "Point it at any codebase; it ships an interactive page and a narrated, synced video \u2014 audience-tailored, every claim traced to the code.",
   "bin": {
     "coordn8": "bin/coordn8.js"
   },
@@ -31,6 +31,8 @@
     "adapters/",
     "scripts/",
     "build/",
+    "examples/",
+    "docs/",
     "install.sh",
     "README.md",
     "LICENSE"

@@ -18,7 +18,11 @@ Data contract — beatmap.json (default shape; deviate if needed):
   "fps": 30,
   "sentences": [
     {"idx": 1, "text": "...", "start": 0.0, "end": 3.2,
-     "visual_enter": 0.2}   # when the sentence's visual appears; must be >= start
+     "visual_enter": 0.2,   # when the sentence's visual appears; must be >= start
+     "speech": "..."}       # OPTIONAL spoken form for TTS ONLY (PLAYBOOK 2.2c):
+                            # e.g. text "the SOP" -> speech "the S O P". Captions
+                            # and the page use `text`; only TTS reads `speech`.
+                            # Absent when the spoken form equals the display text.
   ]
 }
 

@@ -166,9 +166,38 @@ Each of these is a bar the deliverable must genuinely clear before it's called d
 | `beat_sync` | video: no visual enters ahead of its sentence; duration within tolerance; per-sentence frames extracted for inspection |
 | `subtitle_check` | video: the caption track (`.srt`/`.vtt`) carries the **exact** narrated words in order — proves captions never drifted from the voice — cue timings are monotonic, non-negative, and within the video's duration, **and** every cue is within the readable limits (≤2 lines, ≤42 chars/line, ≤7 s on screen, ≤20 chars/sec) so a caption can never come back as a screen-filling paragraph |
 | `media_probe` | video: resolution, fps, audio present, clean decode |
-| `verify_manifest` | both, LAST: reads `_build/verification.json` and refuses (1) any `pass` with no evidence, (2) any end-user "Verified: …" word not backed by a genuine pass, (3) any required gate silently missing/failed/untested — emitting the only claim string that's safe to show |
+| `verify_manifest` | both, LAST: reads `_build/verification.json` and refuses (1) any `pass` with no evidence, (2) any end-user "Verified: …" word not backed by a genuine pass, (3) any required gate silently missing/failed/untested, (4) **any semantic claim** ("explainability", "shareability", "anti-slop", "looks good") that has no **frame-level** verification behind it — emitting the only claim string that's safe to show |
 
-Run them all against a build folder: `npx github:ompandey98/coordn8 gates path/to/Coordn8`
+Run them all against a build folder: `npx -y github:ompandey98/coordn8 gates path/to/Coordn8`
+
+---
+
+## The semantic layer — why a green board used to ship a rejected video (v1.5.0)
+
+> **Every check above measures GEOMETRY and PRESENCE. Every complaint a human makes is about MEANING.**
+
+That one sentence is the most important thing in this package. A real production build — a 6-minute narrated video, 11 segments — took **4 delivered versions and 8+ full render cycles** to be accepted. On the run where *every automated gate reported PASS*, the reviewer listed **ten distinct real defects**. The gates weren't lying; they were measuring the wrong category of thing. Geometry can tell you two boxes don't overlap. It cannot tell you whether **this frame shows what the voice is saying**.
+
+v1.5.0 closes that gap on three levels — and the order matters, because the first level makes defects *impossible* rather than merely *detectable*:
+
+**1. The scene runtime (`scripts/render/scene_runtime.js`) — removes whole defect classes at the source.**
+
+| It does this | So this can't happen |
+|---|---|
+| **Named beats that THROW** — `beat('the-worked-example')` resolved against the script; an out-of-range index raises instead of **clamping** | **Six** of the ten observed defects came from ONE cause: a beat index going stale when the narration line count changed, silently clamped. Editing narration is the most common operation in the workflow, and it used to mistime scenes invisibly. This is the single highest-value change in the release |
+| **Non-finite alpha is fatal at the draw call** | A `NaN` opacity draws **nothing** — no error, no warning, no log. An entire section once rendered blank while the narration described its contents out loud |
+| **Bounded text by default** inside containers (`unbounded: true` is an explicit opt-in) | A caption overflowing its own card by ~45px each side. The overlap gate compares two *separate* boxes, so a child escaping its *own parent* was invisible to it |
+| **`from`/`to` required** on every connector | An arrow animating opposite to its own arrowhead, contradicting the sentence. **No geometry gate has any concept of direction** |
+| **`subjectId` required** on every asset and beat | A panel showing the evidence for a *different* example — real, legible, well-cropped, and about the wrong thing |
+| **`section('name', …)`** declarations + an **instrumentation trace** | Enables everything below. Without instrumentation the semantic gates cannot be written at all |
+
+**2. Semantic gates that read the trace — no browser required.** `check_semantics.py` runs S1–S8 (non-finite alpha · raw boundary index · child-escape · text-on-connector · asset↔subject mismatch · flow direction · declared-but-empty section · ink regression vs the previous approved cut). `check_indices.py` catches stale beat references and `lineCount` fallback guards. `check_density.py` turns *"this looks low-effort"* into a **number** — ink per horizontal band per spoken line, because half the frame at 0.0% ink shipped repeatedly while every correctness gate passed. `check_content.py` holds `approved_strings.json` **byte-exact** (an approved title was silently replaced twice), catches repeated 5-grams, catches the voice reciting a list already on the frame, and sweeps identifiers in **sidecar files too** (retracted figures once survived in a stale caption file).
+
+**3. Stage V — the blind visual reverse check (`stage_v.py`), a mandatory stage.** For every spoken line, the frame at 85–90% through the line goes to a reviewer **with the exact sentence and no knowledge of the builder's claims**. A `contradicts` verdict **blocks the build**. Three rules, each learned from this stage *failing*: verifiers must be **blind** (a reviewer pointed at a checklist finds only checklist items); the artifact must be proved **newer than every source edit** (reviewing a stale render produced already-fixed "defects" that discredited the genuine findings); and the reviewer gets the **previous cut's frame** and is asked *"what used to be here?"* — the only way to find a section that silently lost its visual.
+
+**And the claim discipline that ties it together.** The most damaging output of that build wasn't a defect — it was the status line *"ten gates pass on all N scenes."* Every word true; ten real defects present. **A true claim that is worthless destroys trust faster than any single defect.** So: report what a gate *measures*, never what it *implies*; state in the same breath that a gate passing is **not** evidence of quality; and only frame-verified items may be called done for anything semantic — `verify_manifest.py` now **refuses** those words otherwise. Every status ends with what was **not** verified.
+
+The full doctrine — ten defect classes with root causes, seven pre-build rules, the verification fleet, and a first-go checklist — is **Phase F** in [engine/PLAYBOOK.md](engine/PLAYBOOK.md), so a fresh agent session inherits all of it.
 
 ---
 

@@ -70,6 +70,25 @@ from lib.common import (EXIT_ERROR, EXIT_PASS, EXIT_REVIEW, EXIT_SKIPPED,  # noq
 
 VALID_STATUS = {"pass", "fail", "untested", "skipped"}
 
+# Evidence strength must be STATED, not implied. A unit test, a script's JSON, and a
+# human watching the final file are not the same evidence, and a claim may never be
+# stronger than the evidence behind it.
+VALID_STRENGTH = {"verified-live", "code-traced", "untested"}
+
+# SEMANTIC claims — the ones about MEANING rather than geometry. A mechanical gate can
+# never authorize these: "no two boxes overlap" is not "the layout is good". They require
+# frame-level verification (Stage V's blind frame-vs-sentence review, or a human).
+# This encodes claim-discipline rule 3: only frame-verified items may be called done for
+# anything semantic. A build once reported "ten gates pass" — every word true — while ten
+# real defects shipped; a true claim that is worthless destroys trust faster than a defect.
+SEMANTIC_CLAIMS = {
+    "explainability", "shareability", "anti_slop", "anti-slop", "looks_good",
+    "well_made", "well-made", "aesthetics", "aesthetic", "clarity", "quality",
+    "subject_correctness", "direction", "section_presence", "register",
+}
+# Items whose pass is what makes a semantic claim authorizable.
+FRAME_VERIFIED_IDS = {"stage_v", "stage_v_frames", "frame_review", "human_review"}
+
 # Load-bearing checklist items per deliverable (from the consolidated gate table
 # in PLAYBOOK.md). These must be `pass` before the deliverable is called done.
 # Overridable via manifest `required_items`, but any drop is surfaced, not silent.
@@ -154,6 +173,26 @@ def main() -> int:
                 f"what was run/seen, or change the status.")
             continue
 
+        # 1b — evidence STRENGTH must be stated and must match the claim. An
+        # unstated strength is treated as the weakest reading, never the strongest.
+        strength = str(it.get("evidence_strength") or "").strip().lower()
+        if status == "pass" and strength and strength not in VALID_STRENGTH:
+            findings.append(
+                f"item '{iid}' has evidence_strength {strength!r} — expected one of "
+                f"{sorted(VALID_STRENGTH)}. Tag what was ACTUALLY done: a unit test is "
+                f"'code-traced', watching the final file is 'verified-live'.")
+        if status == "pass" and not strength:
+            # Not fatal, but it must be visible: an untagged pass reads stronger than it is.
+            findings.append(
+                f"item '{iid}' passes with NO evidence_strength tag — add "
+                f"verified-live | code-traced | untested so the claim cannot read "
+                f"stronger than the evidence behind it.")
+        if status == "pass" and strength == "untested":
+            findings.append(
+                f"item '{iid}' is marked pass with evidence_strength 'untested' — that is a "
+                f"contradiction. An untested item is not a pass.")
+            continue
+
         if status == "pass":
             passed_ids.add(iid)
             if claim:
@@ -175,8 +214,27 @@ def main() -> int:
             f"item{where}. Refusing to authorize this claim string — never write "
             f"'Verified: {c}' unless {c} actually passed.")
 
-    # The ONLY claim string safe to show a human: claimed AND actually passed.
-    safe_claims = [c for c in claims if c.lower() in passed_claims]
+    # 2b — SEMANTIC claims require FRAME-LEVEL verification, not a mechanical gate.
+    # "Ten gates pass" was true while ten real defects shipped: geometry gates cannot
+    # authorize a claim about meaning or quality. Only Stage V (blind frame-vs-sentence
+    # review) or a human can.
+    frame_verified = bool(passed_ids & FRAME_VERIFIED_IDS)
+    semantic_unauthorized = []
+    for c in claims:
+        if c.lower() in SEMANTIC_CLAIMS and not frame_verified:
+            semantic_unauthorized.append(c)
+            findings.append(
+                f"SEMANTIC OVERCLAIM: \"{c}\" is a claim about MEANING/QUALITY, and no "
+                f"frame-level verification passed (need one of {sorted(FRAME_VERIFIED_IDS)} "
+                f"— Stage V's blind frame-vs-sentence review, or a human watching it). "
+                f"Mechanical gates measure geometry and presence; they can never authorize "
+                f"\"{c}\". Report what the gates measured, never what it implies.")
+
+    # The ONLY claim string safe to show a human: claimed AND actually passed AND, for
+    # semantic claims, frame-verified.
+    safe_claims = [c for c in claims
+                   if c.lower() in passed_claims
+                   and not (c.lower() in SEMANTIC_CLAIMS and not frame_verified)]
 
     # 3 — nothing silently owed: required items missing or not-passing are open.
     required = _required_for(deliverable, data.get("required_items"))
@@ -225,6 +283,12 @@ def main() -> int:
         "required_count": len(required),
         "still_open": still_open,
         "overclaimed": unbacked,
+        "semantic_unauthorized": semantic_unauthorized,
+        "frame_verified": frame_verified,
+        "gate_pass_is_not_quality": (
+            "A gate passing means 'not provably broken in one mechanical way'. It NEVER means "
+            "the deliverable is good. State that in the same breath as any gate result, and end "
+            "every status with what was NOT verified."),
         # the exact, safe claim string the agent MAY show the end user — empty if
         # nothing is genuinely verified yet. Never show a claim not in this list.
         "authorized_claim": (
