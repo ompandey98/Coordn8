@@ -125,12 +125,74 @@ def scan(src_text: str, n_lines: int, names: list[str]) -> dict:
     }
 
 
+def line_count_changes(script: dict, files: list[Path], counts_path: Path,
+                       full_sweep: bool = False) -> tuple[list[str], dict]:
+    """PACKAGE CHANGE #10: WARN LOUDLY WHEN THE NARRATION LINE COUNT CHANGES.
+
+    Editing the narration is the single most dangerous edit in the system: every
+    scene that addresses a beat is now suspect, and historically the failure was
+    silent. So we persist the per-scene line count and, on the next run, name
+    EXACTLY which scenes must be re-checked — before anything is re-rendered.
+
+    Returns (warnings, current_counts). The counts file is the memory; the first
+    run simply records a baseline and says so.
+    """
+    current: dict[str, int] = {}
+    for p in files:
+        n, _ = scene_lines(script, p.stem)
+        if n >= 0:
+            current[p.stem] = n
+
+    previous: dict[str, int] = {}
+    if counts_path.exists():
+        try:
+            previous = {k: int(v) for k, v in
+                        json.loads(counts_path.read_text(encoding="utf-8")).items()}
+        except Exception:  # noqa: BLE001 — a corrupt baseline must not break the gate
+            previous = {}
+
+    warnings: list[str] = []
+    if not previous:
+        return warnings, current
+
+    for scene, n in current.items():
+        was = previous.get(scene)
+        if was is None:
+            # A brand-new scene is EXPECTED, not a defect. Reporting it as a finding
+            # is exactly the noise that makes a gate get ignored — and an ignored gate
+            # is how the real defects shipped. Only a CHANGE is a finding.
+            continue
+        if was != n:
+            warnings.append(
+                f"⚠ NARRATION LINE COUNT CHANGED in '{scene}': {was} -> {n}. This is the "
+                f"most dangerous edit in the system — EVERY beat reference in this scene "
+                f"must be re-checked, and any frame already rendered from it is stale. "
+                f"Bind beats by NAME so this edit cannot mistime them silently.")
+    # A scene "missing" from a TARGETED scan is not missing from the project — only a
+    # full sweep can tell the difference. Claiming otherwise on a one-scene run is a
+    # false positive, and false positives are what get a gate ignored.
+    if full_sweep:
+        for scene in previous:
+            if scene not in current:
+                warnings.append(
+                    f"scene '{scene}' had a baseline ({previous[scene]} lines) and is now "
+                    f"absent from a full sweep — confirm it was deliberately removed and "
+                    f"that no other scene still references its beats")
+    return warnings, {**previous, **current}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Coordn8 beat-index gate (I1/I2).")
     ap.add_argument("--scene", action="append", default=[], help="a scene source file")
     ap.add_argument("--scene-dir", default=None, help="directory of scene sources (*.js)")
     ap.add_argument("--script", required=True,
                     help="script/beatmap JSON defining each scene's narration lines")
+    ap.add_argument("--counts", default=None,
+                    help="path to persist per-scene line counts, so a CHANGE in the "
+                         "narration line count is reported loudly on the next run "
+                         "(package change #10). Default: <script dir>/.line_counts.json")
+    ap.add_argument("--no-update-counts", action="store_true",
+                    help="report line-count changes but do not update the baseline")
     args = ap.parse_args()
 
     script_path = Path(args.script)
@@ -155,6 +217,12 @@ def main() -> int:
         emit({"gate": "beat_index", "status": "SKIPPED",
               "summary": "no scene sources found to scan"})
         return EXIT_SKIPPED
+
+    # PACKAGE CHANGE #10 — the loud warning on a narration line-count change.
+    counts_path = (Path(args.counts) if args.counts
+                   else script_path.parent / ".line_counts.json")
+    count_warnings, current_counts = line_count_changes(
+        script, files, counts_path, full_sweep=bool(args.scene_dir))
 
     per_scene, total_bad, unresolved = {}, 0, []
     total_named, total_indexed = 0, 0
@@ -188,6 +256,20 @@ def main() -> int:
                         f"{script_path.name} — cannot verify its beat indices (treat as UNCHECKED, "
                         f"not as passing)")
 
+    findings = count_warnings + findings
+
+    # Persist the baseline so the NEXT run can detect the next change. Written after
+    # the comparison, and skippable so a dry run can't silently move the goalposts.
+    # NOTE: current_counts is MERGED over the previous baseline, so scanning a single
+    # scene can never erase the recorded history of the others.
+    if not args.no_update_counts and current_counts:
+        try:
+            counts_path.parent.mkdir(parents=True, exist_ok=True)
+            counts_path.write_text(json.dumps(current_counts, indent=2) + "\n",
+                                   encoding="utf-8")
+        except OSError:
+            pass  # a read-only tree must not break the gate
+
     total_refs = total_named + total_indexed
     name_pct = (100.0 * total_named / total_refs) if total_refs else 0.0
 
@@ -200,6 +282,8 @@ def main() -> int:
         "indexed_refs": total_indexed,
         "name_bound_pct": round(name_pct, 1),
         "per_scene": per_scene,
+        "line_count_changes": count_warnings,
+        "line_counts": current_counts,
         "findings": findings,
         "recommendation": (
             "Bind beats BY NAME (beat('the-worked-example')) via scripts/render/scene_runtime.js, "

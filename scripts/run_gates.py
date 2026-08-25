@@ -167,6 +167,14 @@ def main() -> int:
           + (["--page", str(html)] if html.exists() else [])
           + (["--on-screen", str(on_screen)] if on_screen.exists() else [])
           + sum((["--sidecar", str(s)] for s in sidecars), []))),
+        # Invariant gates C1-C8 (F.4): overlap, declared-asset-never-drawn,
+        # cursor-in-dead-space, source provenance, sustained void under speech,
+        # panel legibility scale, cross-subsystem assets. Necessary, never
+        # sufficient — they never authorize a quality claim.
+        ("invariants", GATES / "check_invariants.py",
+         ([str(p) for p in traces]
+          + sum((["--scene-src", str(sx)] for sx in scene_srcs), []))
+         if traces else [str(build / "_build" / "trace.json")]),
         # Stage V (F.5): the blind frame-vs-sentence review. SKIPPED (an OPEN
         # ITEM, never a pass) until a blind reviewer returns verdicts.
         ("stage_v", GATES / "stage_v.py", ["check", str(stage_v_verdicts)]),

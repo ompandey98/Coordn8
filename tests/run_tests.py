@@ -2349,6 +2349,269 @@ def test_phase_f_doctrine_in_brain():
                   "STAGE V" in contents and "GEOMETRY and PRESENCE" in contents, "")
 
 
+def test_invariant_gates_C1_to_C8():
+    """PHASE F.4 — the eight invariant gates. Each exists because the matching defect
+    shipped with a fully green board. Proves a clean scene passes with NO false
+    positives (a noisy gate gets ignored, which is how a real 1-second void shipped)
+    and that each defect is actually caught."""
+    print("\n[invariant gates C1-C8: necessary, never sufficient]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        lines = ("[{name:'a',text:'One.',start:0,end:2,subjectId:'x'},"
+                 "{name:'b',text:'Two.',start:2,end:4,subjectId:'x'}]")
+        clean = ("{name:'cclean', grid:5, subsystem:'alpha', assets:['shots/one.png'], script:"
+                 + lines + ", draw:(z)=>{z.section('s',(q)=>{"
+                 "q.node({id:'n1',x:120,y:240,w:240,h:100,alpha:1,text:'Node'});"
+                 "q.chip({text:'live',x:120,y:420,alpha:1});"
+                 "q.asset({path:'shots/one.png',subjectId:'x',subsystem:'alpha',"
+                 "x:700,y:240,w:900,h:500,srcW:1200,alpha:1});"
+                 "q.cursor({x:900,y:400,onAsset:'shots/one.png',alpha:1});});}}")
+        bad = ("{name:'cbad', grid:5, subsystem:'alpha',"
+               "assets:['shots/promised-never-drawn.png'], script:" + lines +
+               ", draw:(z,t)=>{ if (t < 1.4) { "
+               "z.text({text:'Only a title',x:120,y:80,size:44,alpha:1}); return; } "
+               "z.section('s',(q)=>{"
+               "q.card({id:'p1',x:200,y:300,w:600,h:300,alpha:1});"
+               "q.card({id:'p2',x:500,y:400,w:600,h:300,alpha:1});"
+               "q.asset({path:'shots/other.png',subjectId:'x',subsystem:'beta',"
+               "x:1150,y:300,w:700,h:400,srcW:3000,alpha:1});"
+               "q.cursor({x:40,y:1040,onAsset:'shots/other.png',alpha:1});});}}")
+        tc, tb = d / "cclean.json", d / "cbad.json"
+        if not (_build_trace("cclean", clean, tc) and _build_trace("cbad", bad, tb)):
+            check("invariant traces built (SKIPPED — no node)", True, "node unavailable")
+            return
+
+        r = run("scripts/gates/check_invariants.py", [str(tc)])
+        check("(A) a CLEAN scene trips NO invariant (no false positives)",
+              r.returncode == 0, (r.stdout + r.stderr)[:400])
+
+        nosrc = d / "nosrc.js"; nosrc.write_text("draw(beatAlpha('a'));\n", encoding="utf-8")
+        r = run("scripts/gates/check_invariants.py",
+                [str(tb), "--scene-src", str(nosrc)])
+        check("(B) the defective scene is flagged (exit 1)", r.returncode == 1,
+              (r.stdout + r.stderr)[:300])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            c = res["counts"]
+            check("(B) C1 catches two visible panels PARTIALLY overlapping",
+                  c["C1"] > 0, json.dumps(c))
+            check("(B) C2 catches a DECLARED asset that never draws",
+                  c["C2"] > 0, json.dumps(c))
+            check("(B) C3 catches a cursor parked in dead space",
+                  c["C3"] > 0, json.dumps(c))
+            check("(B) C5 catches a scene source with no // SRC: provenance",
+                  c["C5"] > 0, json.dumps(c))
+            check("(B) C6 catches a SUSTAINED void while a line is spoken",
+                  c["C6"] > 0, json.dumps(c))
+            check("(B) C7 catches a panel below the 0.42x legibility floor",
+                  c["C7"] > 0, json.dumps(c))
+            check("(B) C8 catches an asset from another subsystem",
+                  c["C8"] > 0, json.dumps(c))
+            check("(B) the gate states invariants are NOT a quality claim",
+                  "not provably broken" in res["gate_pass_is_not_quality"].lower(), "")
+        except (ValueError, IndexError, KeyError) as e:
+            check("(B) invariant gate emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+        # C6 must NEVER flag silence: a hold between sentences is breathing room.
+        gap = ("{name:'cgap', grid:5, script:[{name:'a',text:'One.',start:0,end:1},"
+               "{name:'b',text:'Two.',start:3,end:4}], draw:(z,t)=>{"
+               "z.section('s',(q)=>{ if (t <= 1 || t >= 3) "
+               "q.chip({text:'on',x:100,y:400,alpha:1}); });}}")
+        tg = d / "cgap.json"
+        if _build_trace("cgap", gap, tg):
+            r = run("scripts/gates/check_invariants.py", [str(tg)])
+            check("(C) SILENCE between sentences is NOT flagged as a void "
+                  "(a noisy gate gets ignored)", r.returncode == 0,
+                  (r.stdout + r.stderr)[:300])
+
+
+def test_line_count_change_warning():
+    """PACKAGE CHANGE #10 — editing the narration is the most dangerous edit in the
+    system, so a change in a scene's line count must be reported LOUDLY, naming the
+    scenes that must be re-checked, before anything is re-rendered."""
+    print("\n[line-count change: the most dangerous edit, made loud]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        scene = d / "s1.js"
+        scene.write_text("// SRC: engine/router.py:42\ndraw(beatAlpha('intro'));\n",
+                         encoding="utf-8")
+        script = d / "script.json"
+        counts = d / "counts.json"
+        script.write_text(json.dumps({"scenes": {"s1": {"lines": [
+            {"name": "intro"}, {"name": "mid"}, {"name": "end"}]}}}), encoding="utf-8")
+
+        r = run("scripts/gates/check_indices.py",
+                ["--scene", str(scene), "--script", str(script), "--counts", str(counts)])
+        check("first run records a baseline and warns about nothing",
+              r.returncode == 0, (r.stdout + r.stderr)[:250])
+        check("the baseline file is written", counts.exists(), "")
+
+        # Delete a narration line — every beat reference is now suspect.
+        script.write_text(json.dumps({"scenes": {"s1": {"lines": [
+            {"name": "intro"}, {"name": "end"}]}}}), encoding="utf-8")
+        r = run("scripts/gates/check_indices.py",
+                ["--scene", str(scene), "--script", str(script), "--counts", str(counts)])
+        check("a line-count CHANGE is flagged (exit 1)", r.returncode == 1,
+              (r.stdout + r.stderr)[:250])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            w = " ".join(res["line_count_changes"])
+            check("the warning names the scene and the old->new counts",
+                  "s1" in w and "3 -> 2" in w, w[:200])
+            check("the warning says every beat reference must be re-checked",
+                  "re-checked" in w, w[:200])
+            check("the warning says already-rendered frames are stale",
+                  "stale" in w.lower(), w[:200])
+        except (ValueError, IndexError, KeyError) as e:
+            check("check_indices emits parseable JSON", False, str(e))
+
+
+def test_addendum_coverage_audit():
+    """The whole package exists to prevent a TRUE BUT WORTHLESS claim. So "every
+    called-out issue is addressed" is itself a CHECKED artifact, not an assertion:
+    tests/audit_addendum.py maps each item in the field report to concrete evidence
+    and fails on any gap. This test runs that audit as part of the suite, so a future
+    change that silently drops a mechanism breaks the build."""
+    print("\n[addendum coverage audit: no item addressed by assertion alone]")
+    r = run("tests/audit_addendum.py", ["--json"])
+    check("the coverage audit runs", "Traceback" not in (r.stdout + r.stderr),
+          (r.stdout + r.stderr)[:300])
+    try:
+        res = json.loads(r.stdout)
+        check(f"every addendum item is supported by present evidence "
+              f"({res['covered']}/{res['total']})",
+              res["gaps"] == 0 and res["covered"] == res["total"],
+              json.dumps([x for x in res["rows"] if x["status"] != "covered"])[:400])
+        check("the audit covers the whole document (>= 55 checked items)",
+              res["total"] >= 55, str(res["total"]))
+        check("the audit exits 0 when there are no gaps", r.returncode == 0, "")
+    except ValueError as e:
+        check("coverage audit emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+
+def test_orchestrator_fail_early_and_adaptive():
+    """PLAYBOOK R.3a/R.3b — the supervised orchestrator. Two properties matter:
+
+    FAIL EARLY: cheap source/plan/trace stages run BEFORE anything expensive, and a
+    finding in one of them HALTS the run, so nothing is rendered on top of a
+    known-bad input. Generating everything and evaluating at the end is what forced
+    full re-renders (and each re-render introduced fresh defects).
+
+    ADAPTIVE PARALLELISM: work inside a stage goes through the AIMD pool, which sizes
+    itself from real CPU + free RAM and keeps re-tuning live. The run records the peak
+    concurrency it actually reached, so the claim is measured, not asserted.
+
+    Also proves the agent-to-agent BUS: every stage writes its result to
+    `_build/orchestration/`, so a worker reads a predecessor's output from disk rather
+    than from a conversation."""
+    print("\n[orchestrator: fail-early stages + adaptive parallel + on-disk bus]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+
+        # (A) an EMPTY build must run every stage and skip honestly, never crash.
+        empty = d / "empty"; (empty / "_build").mkdir(parents=True)
+        r = run("scripts/orchestrate.py", [str(empty), "--json"])
+        check("(A) an empty build runs without crashing",
+              "Traceback" not in (r.stdout + r.stderr), (r.stdout + r.stderr)[-300:])
+        try:
+            rep = json.loads(r.stdout)
+            check("(A) all five stages ran on an empty build",
+                  [s["stage"] for s in rep["stages"]]
+                  == ["source", "plan", "trace", "artifact", "judgement"],
+                  json.dumps([s["stage"] for s in rep["stages"]]))
+            check("(A) nothing halted (there is nothing to fix)",
+                  rep["halted_after"] is None, str(rep["halted_after"]))
+            check("(A) the pool reports a start count and a live ceiling",
+                  rep["pool"]["start_workers"] >= 1
+                  and rep["pool"]["ceiling_workers"] >= rep["pool"]["start_workers"],
+                  json.dumps(rep["pool"]))
+            check("(A) peak concurrency is MEASURED per stage, not assumed",
+                  all(isinstance(s.get("peak_workers"), int) for s in rep["stages"]),
+                  json.dumps([s.get("peak_workers") for s in rep["stages"]]))
+        except ValueError as e:
+            check("(A) orchestrator emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+        # (B) a SOURCE-stage defect must halt before any artifact/judgement work.
+        bad = d / "bad"; (bad / "_build").mkdir(parents=True); (bad / "video").mkdir()
+        (bad / "video" / "s1.js").write_text(
+            "// SRC: engine/router.py:42\ndraw(beatAlpha(7));\n", encoding="utf-8")
+        (bad / "_build" / "script.json").write_text(json.dumps(
+            {"scenes": {"s1": {"lines": [{"name": "a"}, {"name": "b"}]}}}), encoding="utf-8")
+        r = run("scripts/orchestrate.py", [str(bad), "--json"])
+        try:
+            rep = json.loads(r.stdout)
+            check("(B) a stale beat index HALTS the run at the source stage",
+                  rep["halted_after"] == "source", str(rep["halted_after"]))
+            check("(B) the expensive stages were NOT run after the halt",
+                  [s["stage"] for s in rep["stages"]] == ["source"],
+                  json.dumps([s["stage"] for s in rep["stages"]]))
+        except ValueError as e:
+            check("(B) orchestrator emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+        # (C) --no-fail-fast must override the halt and run everything.
+        r = run("scripts/orchestrate.py", [str(bad), "--json", "--no-fail-fast"])
+        try:
+            rep = json.loads(r.stdout)
+            check("(C) --no-fail-fast runs every stage despite the finding",
+                  len(rep["stages"]) == 5 and rep["halted_after"] is None,
+                  json.dumps([s["stage"] for s in rep["stages"]]))
+        except ValueError as e:
+            check("(C) orchestrator emits parseable JSON", False, str(e))
+
+        # (D) the on-disk bus: per-stage files a downstream worker can read.
+        bus = bad / "_build" / "orchestration"
+        check("(D) the agent-to-agent bus directory is written", bus.is_dir(), str(bus))
+        check("(D) a per-stage result file exists (readable by another worker/tool)",
+              (bus / "source.json").exists(), str(list(bus.glob("*.json"))))
+        check("(D) the run summary is on disk (restartable, not context-bound)",
+              (bus / "run.json").exists(), "")
+        try:
+            st = json.loads((bus / "source.json").read_text(encoding="utf-8"))
+            check("(D) a stage file carries each gate's status + summary",
+                  st["stage"] == "source" and st["gates"]
+                  and all("status" in g and "summary" in g for g in st["gates"]),
+                  json.dumps(st)[:200])
+        except (ValueError, KeyError) as e:
+            check("(D) stage file is parseable", False, str(e))
+
+
+def test_adaptive_pool_never_floods_or_stalls():
+    """PLAYBOOK R.3 — the pool must use the machine well WITHOUT crashing it. Proves the
+    real controller decisions: it HALVES immediately under load/memory pressure
+    (protecting the host takes priority), GROWS one worker at a time only when both
+    signals have headroom, and never exceeds its ceiling or drops below one worker."""
+    print("\n[adaptive pool: ramps up on headroom, halves under pressure]")
+    sys.path.insert(0, str(ROOT / "scripts" / "render"))
+    import parallel as P  # noqa
+
+    start = P.compute_workers("cpu")
+    ceiling = P.compute_worker_ceiling("cpu")
+    check("a conservative start is computed from real capacity", start >= 1, str(start))
+    check("the live ceiling is >= the start (there is room to ramp up)",
+          ceiling >= start, f"start={start} ceiling={ceiling}")
+
+    # The pool must actually run work and report the peak concurrency it reached.
+    items = list(range(24))
+    res = P.run_pool(items, lambda x: x * 2, kind="cpu", per_worker_mb=1, max_retries=0)
+    check("every item completes", len(res.done) == len(items),
+          f"{len(res.done)}/{len(items)} done, {len(res.failed)} failed")
+    check("peak concurrency is reported and within the ceiling",
+          1 <= res.peak_workers <= max(ceiling, start),
+          f"peak={res.peak_workers} ceiling={ceiling}")
+    check("results are correct (the pool does not corrupt work)",
+          sorted(out for _i, out in res.done) == [i * 2 for i in items], "")
+
+    # A task that raises must be reported as failed, never crash the pool.
+    def boom(x):
+        if x == 3:
+            raise RuntimeError("intentional")
+        return x
+    res2 = P.run_pool(list(range(6)), boom, kind="cpu", per_worker_mb=1, max_retries=0)
+    check("a failing item is reported, and the rest still complete",
+          len(res2.failed) == 1 and len(res2.done) == 5,
+          f"done={len(res2.done)} failed={len(res2.failed)}")
+
+
 def main() -> int:
     print("Coordn8 test suite")
     print("=" * 50)
@@ -2388,6 +2651,11 @@ def main() -> int:
     test_stage_v_blind_review()
     test_claim_discipline_semantic_claims_need_frame_verification()
     test_phase_f_doctrine_in_brain()
+    test_invariant_gates_C1_to_C8()
+    test_line_count_change_warning()
+    test_addendum_coverage_audit()
+    test_orchestrator_fail_early_and_adaptive()
+    test_adaptive_pool_never_floods_or_stalls()
     print("=" * 50)
     print(f"RESULT: {PASS} passed, {FAIL} failed")
     if FAILURES:

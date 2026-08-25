@@ -112,4 +112,35 @@ def load_json(path: Path):
 
 
 def run(cmd: list[str], timeout: int = 120) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    """Run a command and ALWAYS return a CompletedProcess — never raise.
+
+    Every gate and render step shells out through here, and a gate must degrade
+    HONESTLY rather than crash: a hung headless browser, a missing binary, or a
+    permission error has to become a reportable "could not do this here, and why",
+    not an unhandled traceback the caller cannot classify.
+
+    A timeout or spawn failure is surfaced as a non-zero returncode with the reason
+    on stderr, which is exactly what the callers already branch on. (A real
+    TimeoutExpired escaping from here once turned a hung Chrome into a stack trace
+    instead of an honest skip.)
+    """
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired as e:
+        out = e.stdout or ""
+        err = e.stderr or ""
+        if isinstance(out, bytes):
+            out = out.decode("utf-8", "replace")
+        if isinstance(err, bytes):
+            err = err.decode("utf-8", "replace")
+        return subprocess.CompletedProcess(
+            cmd, 124, out,
+            f"{err}\n[coordn8] TIMEOUT after {timeout}s: {' '.join(map(str, cmd))[:300]} "
+            f"— the tool started but did not finish here. Treat this as 'could not "
+            f"verify', never as a pass.".strip())
+    except (OSError, ValueError) as e:
+        # Missing binary, bad path, unreadable cwd, bad argv — all reportable.
+        return subprocess.CompletedProcess(
+            cmd, 127, "",
+            f"[coordn8] COULD NOT RUN {cmd[0] if cmd else '?'}: "
+            f"{type(e).__name__}: {e}")

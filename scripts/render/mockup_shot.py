@@ -64,6 +64,24 @@ DIM = "rgba(0,0,0,0.62)"  # spotlight scrim over everything but the focus region
 
 # ---- pure helpers (zero-dep, unit-tested) ---------------------------------
 
+
+def _valid_png(p: Path, min_bytes: int = 512) -> bool:
+    """Is `p` a real, non-trivial PNG? Used to judge the ARTIFACT rather than the
+    exit code. Some headless-Chrome builds write a perfectly good screenshot and
+    THEN hang or exit non-zero (e.g. the 'allocator multiple times' quirk). Judging
+    only the exit code then reports failure for a file that exists and is fine —
+    while judging only existence would risk claiming a truncated/blank file. So we
+    verify the bytes: PNG magic, an IHDR, and a plausible size."""
+    try:
+        if not p.exists() or p.stat().st_size < min_bytes:
+            return False
+        head = p.open("rb").read(32)
+        return head[:8] == b"\x89PNG\r\n\x1a\n" and b"IHDR" in head
+    except OSError:
+        return False
+
+
+
 def png_size(path: Path) -> tuple[int, int] | None:
     """Read (width, height) from a PNG header with no third-party deps.
 
@@ -385,9 +403,19 @@ def _shot_chrome_cli(html: Path, out: Path, vw: int, vh: int, mock: dict | None,
         except OSError:
             pass
     if cp.returncode != 0 or not out.exists():
-        sys.stderr.write(f"[mockup_shot] chrome screenshot failed: "
-                         f"{cp.stderr[:300]}\n")
-        return EXIT_FAIL
+        # Judge the ARTIFACT, not just the exit code. Chrome sometimes writes a
+        # perfectly valid screenshot and then hangs or exits non-zero; reporting
+        # failure for a good file is as wrong as claiming a file we never made.
+        if _valid_png(out):
+            sys.stderr.write(
+                f"[mockup_shot] chrome exited {cp.returncode} "
+                f"({(cp.stderr or '').strip()[:120]}) BUT the screenshot was written and "
+                f"validated as a real PNG ({out.stat().st_size} bytes) — treating as "
+                f"captured. The image is verified; the exit code is not.\n")
+        else:
+            sys.stderr.write(f"[mockup_shot] chrome screenshot failed: "
+                             f"{cp.stderr[:300]}\n")
+            return EXIT_FAIL
     if offline:
         sys.stderr.write("[mockup_shot] note: Chrome-CLI path stubs fetch/XHR "
                          "for --offline; it does not hard-block the network. Use "
@@ -441,8 +469,18 @@ def _rasterize_svg(svg_path: Path, out: Path, width: int, height: int) -> int:
               "--default-background-color=00000000",
               f"--screenshot={out}", url], timeout=90)
     if cp.returncode != 0 or not out.exists():
-        sys.stderr.write(f"[mockup_shot] rasterize failed: {cp.stderr[:300]}\n")
-        return EXIT_FAIL
+        # Same rule as the capture path: verify the produced PNG rather than
+        # trusting the exit code, so a Chrome that renders then hangs is not
+        # reported as a failure it wasn't.
+        if _valid_png(out):
+            sys.stderr.write(
+                f"[mockup_shot] chrome exited {cp.returncode} "
+                f"({(cp.stderr or '').strip()[:120]}) BUT the raster was written and "
+                f"validated as a real PNG ({out.stat().st_size} bytes) — treating as "
+                f"rendered.\n")
+        else:
+            sys.stderr.write(f"[mockup_shot] rasterize failed: {cp.stderr[:300]}\n")
+            return EXIT_FAIL
     sys.stderr.write(f"[mockup_shot] annotated screenshot -> {out}\n")
     return EXIT_OK
 

@@ -103,7 +103,9 @@ One self-contained HTML file, zero external dependencies, opens by double-click 
 | **Best free engine per scene** | Math and precise geometry are rendered by **Manim** (the engine 3Blue1Brown uses); software, flows, and graphs use HTML/CSS/Canvas with **GSAP** (eased motion), **D3** (force/tree graphs), and **Rough.js** (hand-drawn warmth) — all free, no API keys, no paid services. Every engine writes the same frame model, so they blend seamlessly on one timeline. Manim and the JS libs are *enhancements*: if one can't be installed, that scene falls back to plain HTML/Canvas and the base video still ships. |
 | **Toggle-able captions** | The video carries a soft, embedded subtitle track (off by default; enable in VLC/QuickTime/any player), plus a sidecar `.srt` and a WebVTT track for the page player. Captions are the *exact* narrated words — re-serialized from the same beatmap the voice uses, not re-transcribed — and a gate proves they never drift from the narration. A long sentence is split into **readable cues** (≤2 lines, ≤42 chars/line, capped on-screen time) rather than dumped as one screen-filling paragraph — the words stay verbatim, just broken into glance-able chunks. |
 | **Remembers your decisions** | Your course-corrections ("slow the intro", "cut that section") are written to a persistent decision log and honored across long sessions and full rebuilds — never silently reverted. |
-| **Fast without melting your laptop** | The render pipeline is **adaptive**: it sizes parallelism from real CPU + free RAM and then keeps re-tuning it live — ramping *up* to use idle cores when the machine has headroom, and shrinking fast the instant load or memory tightens (the same additive-increase / multiplicative-decrease discipline TCP uses). So a machine that frees up mid-run gets used, instead of being stuck behind one cautious worker count. It also writes every frame to disk as it goes — a crash loses one frame, not the batch. |
+| **Fast without melting your laptop** | Work runs **adaptively parallel**: concurrency is sized from real CPU + free RAM, then re-tuned continuously for the whole run — ramping *up* one worker at a time whenever both load and memory have headroom, and **halving immediately** the moment either tightens (the additive-increase / multiplicative-decrease discipline TCP uses). Protecting the machine always wins; using it fully is the goal. In-flight work is never killed to shrink — capacity falls as tasks finish. Every frame is written to disk as it goes, so a crash loses one frame, not the batch. |
+| **Catches mistakes before they're expensive** | Checks are ordered by cost and the run **stops at the first stage that matters**: source scans and the *plan* are judged before a single frame is rendered, then the instrumentation trace, and only then the rendered artefacts. A sparse storyboard or a stale beat reference is caught on paper in seconds instead of after a long render — and the final mandatory evaluation still runs, it just should have nothing left to find. If it *does* find something, going back to authoring is still available; it simply stops being the normal path. |
+| **A supervised fleet, not one agent doing everything** | A supervisor owns the stage order, the concurrency budget, and the stop decision; workers do the work. They talk through **files on disk**, not a conversation — every stage writes its result to `_build/orchestration/`, so the run is restartable, a killed worker loses one item, and another tool on another machine can pick it up. Verifiers are spawned separately from builders and stay **blind to their claims**. Where a host can't spawn parallel agents, the same ladder runs as sequential role passes — the order and the blindness are what must survive, and they do. |
 | **Spends effort where it counts** | Judgment-heavy work (understanding code, fact-checking, the anti-slop and clarity critics) gets full reasoning; deterministic plumbing (subtitle serialization, muxing, frame capture, byte-diffing adapters) runs on a fast, cheap, high-concurrency path. Faster and lighter on tokens, with **zero** shortcuts on anything that decides correctness — every fidelity gate runs at full strength regardless. |
 | **Honest about limits** | On a machine without video tooling it says *exactly* what it couldn't render and the one-line command to unlock it, and offers the page as a fallback rather than silently producing an unrequested deliverable. It never fakes a deliverable and never swaps in one you didn't ask for. |
 | **Verifies before it hands over** | Deterministic gate scripts run against each build — tree-shape, fact-tracing, content bans, DOM render, visual density, layout/composition, narration sync, caption fidelity, media integrity — plus a **semantic layer** that checks *meaning* rather than geometry: whether a frame shows what the voice is saying, whether an arrow points the way the sentence says, whether a panel shows the right example, whether a section quietly lost its visual, and whether any beat leaves half the frame empty. A final verification manifest then refuses to authorize any "Verified: …" word that isn't backed by a genuine pass. The scripts are advisory leads the agent re-checks — a gate whose input is absent skips honestly rather than faking a pass. |
@@ -171,10 +173,30 @@ Each of these is a bar the deliverable must genuinely clear before it's called d
 | `check_indices` | video, **I1/I2**: every beat reference resolves for that scene's real line count — no stale helper index, no raw boundary index past the array, no `lineCount` guard that silently falls through to hardcoded timings. Also reports how much of each scene is **name-bound** (the safe form) |
 | `check_density` | video, **frame use**: ink coverage per horizontal band per spoken line, so a beat that leaves ~540px of the frame empty under live narration is a finding, not an opinion. Runs on the trace (no renderer needed) or on real frames, and always prints a **weakest-beat ranking** — the lowest-ink beat is usually what a reviewer names next |
 | `check_content` | both: every entry in `approved_strings.json` appears **byte-exact** (approved wording is frozen; a theme phrase is never a licence to rewrite it), zero repeated 5-grams across narration lines, no sentence reciting a list already carried by the frame, and an identifier/PII sweep across **frames and sidecar files** (captions, intermediate JSON, logs shipped alongside) |
+| `check_invariants` | video, **C1–C8**: the deterministic frame invariants — no partial overlap of two visible content panels and no legible text collision, no **declared** asset that never draws, no cursor parked in dead space, a `// SRC:` provenance comment on every scene source, no **sustained** void (>0.6s) while a line is being spoken (silence is never flagged — a hold between sentences is deliberate), no asset panel below **0.42×** of its source width (below which real UI text is unreadable), and no asset from another subsystem inside this scene. Necessary, never sufficient |
 | `stage_v` | video, **the blind reverse check**: every spoken line's frame reviewed against its exact sentence by a reviewer with **no knowledge of the builder's claims**, on an artifact proved **newer than every source edit**, with the **previous cut's frame** supplied. A `contradicts` verdict blocks; an unanswered field counts as *not verified*; no render at all makes this an **open item, never a pass** |
 | `verify_manifest` | both, LAST: reads `_build/verification.json` and refuses (1) any `pass` with no evidence, (2) any end-user "Verified: …" word not backed by a genuine pass, (3) any required gate silently missing/failed/untested, (4) any `pass` whose evidence strength is `untested`, (5) **any semantic claim** ("explainability", "shareability", "anti-slop", "looks good") that has no **frame-level** verification behind it — emitting the only claim string that's safe to show |
 
-Run them all against a build folder: `npx -y github:ompandey98/coordn8 gates path/to/Coordn8`
+**Running them.** The supervised runner orders the checks by cost and stops at the first stage whose findings would invalidate everything after it — so a cheap mistake is caught before anything expensive is rendered on top of it:
+
+```bash
+npx -y github:ompandey98/coordn8 orchestrate path/to/Coordn8   # fail-early, staged, parallel
+npx -y github:ompandey98/coordn8 gates path/to/Coordn8         # every gate, flat report
+npx -y github:ompandey98/coordn8 detect                        # tier + parallel budget
+```
+
+Or from a clone, with the individual pieces:
+
+```bash
+python3 scripts/orchestrate.py path/to/Coordn8          # staged verification
+python3 scripts/orchestrate.py path/to/Coordn8 --json   # machine-readable
+node scripts/render/scene_runtime.js selftest           # prove the runtime's guarantees
+node examples/example_scene.js trace --out _build/trace.json    # emit an instrumentation trace
+python3 scripts/gates/check_semantics.py _build/trace.json      # S1–S8
+python3 scripts/gates/check_invariants.py _build/trace.json     # C1–C8
+python3 scripts/gates/check_density.py trace _build/trace.json  # frame use, no renderer needed
+python3 tests/audit_addendum.py                         # prove every quality rule is wired
+```
 
 ---
 
@@ -215,6 +237,7 @@ Contributions welcome. To extend the engine or add support for a new tool:
 python3 build/generate_adapters.py         # rebuild the tool adapters from source
 python3 build/generate_adapters.py --check # sanity check (also runs in CI)
 python3 tests/run_tests.py                 # run the full suite
+python3 tests/audit_addendum.py            # prove every quality rule is present and wired
 node scripts/render/scene_runtime.js selftest   # prove the scene-runtime guarantees
 ```
 
@@ -227,6 +250,8 @@ Files under `adapters/` are generated, so edit the source rather than them; addi
 | [`docs/TEACHING_PRINCIPLES.md`](docs/TEACHING_PRINCIPLES.md) | the pedagogy both deliverables are held to |
 | [`docs/FIRST_GO_QUALITY_ADDENDUM.md`](docs/FIRST_GO_QUALITY_ADDENDUM.md) | the field report behind the semantic layer — the ten defect classes, why mechanical checks were blind to each, and the ranked fixes. Written from a real production build; it's the reasoning behind Phase F of the playbook |
 | [`examples/example_scene.js`](examples/example_scene.js) | a worked video scene authored the safe way, gate-clean, with every pattern annotated |
+| [`scripts/orchestrate.py`](scripts/orchestrate.py) | the supervised runner: the cost-ordered stage ladder, the fail-early halt, and the on-disk bus workers hand off through |
+| [`scripts/render/parallel.py`](scripts/render/parallel.py) | the adaptive worker pool — how concurrency is sized from live CPU/RAM and re-tuned continuously |
 
 ---
 

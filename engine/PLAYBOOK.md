@@ -404,6 +404,45 @@ Parallelism is mandatory but must be **bounded to the machine and continuously r
 - **Restart, don't abandon.** A stalled or crashed worker is restarted immediately from its persisted inputs. The queue tracks done/failed; on resume you re-enqueue only the failures.
 - **Serial only where required.** The final ffmpeg concat is serial; the cartographer join is serial; a global dedup barrier is serial. Everything else fans out.
 
+### R.3a FAIL EARLY — gate the cheap thing BEFORE you build the expensive thing
+
+Generating the whole deliverable and only then evaluating it is the most expensive mistake in this engine. Every render cycle that changed the script forced a full downstream re-render, and each re-render introduced fresh index defects. So the checks are ordered by **cost**, and the pipeline **halts** at the first stage whose findings would invalidate everything after it. `scripts/orchestrate.py` implements this ladder:
+
+| Stage | What it judges | Renderer needed? |
+|---|---|---|
+| **0 precondition** | do the inputs exist at all | no |
+| **1 source** | stale beat indices, raw boundary indexing, **a narration line-count change**, repetition, approved-string drift, banned content | no — seconds |
+| **2 plan** | the storyboard / page plan: visual density, coverage, tree shape. **This is where a sparse or incomplete deliverable is caught ON PAPER** | no |
+| **3 trace** | the instrumentation trace: semantic gates S1–S8, invariants C1–C8, density | no |
+| **4 artifact** | the rendered files: layout pixels, sync, media, subtitles | yes |
+| **5 judgement** | Stage V (blind frame-vs-sentence) + the claim manifest | yes |
+
+Rules that make this real rather than decorative:
+- **A finding in stages 1–3 HALTS the run.** Those are the stages whose output the later ones are built on; rendering on top of a known-bad input is how a cheap finding becomes a re-render. `--no-fail-fast` overrides it deliberately.
+- **The final evaluation is never skipped.** Fail-early exists to make stage 5 find *nothing*, not to replace it. If stage 5 does find something, the pipeline **does** roll back to authoring — that path stays open, it is just no longer the normal case.
+- **Never render on top of an unverified plan.** The storyboard/page-plan gate (2.1a / 1.1a) is a stage-2 citizen precisely so a sparse deliverable is redesigned on paper, cheaply.
+- **Within a stage, everything runs concurrently** through the adaptive pool (R.3). A stage boundary is a barrier only because the next stage genuinely depends on it.
+
+### R.3b THE SUPERVISED FLEET — one supervisor, many workers, disk as the message bus
+
+The fleet in R.1/F.6 needs a **supervisor** and a **communication channel**, or it degrades into one agent doing everything serially. Both are concrete:
+
+- **The supervisor** owns the stage ladder (R.3a), the concurrency budget (R.3), and the halt decision. It never does a worker's job itself; it dispatches, collects, and decides. It re-reads the machine's state continuously (not once at the start) and keeps re-tuning the live worker count for the whole run.
+- **The bus is the filesystem, not the conversation.** Every worker writes its result to `_build/orchestration/<stage>.json` (and its own artefact into the memory palace) the moment it exists. Downstream roles read that file. This is what makes the fleet restartable, crash-safe, and portable: nothing lives only in a context window, so a killed worker loses one item, and a *different tool on a different machine* can pick the run up from disk.
+- **Agent-to-agent handoff is by named artefact, never by summary.** A reader emits a `file:line`-anchored fact file; the scriptwriter cites that file; the storyboarder cites the script; the verifier reads the rendered artefact. Each link is a file on disk with a name, so a claim can always be traced to the worker that produced it.
+- **Verifiers are spawned separately from builders and stay BLIND to their claims** (F.5). A supervisor that hands the verifier the builder's checklist has destroyed the verification — the reviewer will confirm the list and miss everything off it.
+
+**Host portability — the fleet degrades, the discipline does not.** The engine runs wherever it is invoked, and hosts differ in whether they can spawn real parallel agents:
+
+| Host | Fleet execution | What stays identical |
+|---|---|---|
+| **Claude Code** | real sub-agents, dispatched in parallel, each with its own context; process-level parallelism for renders | everything |
+| **Codex / AGENTS.md CLIs** | shell-level parallelism (`orchestrate.py` + the adaptive pool); roles run as separate invocations | stage ladder, bus files, blindness |
+| **Cursor / Kiro** | agent runs the ladder; parallelism via the pool; roles as sequential passes with role-scoped prompts | stage ladder, bus files, blindness |
+| **A host with no spawn and no shell** (chat-only) | ONE agent performs each role **in sequence**, writing the same bus files, and **explicitly re-reading only the predecessor's artefact** for the next role | stage ladder, bus files, blindness |
+
+In the degraded case the **order and the blindness are what must survive**: run the verifier pass *without* re-reading your own claim list, on the artefact as it actually is. A single agent can be blind to its own claims by reading only the artefact and the sentence — and it must, because that is where the defects were found.
+
 ### R.4 Honesty & communication during orchestration
 
 - Emit short live status tables at each phase boundary and during long runs: `phase | status | workers | ETA`.
@@ -956,11 +995,23 @@ All require the **instrumentation mode** in `scripts/render/scene_runtime.js`, w
 
 **S7 + S8 are the pair that catches "this whole section is empty" on the FIRST run.** S1/S5/S6 are treated as **blocking** classes — they shipped visible, credibility-destroying defects.
 
-### F.4 INVARIANT GATES — necessary, never sufficient
+### F.4 INVARIANT GATES C1–C8 — necessary, never sufficient
 
-The existing gates (overlap, dead-frame, legibility, sync, subtitle fidelity, content bans, density, beat-index, identifier sweep) all still run exactly as hard as before. Two general findings worth encoding:
+These are the deterministic frame-level invariants, run by `check_invariants.py` on the same instrumentation trace the semantic gates read. They are **necessary and never sufficient**: passing all of them means "not provably broken in these eight mechanical ways", and it is never a quality claim.
 
-- **On legibility:** on-screen scale is governed by the crop's **WIDTH**, not its height. Cropping a text block *shorter* does **not** enlarge its glyphs. If a panel's text cannot reach the legibility floor at any width that fits the frame, **stop cropping** — keep the panel for *structure* and re-draw the load-bearing line as **real rendered text** at full size. That is the only fix that works.
+| ID | Fails when | The defect it caught |
+|---|---|---|
+| **C1** | two clearly-visible content panels **partially** overlap (full containment is legal, deliberate nesting), or two **legible** text boxes collide | one visual on top of another; old text bleeding through. The legibility floor is 0.25, not "bright": a chip label dimmed to 0.32 is still plainly readable, and requiring both texts to be bright blinded an earlier version to exactly that case |
+| **C2** | a **declared** asset never actually draws | a prepared screenshot that was promised in the scene's manifest and never appeared, while the narration described it |
+| **C3** | a recorded cursor sits in dead space instead of on the panel it points at | a pointer parked off the screenshot during its own spoken line — a viewer reads it as a mistake |
+| **C4** | an n-gram repeats across two narration lines | see D10 — implemented in `check_content.py` |
+| **C5** | a scene source carries no `// SRC:` provenance comment | an on-screen claim that cannot be traced back to the code it came from |
+| **C6** | a **sustained** void (>0.6 s) **while a line is being spoken** | ~1 s of total emptiness mid-sentence. Two rules keep this gate trustworthy: **silence is never flagged** (a hold with just the title between sentences is deliberate breathing room), and it measures **duration, not instants** — a 0.2 s gap at a line boundary is a cross-fade. A noisy gate gets ignored, which is how a real void shipped |
+| **C7** | an asset panel renders below **0.42×** of its source width | real UI text rendered at ~8–11px, illegible. On-screen scale is governed by the crop's **WIDTH**, not its height — cropping a text block *shorter* does **not** enlarge its glyphs. If a panel can't reach the floor at any width that fits the frame, **stop cropping**: keep the panel for *structure* and re-draw the load-bearing line as **real rendered text** at full size. That is the only fix that works |
+| **C8** | an asset belonging to one **subsystem** appears in another subsystem's scene | showing one system's product while the narration describes a different one — factually wrong, and invisible to geometry, because it is a question of *which system an asset belongs to* |
+
+The pre-existing gates (sync, subtitle fidelity, content bans, layout/safe-area, media probes, visual density, beat-index) continue to run alongside these. One further finding worth encoding:
+
 - **On identifier sweeps:** sweep **sidecar artifacts too** — caption files, intermediate JSON, build logs shipped alongside. Retracted figures survived in a stale caption file long after they were removed from the video; any re-mux would have shipped them.
 
 ### F.5 STAGE V — THE BLIND VISUAL REVERSE CHECK (a mandatory stage, every video)
@@ -1015,7 +1066,7 @@ The worst output of the reference build was a status line of the form:
 
 **After rendering, before ANY claim**
 - [ ] Instrumented semantic gates: **S1, S3, S4, S5, S6, S7, S8**
-- [ ] Invariant gates: overlap, dead-frame, legibility, sync, density, subtitle fidelity, identifier sweep (frames **and** sidecars)
+- [ ] Invariant gates **C1–C8** (`check_invariants.py`): panel overlap · declared-asset-never-drawn · cursor-in-dead-space · source provenance · sustained void under speech · panel legibility scale · cross-subsystem assets — plus sync, density, subtitle fidelity, and the identifier sweep over frames **and** sidecars
 - [ ] **Stage V on every spoken line of every changed scene** — blind reviewer, fresh artifact, previous-cut frame supplied
 - [ ] Claim manifest emitted; "Verified:" = claimed ∩ passed-with-evidence (semantic claims require frame verification)
 - [ ] Open items stated explicitly, including anything the tier could not verify
@@ -1054,6 +1105,7 @@ The worst output of the reference build was a status line of the form:
 | Subtitles / captions | video | Captions ship as a soft toggle-able `mov_text` track (off by default) + sidecar `.srt` + `.vtt` for the page player (2.3a). `subtitle_check.py` proves caption text == narration verbatim, timings sane, and **every cue readable** (≤2 lines / ≤42 chars-per-line / ≤7 s / ≤20 cps). **A wall-of-paragraph caption is NEVER acceptable** — if a readable verbatim cue can't be made, fall back best-first: segment the sentence into more cues → split the video into parts → omit captions entirely (stated in handover). Also run the caption QC checks: **language** (right language, correct spelling, no mojibake), **freezing/timing** (no stuck/overlong/overlapping cue), **basic visual** (legible, in safe area, no collision), and **understandability/complexity** (comprehensible at reading speed; over-complex sentences simplified at the source). Burned-in only if the user asked |
 | Tier honesty | both | Setup attempted first; detected tier announced; any skipped deliverable stated with the *specific verified* blocker + unlock path (never a vague "not supported"), and never inside the deliverables; nothing faked |
 | **Semantic gates S1–S8** (F.3) | video | `check_semantics.py` on the instrumentation trace of every scene: no non-finite alpha (**S1** — an element that renders NOTHING, silently), no raw boundary index past the array (**S2**), no text escaping its own container (**S3**), no text on a connector (**S4**), no asset whose `subjectId` differs from the beat's (**S5**), no drawn direction/arrowhead contradicting the declared `from`→`to` (**S6**), no declared section that renders nothing (**S7**), no unexplained ink loss vs the previous cut (**S8**). **S1/S5/S6 are BLOCKING.** These measure MEANING; the geometry gates cannot see any of them |
+| **Invariant gates C1–C8** (F.4) | video | `check_invariants.py` on the instrumentation trace: no partial overlap of two visible content panels and no legible text collision (**C1**), no DECLARED asset that never draws (**C2**), no cursor parked in dead space (**C3**), a `// SRC:` provenance comment on every scene source (**C5**), no SUSTAINED void >0.6s while a line is SPOKEN — silence is never flagged (**C6**), no asset panel below 0.42× of source width (**C7**), no asset from another subsystem inside this scene (**C8**). Necessary, NEVER sufficient — a green board here is not a quality claim |
 | **Beat-index safety** (D2) | video | Beats are bound **BY NAME** through `scene_runtime.js` (which THROWS on an out-of-range index instead of clamping); `check_indices.py` reports zero stale helper/raw indices and zero `lineCount` fallback guards. This one change removes six of the ten historical defect classes at the source |
 | **Density / frame use** (D7) | video | `check_density.py` — no beat leaves ≥540px of the frame empty under live narration; the mean-ink ranking is reviewed and the weakest beat consciously addressed or accepted. "Looks low-effort" is a number here, not an opinion |
 | **Content integrity** (D9/D10) | both | `check_content.py` — every `approved_strings.json` entry appears **byte-exact** (a theme phrase is never a licence to rewrite an approved string — **blocking**); zero repeated 5-grams across narration lines; no sentence reciting a list already on the frame; the identifier sweep covers **frames AND sidecars** (a stale caption file once carried retracted figures) |

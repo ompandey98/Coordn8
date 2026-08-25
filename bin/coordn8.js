@@ -10,6 +10,7 @@
  *   npx coordn8 setup           auto-install missing runtime tools (ffmpeg/chromium/tts) to unlock video
  *   npx coordn8 detect          run environment/tier detection
  *   npx coordn8 gates <folder>  run the advisory gate report on a build folder
+ *   npx coordn8 orchestrate <f> supervised fail-early verification (parallel, adaptive, halts early)
  *   npx coordn8 check           verify adapters are in sync with PLAYBOOK.md
  *   npx coordn8 version
  */
@@ -120,13 +121,16 @@ function help() {
 Usage (no clone needed — runs straight from GitHub; add -y so npx never prompts):
   npx -y github:ompandey98/coordn8 init [target]   Install (always overwrites w/ latest): claude|cursor|codex|kiro|generic|all
   npx -y github:ompandey98/coordn8 update [target] Force-refresh to the latest (clears the npx cache) + reinstall
-  npx github:ompandey98/coordn8 uninstall       Remove installed adapters
-  npx github:ompandey98/coordn8 print           Print the raw engine brain (paste into any agent)
-  npx github:ompandey98/coordn8 setup           Auto-install missing tools (ffmpeg/chromium/TTS) to unlock the video — sudo-free where possible
-  npx github:ompandey98/coordn8 detect          Detect environment capabilities and the tier
-  npx github:ompandey98/coordn8 gates <folder>  Run the advisory gate report on a build folder
-  npx github:ompandey98/coordn8 check           Verify adapters are byte-in-sync with PLAYBOOK.md
-  npx github:ompandey98/coordn8 version         Print version
+  npx -y github:ompandey98/coordn8 uninstall              Remove installed adapters
+  npx -y github:ompandey98/coordn8 print                 Print the raw engine brain (paste into any agent)
+  npx -y github:ompandey98/coordn8 setup                 Auto-install missing tools (ffmpeg/chromium/TTS) to unlock the video — sudo-free where possible
+  npx -y github:ompandey98/coordn8 detect                Detect environment capabilities, the tier, and the parallel budget
+  npx -y github:ompandey98/coordn8 orchestrate <folder>  Supervised FAIL-EARLY verification: cheap source/plan/trace stages
+                                                         run before anything expensive, in parallel on an adaptive pool that
+                                                         ramps up on spare capacity and backs off under load
+  npx -y github:ompandey98/coordn8 gates <folder>        Run every gate as a flat advisory report (no stage ordering)
+  npx -y github:ompandey98/coordn8 check                 Verify adapters are byte-in-sync with PLAYBOOK.md
+  npx -y github:ompandey98/coordn8 version               Print version
 
 Then open a FRESH session at your repo root and invoke Coordn8.`);
 }
@@ -155,6 +159,13 @@ switch (cmd) {
     break;
   case 'gates':
     runPy('scripts/run_gates.py', rest);
+    break;
+  case 'orchestrate':
+  case 'verify':
+    // Supervised, fail-early, adaptively-parallel verification (PLAYBOOK R.3a/R.3b):
+    // cheap source/plan/trace stages run BEFORE anything expensive, and a finding in
+    // those stages halts the run so nothing is rendered on a known-bad input.
+    runPy('scripts/orchestrate.py', rest);
     break;
   case 'check':
     runPy('build/generate_adapters.py', ['--check']);

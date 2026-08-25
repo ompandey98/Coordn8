@@ -185,10 +185,18 @@
       this.ctx = opts.ctx || null;             // null => trace-only (Node) mode
       this.width = opts.width || 1920;
       this.height = opts.height || 1080;
+      // Which subsystem/system this SCENE is about (C8). An asset belonging to a
+      // different subsystem must not appear here.
+      this.subsystem = opts.subsystem || opts.system || null;
+      // The asset manifest this scene PROMISES to show (C2). A declared asset that
+      // never actually draws is the "the screenshot we prepared never appeared"
+      // defect — invisible unless the promise is written down.
+      this.declaredAssets = Array.isArray(opts.assets) ? opts.assets.slice() : [];
       this.t = 0;
       this._boxes = [];
       this._connectors = [];
       this._assets = [];
+      this._cursors = [];
       this._nodes = new Map();                 // id -> {x,y,w,h} for connector checking
       this._sectionStack = [];
       this._containerStack = [];
@@ -202,6 +210,7 @@
       this._boxes = [];
       this._connectors = [];
       this._assets = [];
+      this._cursors = [];
       this._sectionStack = [];
       this._containerStack = [];
       this._sectionsSeen = new Map();
@@ -223,6 +232,7 @@
         boxes: this._boxes,
         connectors: this._connectors,
         assets: this._assets,
+        cursors: this._cursors,
         sections: Array.from(this._sectionsSeen.entries())
           .map(([name, v]) => ({ name, drawCount: v.drawCount, inkArea: Math.round(v.inkArea) })),
       };
@@ -541,15 +551,26 @@
              `Without it, a panel showing the evidence for a DIFFERENT example than the one ` +
              `being narrated is undetectable (it is real, legible and correctly composed).`);
       }
-      const scale = finite(s.scale) ? s.scale : 1;
+      // EFFECTIVE RENDER SCALE (C7 legibility). On-screen glyph size is governed
+      // by the crop's WIDTH, not its height — cropping a text block SHORTER does
+      // not enlarge its glyphs. So when the source width is declared we compute
+      // the true scale rather than trusting a hand-passed number.
+      const srcW = finite(s.srcW) ? s.srcW : (s.crop && finite(s.crop.w) ? s.crop.w : null);
+      const scale = srcW && finite(s.w) && srcW > 0
+        ? s.w / srcW
+        : (finite(s.scale) ? s.scale : 1);
       const box = this._record({
         kind: 'shot', x: s.x, y: s.y, w: s.w, h: s.h, alpha: s.alpha,
         path: s.path, subjectId: s.subjectId || s.subject_id, scale,
       });
       const rec = {
         path: s.path, subjectId: box.subjectId, crop: s.crop || null,
-        scale, alpha: box.alpha, x: s.x, y: s.y, w: s.w, h: s.h,
+        scale, srcW: srcW, alpha: box.alpha, x: s.x, y: s.y, w: s.w, h: s.h,
         section: this._currentSection(), caption: s.caption || null,
+        // Which subsystem/system this asset BELONGS to (C8). Showing one system's
+        // product while narrating another is factually wrong and no geometry gate
+        // can see it — it needs a declaration.
+        subsystem: s.subsystem || s.system || null,
       };
       if (INSTRUMENT || !this.ctx) this._assets.push(rec);
       if (this.ctx && box.alpha > 0.001 && s.image) {
@@ -559,6 +580,36 @@
         c.restore();
       }
       return box;
+    }
+
+    /**
+     * A simulated cursor/pointer, used when walking a screenshot. Recorded so the
+     * cursor-region gate (C3) can prove it sits ON the panel it is pointing at
+     * during its spoken line, rather than parked in dead space — which reads as a
+     * mistake to a viewer and is invisible to every geometry check.
+     */
+    cursor(spec) {
+      const s = spec || {};
+      if (!finite(s.x) || !finite(s.y)) {
+        fail(`cursor() needs finite x/y (got ${s.x}, ${s.y})`);
+      }
+      const rec = { x: s.x, y: s.y, onAsset: s.onAsset || s.on || null,
+                    alpha: finite(s.alpha) ? s.alpha : 1,
+                    section: this._currentSection() };
+      if (INSTRUMENT || !this.ctx) this._cursors.push(rec);
+      if (this.ctx && rec.alpha > 0.001) {
+        const c = this.ctx;
+        c.save(); c.globalAlpha = rec.alpha;
+        c.fillStyle = s.color || '#ffffff';
+        c.beginPath();
+        c.moveTo(s.x, s.y);
+        c.lineTo(s.x + 13, s.y + 20);
+        c.lineTo(s.x + 5, s.y + 20);
+        c.lineTo(s.x + 2, s.y + 29);
+        c.closePath(); c.fill();
+        c.restore();
+      }
+      return rec;
     }
   }
 
@@ -606,7 +657,9 @@
     if (typeof o.draw !== 'function') fail('buildTrace needs a draw(scene) function');
     const script = o.script instanceof Script ? o.script : new Script(o.script || []);
     const scene = new Scene({ name: o.name || 'scene', script, ctx: null,
-                              width: o.width || 1920, height: o.height || 1080 });
+                              width: o.width || 1920, height: o.height || 1080,
+                              subsystem: o.subsystem || o.system || null,
+                              assets: o.assets || [] });
     const grid = finite(o.grid) ? o.grid : 5;               // samples/second
     const dur = finite(o.duration) ? o.duration : script.duration;
     const frames = [];
@@ -619,6 +672,8 @@
     }
     return {
       scene: scene.name,
+      subsystem: scene.subsystem,
+      declaredAssets: scene.declaredAssets,
       width: scene.width,
       height: scene.height,
       grid,
