@@ -94,7 +94,9 @@ function draw(z) {
       k.text({ text: 'Order 9f2 — no shipping address on file', size: 34, y: 660 });
       k.text({ text: 'Because the address is missing, the shape check fails and the router '
                      + 'sends it to the review path instead of fulfilment.',
-               size: 26, y: 720 });
+               // 30px: the legibility floor is 28px at 1080p, and the quality
+               // scorecard flagged this very line when it was smaller.
+               size: 30, y: 720 });
     });
 
     // An asset MUST declare subjectId — which case it actually shows. If this said
@@ -114,7 +116,7 @@ function draw(z) {
     // a band at 0.0% ink under live narration is the measured "low-effort" look
     // that DEN catches (D7).
     ['one decision', 'one handler', 'no branching downstream'].forEach((label, i) => {
-      s.chip({ text: label, x: 160 + i * 380, y: 940, alpha: a, size: 24 });
+      s.chip({ text: label, x: 160 + i * 380, y: 940, alpha: a, size: 28 });
     });
   });
 
@@ -137,13 +139,15 @@ function draw(z) {
     // reviewer names next, whether or not it tripped the threshold.
     // `until` resolves BY NAME, so if that beat is renamed or removed this throws
     // instead of silently mistiming.
-    const a = s.beatAlpha('the-problem', { until: 'the-worked-example', fadeOut: 0.5 });
-    s.card({ id: 'opening-q', x: 140, y: 470, w: 1620, h: 420, alpha: a * 0.55,
+    const a = s.beatAlpha('the-problem', { until: 'the-router', fadeOut: 0.45 });
+    // Sits in the band the diagram has not reached yet, and clears BEFORE the
+    // worked-example card appears — the quality scorecard flagged the overlap when
+    // these two were on screen together.
+    s.card({ id: 'opening-q', x: 140, y: 470, w: 1620, h: 300, alpha: a * 0.55,
              pad: 48 }, (k) => {
-      k.text({ text: 'Which handler takes this order — and why that one?',
-               size: 62, weight: 700, y: 560 });
-      k.text({ text: 'One classification decision, made once, up front.',
-               size: 34, y: 680 });
+      k.text({ text: 'Which handler takes this order — and why?',
+               size: 58, weight: 700, y: 540 });
+      k.text({ text: 'One decision, made once, up front.', size: 34, y: 640 });
     });
   });
 }

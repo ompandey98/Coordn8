@@ -53,6 +53,10 @@
   // The whole point is that a mistake is LOUD at authoring time, so the default
   // must be strict. `Coordn8.setVerify(false)` is the deliberate opt-out.
   // ---------------------------------------------------------------------------
+  // The 1080p legibility floor. Text is never auto-shrunk below this: an
+  // unreadable caption is a worse defect than a truncated one.
+  const MIN_LEGIBLE_PX = 28;
+
   let VERIFY = true;
   let INSTRUMENT = false;
 
@@ -375,8 +379,13 @@
                `— cannot bound text inside it`);
         }
         if (w > inner) {
-          // Shrink to fit, down to a legibility floor; below that, ellipsize.
-          const minSize = finite(s.minSize) ? s.minSize : Math.max(14, Math.round(size * 0.62));
+          // Shrink to fit — but NEVER below the legibility floor. Fitting by shrinking
+          // into illegibility just trades one defect (overflow) for a worse one
+          // (unreadable text): a 19px caption at 1080p cannot be read, so truncating
+          // is strictly better than shrinking past the floor. Below it we ellipsize.
+          const minSize = finite(s.minSize)
+            ? s.minSize
+            : Math.min(size, MIN_LEGIBLE_PX);
           let trySize = size;
           while (trySize > minSize && this._measure(str, trySize) > inner) trySize -= 1;
           if (this._measure(str, trySize) > inner) {
@@ -481,8 +490,14 @@
       }
       if (s.text) {
         this._containerStack.push({ id: s.id, box: Object.assign({}, box, { pad: 12 }) });
-        try { this.text({ text: s.text, alpha: box.alpha, align: 'center', size: s.textSize || 22,
-                          y: s.y + s.h / 2 - 14 }); } finally { this._containerStack.pop(); }
+        // Default label size is the 1080p LEGIBILITY FLOOR (28px), not something
+        // smaller: every scene that draws a node inherits this default, so a value
+        // under the floor would put every diagram below the readable threshold at
+        // once. The quality scorecard caught exactly that.
+        const labelSize = finite(s.textSize) ? s.textSize : 30;
+        try { this.text({ text: s.text, alpha: box.alpha, align: 'center',
+                          size: labelSize, y: s.y + s.h / 2 - labelSize / 2 });
+        } finally { this._containerStack.pop(); }
       }
       return box;
     }

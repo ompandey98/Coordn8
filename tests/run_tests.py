@@ -2612,6 +2612,631 @@ def test_adaptive_pool_never_floods_or_stalls():
           f"done={len(res2.done)} failed={len(res2.failed)}")
 
 
+def test_disk_safety_render_can_never_fill_the_volume():
+    """THE INCIDENT THIS PREVENTS: a render accumulated frames without bound, produced
+    NO video, filled a 1 TB disk and killed the machine. Nothing budgeted, nothing
+    watched, nothing ever deleted a frame, and retries added to the pile.
+
+    Proves all five defences independently, because each alone has a hole:
+      1 preflight refuses an over-budget render UP FRONT, leaving nothing behind
+      2 the watchdog TRIPS AN ABORT and the pool actually STOPS
+      3 cleanup reclaims frames, and REFUSES to touch anything that isn't one
+      4 an aborted pool is reported as NOT ok (never a silent success)
+      5 the build-level gate flags stale/over-budget accumulation and low free space
+    """
+    print("\n[disk safety: a render may never fill the user's volume]")
+    sys.path.insert(0, str(ROOT / "scripts" / "render"))
+    import diskguard as dg  # noqa
+    from parallel import run_pool  # noqa
+    import threading, time  # noqa
+
+    # --- 1. PREFLIGHT ----------------------------------------------------
+    b = dg.Budget(out_dir=Path("/tmp"), frame_count=10800,
+                  measured_frame_bytes=3 * 1024 * 1024)   # the real 6-min PNG case
+    try:
+        b.check()
+        check("(1) preflight REFUSES the ~32GB/scene case", False, "it allowed it")
+    except dg.DiskBudgetError as e:
+        msg = str(e)
+        check("(1) preflight REFUSES the ~32GB/scene case", True, "")
+        check("(1) the refusal states the real projected size",
+              "31.6 GB" in msg or "GB of intermediate frames" in msg, msg[:120])
+        check("(1) the refusal names concrete fixes (--stream / fps / cap)",
+              "--stream" in msg and "--fps" in msg, msg[:160])
+    b2 = dg.Budget(out_dir=Path("/tmp"), frame_count=300,
+                   measured_frame_bytes=150 * 1024)
+    try:
+        b2.check()
+        check("(1) a sane render is still ALLOWED (guard isn't a blanket no)", True, "")
+    except dg.DiskBudgetError as e:
+        check("(1) a sane render is still ALLOWED", False, str(e)[:150])
+
+    # --- 2 + 4. WATCHDOG ABORTS THE POOL --------------------------------
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        wd = dg.DiskWatchdog(path=d, abort_free_bytes=1, cap_bytes=300 * 1024,
+                             watch_dir=d, interval_s=0.05)
+        wrote = []
+
+        def work(i):
+            (d / f"frame_{i:06d}.jpg").write_bytes(b"x" * 100 * 1024)
+            wrote.append(i)
+            time.sleep(0.02)
+            return i
+
+        with wd:
+            res = run_pool(list(range(200)), work, kind="cpu", per_worker_mb=10,
+                           adaptive=False, respect_load=False,
+                           abort_event=wd.abort, log=lambda m: None)
+        check("(2) the watchdog TRIPS on a cap breach", wd.abort.is_set(), "")
+        check("(2) the pool STOPS EARLY instead of running to completion",
+              res.aborted and len(wrote) < 200, f"wrote {len(wrote)}/200")
+        check("(2) the abort reason is specific and human-readable",
+              "per-render cap" in wd.reason or "free space" in wd.reason, wd.reason[:120])
+        check("(4) an aborted pool is NOT reported as ok (no silent success)",
+              res.ok is False, f"aborted={res.aborted} failed={len(res.failed)}")
+
+        # --- 3. CLEANUP ------------------------------------------------
+        held = dg.dir_bytes(d)
+        r = dg.reclaim([d])
+        check("(3) cleanup reclaims the frames it wrote",
+              r["freed_bytes"] > 0 and not d.exists(),
+              f"held={dg.human(held)} freed={r['freed']}")
+
+    # cleanup must never delete a user's real work
+    with tempfile.TemporaryDirectory() as d2:
+        doc = Path(d2) / "MyThesis.docx"
+        doc.write_bytes(b"irreplaceable")
+        r = dg.reclaim([doc])
+        check("(3) cleanup REFUSES anything that isn't a render intermediate",
+              doc.exists() and len(r["skipped"]) == 1, str(r)[:150])
+
+    # dry-run reports without deleting
+    with tempfile.TemporaryDirectory() as d3:
+        fr = Path(d3) / "_build" / "frames" / "s1"
+        fr.mkdir(parents=True)
+        for i in range(12):
+            (fr / f"frame_{i:06d}.jpg").write_bytes(b"z" * 20_000)
+        dry = dg.reclaim([fr], dry_run=True)
+        check("(3) --dry-run reports what it WOULD free and deletes nothing",
+              dry["dry_run"] and dry["freed_bytes"] > 0 and fr.exists(),
+              str(dry)[:120])
+
+
+def test_disk_gate_flags_accumulation():
+    """(5) The BUILD-level gate. Per-scene guards can each pass while eleven scenes
+    still pile up, so the gate measures the whole folder, flags frames whose mp4
+    already exists (they should have been reclaimed at encode time), and reports
+    CRITICAL when free space is low — the one condition never softened."""
+    print("\n[disk gate: build-level accumulation]")
+    with tempfile.TemporaryDirectory() as d:
+        build = Path(d)
+        fr = build / "_build" / "frames" / "s1"
+        fr.mkdir(parents=True)
+        for i in range(25):
+            (fr / f"frame_{i:06d}.jpg").write_bytes(b"q" * 40_000)
+        (build / "video").mkdir()
+        (build / "video" / "s1.mp4").write_bytes(b"already encoded")
+
+        r = run("scripts/gates/check_disk.py", [str(build)])
+        check("the gate flags the build (exit 1)", r.returncode == 1,
+              (r.stdout + r.stderr)[:250])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            joined = " ".join(res["findings"])
+            check("STALE frames are flagged because the mp4 already exists",
+                  "STALE" in joined, joined[:160])
+            check("it reports how much is reclaimable",
+                  res["intermediate_frames_bytes"] > 0, str(res["intermediate_frames"]))
+            check("it prints an actionable reclaim command",
+                  "clean" in res["reclaim_command"], res["reclaim_command"][:90])
+        except (ValueError, IndexError, KeyError) as e:
+            check("disk gate emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+        # CRITICAL low-free-space path
+        r = run("scripts/gates/check_disk.py", [str(build), "--min-free-gb", "999999"])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            check("low free space is reported as CRITICAL", res["critical"] is True,
+                  str(res.get("critical")))
+            check("the CRITICAL finding says not to start another render",
+                  "Do NOT start another render" in " ".join(res["findings"]),
+                  " ".join(res["findings"])[:150])
+        except (ValueError, IndexError, KeyError) as e:
+            check("disk gate CRITICAL path emits JSON", False, str(e))
+
+        # After reclaiming, the gate is clean.
+        import shutil as _sh
+        _sh.rmtree(fr, ignore_errors=True)
+        r = run("scripts/gates/check_disk.py", [str(build)])
+        check("after reclaiming, the gate PASSES (exit 0)", r.returncode == 0,
+              (r.stdout + r.stderr)[:200])
+
+
+def test_render_cleans_up_and_streams():
+    """The two behaviours that make the incident impossible in the real pipeline:
+    `encode` RECLAIMS the frames it consumed, and `stream` writes NO frames at all.
+    Needs Chrome + ffmpeg; SKIPS honestly (never silently passes) without them."""
+    print("\n[render: encode reclaims frames; stream writes none]")
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from lib.common import find_chrome, have  # noqa
+    if not (find_chrome() and have("ffmpeg")):
+        check("render cleanup/stream (SKIPPED — needs Chrome + ffmpeg)", True,
+              "tooling absent here; behaviour UNVERIFIED on this machine")
+        return
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        scene = d / "scene.html"
+        scene.write_text(
+            "<!doctype html><html><head><meta charset='utf-8'><style>"
+            "body{margin:0;width:1920px;height:1080px;background:#123;color:#fff;"
+            "font:600 60px system-ui}</style></head><body><div id='t'></div><script>"
+            "const t=parseFloat(new URLSearchParams(location.search).get('t')||'0');"
+            "document.getElementById('t').textContent='t='+t.toFixed(2);"
+            "document.title='READY';</script></body></html>", encoding="utf-8")
+
+        # STREAM: a real mp4, zero frames anywhere.
+        out = d / "streamed.mp4"
+        r = run("scripts/render/capture_scene.py",
+                ["stream", "--scene", str(scene), "--duration", "1",
+                 "--fps", "8", "--out", str(out)])
+        check("stream produces a real mp4 (exit 0)",
+              r.returncode == 0 and out.exists() and out.stat().st_size > 0,
+              (r.stdout + r.stderr)[:300])
+        strays = [p for p in d.rglob("frame_*") if p.is_file()]
+        check("stream leaves ZERO frames on disk", not strays, str(strays[:3]))
+        check("stream leaves no temp dir behind",
+              not list(Path(tempfile.gettempdir()).glob("coordn8-stream-*")), "")
+
+        # CAPTURE -> ENCODE: frames appear, then are reclaimed.
+        frames = d / "frames"
+        r = run("scripts/render/capture_scene.py",
+                ["capture", "--scene", str(scene), "--duration", "1",
+                 "--fps", "8", "--out", str(frames)])
+        check("capture writes frames (exit 0)", r.returncode == 0 and frames.is_dir(),
+              (r.stdout + r.stderr)[:300])
+        n_before = len([p for p in frames.glob("frame_*") if p.is_file()])
+        check("capture wrote the expected frame count", n_before > 0, str(n_before))
+        check("capture reports a MEASURED plan before bulk writing",
+              "plan:" in (r.stdout + r.stderr), (r.stdout + r.stderr)[:200])
+
+        mp4 = d / "s1.mp4"
+        r = run("scripts/render/capture_scene.py",
+                ["encode", "--frames", str(frames), "--fps", "8", "--out", str(mp4)])
+        check("encode succeeds (exit 0)", r.returncode == 0 and mp4.exists(),
+              (r.stdout + r.stderr)[:300])
+        check("encode RECLAIMS the frames it consumed (the 1TB fix)",
+              not frames.exists() or not any(frames.glob("frame_*")),
+              f"frames dir still present: {frames.exists()}")
+        check("encode says how much it reclaimed",
+              "reclaimed" in (r.stdout + r.stderr), (r.stdout + r.stderr)[:200])
+
+        # --keep-frames is an explicit opt-out that still works.
+        frames2 = d / "frames2"
+        run("scripts/render/capture_scene.py",
+            ["capture", "--scene", str(scene), "--duration", "0.5",
+             "--fps", "8", "--out", str(frames2)])
+        mp42 = d / "s2.mp4"
+        r = run("scripts/render/capture_scene.py",
+                ["encode", "--frames", str(frames2), "--fps", "8",
+                 "--out", str(mp42), "--keep-frames"])
+        check("--keep-frames preserves them when explicitly asked",
+              r.returncode == 0 and any(frames2.glob("frame_*")), "")
+
+        # An over-budget capture refuses AND leaves nothing behind.
+        f3 = d / "frames3"
+        r = run("scripts/render/capture_scene.py",
+                ["capture", "--scene", str(scene), "--duration", "30",
+                 "--fps", "30", "--out", str(f3), "--max-bytes-gb", "0.0005"])
+        check("an over-budget capture REFUSES (exit 2)", r.returncode == 2,
+              (r.stdout + r.stderr)[:250])
+        left = [p for p in f3.rglob("*") if p.is_file()] if f3.exists() else []
+        check("the refusal leaves NOTHING behind (not even the probe frame)",
+              not left, str(left[:3]))
+
+
+def test_telemetry_and_observability():
+    """A job that can run for an hour MUST be observable. Two real incidents shared
+    one root cause — nobody could see what the render was doing: one filled a 1 TB
+    disk, another crawled at 5.4s/frame while driving load to 37 on 14 cores.
+
+    Proves the observability backbone: an event stream and summary written AS THE RUN
+    GOES (so a killed run still leaves the record), a resource TIME SERIES, a rate and
+    an ETA, and a verdict that names WHICH failure mode occurred."""
+    print("\n[telemetry: a long run is observable, with a verdict]")
+    r = _run_node.__self__ if False else None  # noqa — keep linters quiet
+    res = run("scripts/render/telemetry.py", ["--selftest"])
+    check("the telemetry self-test passes", res.returncode == 0,
+          (res.stdout + res.stderr)[-400:])
+    for needle in ("events file written", "summary file written",
+                   "events are valid JSONL", "resource series collected",
+                   "rate computed", "verdict has a status"):
+        check(f"observability guarantee: {needle}", f"ok   {needle}" in res.stdout,
+              res.stdout[-300:])
+
+    sys.path.insert(0, str(ROOT / "scripts" / "render"))
+    import telemetry as tl  # noqa
+    import time as _t
+
+    # A killed run must still have its record: events are flushed per event.
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        runrec = tl.Run("killed", d, echo=False)
+        runrec.event("frame.error", index=7, reason="simulated")
+        check("events are flushed immediately (a killed run keeps its record)",
+              runrec.events_path.exists()
+              and "frame.error" in runrec.events_path.read_text(), "")
+        runrec.finish("aborted")
+
+    # The verdict must distinguish the TWO failure directions, not just report a number.
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        smp = tl.ResourceSampler(disk_path=d, interval_s=0.05).start()
+        p = tl.Progress(total=10, label="frames", report_interval_s=99,
+                        log=lambda m: None)
+        for _ in range(10):
+            _t.sleep(0.005)
+            p.tick()
+        _t.sleep(0.12)
+        smp.stop()
+        check("a fast run with headroom is not called slow",
+              tl.verdict(p, smp, peak_workers=8, worker_ceiling=8,
+                         min_rate=0.5)["status"] in ("ok", "host-pressure"), "")
+
+        # The remaining verdicts must be checked against KNOWN resource conditions.
+        # Using the live sampler here would make the test depend on this machine's
+        # ambient load — and "1 worker on a BUSY machine" is correctly NOT throttling,
+        # so a busy CI box would flip the result. A stub makes the intent explicit.
+        class _IdleSampler:
+            def summary(self_inner):
+                return {"samples": 5, "cores": 16,
+                        "load_1m": {"min": 0.5, "max": 1.0, "mean": 0.8},
+                        "load_per_core": 0.05,
+                        "free_ram_mb": {"min": 30000, "max": 32000, "mean": 31000},
+                        "free_disk": {"min": 500 * 1024 ** 3, "max": 500 * 1024 ** 3,
+                                      "mean": 500 * 1024 ** 3}}
+
+        idle = _IdleSampler()
+        v_throttled = tl.verdict(p, idle, peak_workers=1, worker_ceiling=16,
+                                 min_rate=0.0001)
+        check("using 1 of 16 workers ON AN IDLE MACHINE is reported as THROTTLED "
+              "(the needlessly-slow case)", v_throttled["status"] == "throttled",
+              json.dumps(v_throttled)[:220])
+        check("the throttled verdict explains itself", bool(v_throttled["reasons"]),
+              json.dumps(v_throttled["reasons"])[:150])
+        check("1 of 16 workers on a BUSY machine is NOT called throttled "
+              "(the pool was right to back off)",
+              tl.verdict(p, smp, peak_workers=1, worker_ceiling=16,
+                         min_rate=0.0001)["status"] != "throttled"
+              or (smp.summary().get("load_1m") or {}).get("mean", 0) < 16 * 0.75,
+              "")
+        v_slow = tl.verdict(p, idle, peak_workers=8, worker_ceiling=8,
+                            min_rate=10_000_000)
+        check("an impossibly low rate is reported as SLOW with a reason",
+              v_slow["status"] == "slow" and bool(v_slow["reasons"]),
+              json.dumps(v_slow)[:200])
+        check("a SLOW verdict names the binding constraint",
+              any("Because" in r for r in v_slow["reasons"]),
+              json.dumps(v_slow["reasons"])[:200])
+
+        # Host pressure is ALSO a failure, not a success.
+        class _HammeredSampler:
+            def summary(self_inner):
+                return {"samples": 5, "cores": 8,
+                        "load_1m": {"min": 10.0, "max": 40.0, "mean": 30.0},
+                        "load_per_core": 3.75,
+                        "free_ram_mb": {"min": 200, "max": 900, "mean": 500},
+                        "free_disk": {"min": 1 * 1024 ** 3, "max": 2 * 1024 ** 3,
+                                      "mean": 1 * 1024 ** 3}}
+
+        v_hp = tl.verdict(p, _HammeredSampler(), peak_workers=8, worker_ceiling=8,
+                          min_rate=0.0001)
+        check("hammering the host is reported as HOST-PRESSURE (too aggressive is "
+              "also a failure)", v_hp["status"] == "host-pressure",
+              json.dumps(v_hp)[:200])
+        check("host-pressure names load, RAM and disk specifically",
+              len(v_hp["reasons"]) >= 3, json.dumps(v_hp["reasons"])[:250])
+
+    check("ETA formatting is human and None-safe",
+          tl.fmt_duration(3725) == "1h 2m 5s" and tl.fmt_duration(None) == "unknown",
+          tl.fmt_duration(3725))
+
+
+def test_perf_gate_names_which_failure():
+    """Speed has failed in BOTH directions, so the gate must name which. Fed the REAL
+    numbers measured from the cold-launch run (0.47 frames/s, load peaking at 37.7 on
+    14 cores), it must flag: below the floor, abusing the host (CRITICAL), and the
+    cold-launch engine that caused both."""
+    print("\n[perf gate: too slow AND too aggressive are both failures]")
+    with tempfile.TemporaryDirectory() as d:
+        build = Path(d)
+        tel = build / "_telemetry"
+        tel.mkdir(parents=True)
+        (tel / "capture-s1.summary.json").write_text(json.dumps({
+            "run": "capture-s1", "engine": "cold-chrome-pool",
+            "progress": {"total": 48, "done": 48, "elapsed_s": 83.0,
+                         "overall_rate_per_s": 0.47},
+            "resources": {"cores": 14,
+                          "load_1m": {"min": 6.4, "max": 37.67, "mean": 29.9},
+                          "free_ram_mb": {"min": 11090, "max": 13000, "mean": 12000},
+                          "free_disk": {"min": 200 * 1024 ** 3, "max": 201 * 1024 ** 3,
+                                        "mean": 200 * 1024 ** 3}},
+            "verdict": {"status": "slow", "peak_workers": 11},
+        }), encoding="utf-8")
+
+        r = run("scripts/gates/check_perf.py", [str(build)])
+        check("the gate flags the bad run (exit 1)", r.returncode == 1,
+              (r.stdout + r.stderr)[:250])
+        try:
+            res = json.loads(r.stdout.strip().splitlines()[0])
+            joined = " ".join(res["findings"])
+            check("it reports being BELOW the throughput floor",
+                  "below the" in joined and "floor" in joined, joined[:150])
+            check("it reports ABUSING the host and marks it CRITICAL",
+                  res["critical"] is True and "abusing the host" in joined,
+                  joined[:200])
+            check("it names the cold-launch engine as the cause, with the fix",
+                  "COLD-LAUNCH" in joined and "playwright" in joined.lower(),
+                  joined[:200])
+            check("it states that BOTH directions are failures",
+                  "Both directions are failures" in res["meaning"], res["meaning"][:120])
+        except (ValueError, IndexError, KeyError) as e:
+            check("perf gate emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+        # A healthy run must PASS — a gate that always complains gets ignored.
+        (tel / "capture-s1.summary.json").unlink()
+        (tel / "stream-s2.summary.json").write_text(json.dumps({
+            "run": "stream-s2", "engine": "playwright-persistent",
+            "progress": {"total": 90, "done": 90, "elapsed_s": 3.7,
+                         "overall_rate_per_s": 24.3},
+            "resources": {"cores": 14,
+                          "load_1m": {"min": 4.0, "max": 7.0, "mean": 5.5},
+                          "free_ram_mb": {"min": 12000, "max": 13000, "mean": 12500},
+                          "free_disk": {"min": 200 * 1024 ** 3, "max": 200 * 1024 ** 3,
+                                        "mean": 200 * 1024 ** 3}},
+            "verdict": {"status": "ok", "peak_workers": 1},
+        }), encoding="utf-8")
+        r = run("scripts/gates/check_perf.py", [str(build)])
+        check("a fast, gentle run PASSES (exit 0)", r.returncode == 0,
+              (r.stdout + r.stderr)[:250])
+
+        # No telemetry at all => SKIPPED, never a silent pass.
+        r = run("scripts/gates/check_perf.py", [str(Path(d) / "nothing")])
+        check("with no telemetry it SKIPS honestly (never a silent pass)",
+              r.returncode == 2, (r.stdout + r.stderr)[:200])
+
+
+def test_doctor_measures_before_committing():
+    """`doctor` must MEASURE, never assume. An assumed frame size is what made the
+    1 TB incident possible, so the projection has to come from a real probe."""
+    print("\n[doctor: measured preflight, not an assumed rate]")
+    r = run("scripts/doctor.py", ["--json"])
+    check("doctor runs and emits JSON", "Traceback" not in (r.stdout + r.stderr),
+          (r.stdout + r.stderr)[:300])
+    try:
+        d = json.loads(r.stdout)
+        check("it reports a tier", d["tier"] in ("A", "B", "C"), str(d.get("tier")))
+        for k in ("browser", "ffmpeg", "playwright"):
+            check(f"it reports the {k} tool state", k in d["tools"], "")
+        cap = d["capacity"]
+        check("it reports the worker budget (start and ceiling)",
+              cap["pool_start_workers"] >= 1
+              and cap["pool_ceiling_workers"] >= cap["pool_start_workers"], str(cap))
+        check("it reports free/total disk with the reserve and abort floor",
+              all(k in d["volume"] for k in
+                  ("free", "total", "reserve", "abort_floor")), str(d["volume"]))
+        check("it gives a verdict", d["verdict"] in ("ok", "review", "blocked"),
+              str(d.get("verdict")))
+    except ValueError as e:
+        check("doctor emits parseable JSON", False, f"{e}: {r.stdout[:200]}")
+
+    # A projection WITHOUT a probe must refuse to invent a rate.
+    r = run("scripts/doctor.py", ["--json", "--duration", "300", "--fps", "30",
+                                  "--scenes", "11"])
+    try:
+        d = json.loads(r.stdout)
+        proj = d.get("projection") or {}
+        check("a projection is produced for the described job",
+              proj.get("total_frames") == 99000, str(proj.get("total_frames")))
+        check("WITHOUT --probe it refuses to invent a rate",
+              "unknown" in str(proj.get("render_time", "")).lower(),
+              str(proj.get("render_time")))
+    except ValueError as e:
+        check("doctor projection emits JSON", False, str(e))
+
+
+def test_quality_observability_measures_output():
+    """QUALITY observability (2.5c): the OUTPUT is measured per scene, per dimension,
+    with MAGNITUDES — not a terminal pass/fail over the whole build.
+
+    Three blind spots this closes, each proven here:
+      * no magnitude  -> voice-sync drift is reported in milliseconds
+      * no per-scene  -> a weak scene is named, not hidden in a build average
+      * too late      -> it runs on traces, before/independent of any render
+
+    A clean scene must score 100 on every dimension (a scorer that cries wolf gets
+    ignored), and each seeded defect must be caught by its OWN dimension."""
+    print("\n[quality observability: measured per scene x dimension, in parallel]")
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        tdir = d / "_build" / "traces"
+        tdir.mkdir(parents=True)
+        L = ("[{name:'a',text:'One.',start:0,end:2,subjectId:'x'},"
+             "{name:'b',text:'Two.',start:2,end:4,subjectId:'x'}]")
+
+        # GOOD: fills the frame, enters on beat, has motion, legible, aligned.
+        good = ("{name:'good',grid:10,script:" + L + ",draw:(z,t)=>{z.section('s',(q)=>{"
+                "for(let i=0;i<4;i++) q.card({id:'c'+i,x:120,y:120+i*200,w:1680,h:160,"
+                "alpha:q.beatAlpha('a')},(k)=>{k.text({text:'Row '+i,size:32});});"
+                "q.chip({text:'moving',x:120+Math.min(1400,t*300),y:900,"
+                "alpha:q.beatAlpha('b'),size:28});});}}")
+        # LAGGY: the beat's visual arrives ~1s late and never moves.
+        laggy = ("{name:'laggy',grid:10,script:" + L + ",draw:(z,t)=>{z.section('s',(q)=>{"
+                 "const on=t>=3.0?1:0;"
+                 "q.card({id:'p',x:120,y:120,w:1680,h:700,alpha:on},(k)=>{"
+                 "k.text({text:'late',size:40});});});}}")
+        # RAGGED: overlapping panels, sub-floor type, outside the safe area, off-grid.
+        ragged = ("{name:'ragged',grid:10,script:" + L + ",draw:(z)=>{z.section('s',(q)=>{"
+                  "q.card({id:'p1',x:37,y:23,w:900,h:400,alpha:1});"
+                  "q.card({id:'p2',x:600,y:200,w:900,h:400,alpha:1});"
+                  "q.text({text:'tiny caption',x:41,y:700,size:14,alpha:1});});}}")
+
+        built = all(_build_trace(n, b, tdir / f"{n}.json")
+                    for n, b in (("good", good), ("laggy", laggy), ("ragged", ragged)))
+        if not built:
+            check("quality traces built (SKIPPED — no node)", True, "node unavailable")
+            return
+
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import importlib
+        q = importlib.import_module("quality")
+
+        rep = q.assess_build(sorted(tdir.glob("*.json")))
+        by = {s["scene"]: s for s in rep["scenes"]}
+
+        check("all three scenes are assessed", len(by) == 3, str(sorted(by)))
+        check("six dimensions x three scenes = 18 measurements",
+              rep["measurements"] == 18, str(rep["measurements"]))
+        check("the assessment runs on a PARALLEL pool",
+              (rep["peak_workers"] or 0) >= 1, str(rep["peak_workers"]))
+
+        # No false positives on the clean scene.
+        g = by["good"]
+        check("a CLEAN scene scores 100 overall (no false positives)",
+              g["score"] == 100.0, json.dumps(g["dimensions"], default=str)[:300])
+        for dim in q.DIMENSIONS:
+            check(f"clean scene: {dim} = 100",
+                  g["dimensions"][dim]["score"] == 100.0,
+                  json.dumps(g["dimensions"][dim])[:200])
+
+        # Each seeded defect caught by its OWN dimension, with a magnitude.
+        lg = by["laggy"]
+        vs = lg["dimensions"]["voice_sync"]
+        check("voice_sync reports the DRIFT IN MILLISECONDS (the magnitude)",
+              vs["metrics"].get("max_lag_ms") is not None
+              and vs["metrics"]["max_lag_ms"] >= 900,
+              json.dumps(vs["metrics"]))
+        check("voice_sync names the lagging line and the target",
+              any("AFTER the sentence starts" in f for f in vs["findings"]),
+              json.dumps(vs["findings"])[:200])
+        check("voice_sync reports %-on-beat and lines with NO visual",
+              "on_beat_pct" in vs["metrics"]
+              and vs["metrics"].get("lines_with_no_visual") == 1,
+              json.dumps(vs["metrics"]))
+        check("motion catches a COMPLETELY STATIC frame under narration",
+              lg["dimensions"]["motion"]["score"] < 100.0
+              and any("STATIC" in f for f in lg["dimensions"]["motion"]["findings"]),
+              json.dumps(lg["dimensions"]["motion"])[:220])
+
+        rg = by["ragged"]
+        check("overlap catches partially-overlapping panels",
+              rg["dimensions"]["overlap"]["score"] < 100.0,
+              json.dumps(rg["dimensions"]["overlap"]["metrics"]))
+        check("alignment catches safe-area violations",
+              rg["dimensions"]["alignment"]["metrics"]["safe_area_violations"] > 0,
+              json.dumps(rg["dimensions"]["alignment"]["metrics"]))
+        check("legibility catches sub-floor type and reports the px",
+              rg["dimensions"]["legibility"]["metrics"]["min_font_px"] == 14.0,
+              json.dumps(rg["dimensions"]["legibility"]["metrics"]))
+        check("legibility de-duplicates by DEFECT, not per frame",
+              len(rg["dimensions"]["legibility"]["findings"]) <= 2,
+              json.dumps(rg["dimensions"]["legibility"]["findings"])[:200])
+
+        # The weakest link must be named, not averaged away.
+        check("the weakest SCENE is named", rep["weakest_scene"] == "ragged",
+              str(rep["weakest_scene"]))
+        check("the weakest DIMENSION is named",
+              rep["weakest_dimension"] in q.DIMENSIONS, str(rep["weakest_dimension"]))
+        check("a score is explicitly NOT a quality certificate",
+              "NOT evidence the video" in rep["not_a_quality_certificate"], "")
+
+        # TREND: a regression must be visible per dimension, not just in the total.
+        prev = d / "prev.json"
+        prev.write_text(json.dumps(rep), encoding="utf-8")
+        degraded = json.loads((tdir / "good.json").read_text())
+        for f in degraded["frames"]:
+            f["boxes"] = [b for b in f["boxes"] if b.get("id") == "c0"]
+        (tdir / "good.json").write_text(json.dumps(degraded), encoding="utf-8")
+        rep2 = q.add_trend(q.assess_build(sorted(tdir.glob("*.json"))), prev)
+        regs = " ".join(rep2["trend"]["regressions"])
+        check("a REGRESSION vs the previous cut is detected",
+              bool(rep2["trend"]["regressions"]), json.dumps(rep2["trend"])[:250])
+        check("the regression names the scene AND the dimension that dropped",
+              "good" in regs and any(dm in regs for dm in q.DIMENSIONS), regs[:200])
+        check("the build-level delta is reported",
+              rep2["trend"]["build_delta"] is not None,
+              str(rep2["trend"].get("build_delta")))
+
+        # The CLI surface behaves and emits a gate-style summary.
+        r = run("scripts/quality.py", [str(d), "--json"])
+        check("the quality CLI emits JSON and a gate-style stderr summary",
+              "build score" in r.stderr and r.stdout.strip().startswith("{"),
+              (r.stdout[:100] + r.stderr[:200]))
+        r = run("scripts/quality.py", [str(Path(d) / "nope")])
+        check("with no traces it SKIPS honestly (UNMEASURED is not a pass)",
+              r.returncode == 2 and "UNMEASURED" in (r.stdout + r.stderr),
+              (r.stdout + r.stderr)[:200])
+
+
+def test_host_integration_names_real_mechanisms():
+    """The fleet is only real if the host actually runs it. "Spawn sub-agents" is
+    aspirational; naming the Task tool and the one-message concurrency rule is
+    executable. A session reading only the abstract version does the whole build
+    single-threaded in one context.
+
+    Asserts the brain names the concrete mechanisms AND the rules that make them
+    matter — so this cannot silently regress back to hand-waving."""
+    print("\n[host integration: the brain names the host's REAL mechanisms]")
+    brain = (ROOT / "engine" / "PLAYBOOK.md").read_text(encoding="utf-8")
+
+    for needle, why in [
+        ("Task tool", "fleet roles are dispatched with the actual Task tool"),
+        ("subagent_type", "the dispatch call is concrete, not a metaphor"),
+        ("ONE message", "independent dispatches share one message so they run in parallel"),
+        ("TodoWrite", "phases are tracked so a dropped stage is visible"),
+        ("run_in_background", "a long render does not block the session"),
+        ("BashOutput", "the backgrounded render is polled and reported"),
+        ("ExitPlanMode", "the Phase-0 plan uses the host's own approval gate"),
+        ("Read / Glob / Grep", "the dedicated tools are preferred over shelling out"),
+        ("WebSearch", "design/icon retrieval is named as an enhancement"),
+        ("SendMessage", "continuing a spawned role keeps its context"),
+        ("Blindness is a dispatch property",
+         "verifier blindness is enforced by HOW roles are dispatched"),
+        ("do not depend on each other",
+         "the concurrency rule is stated explicitly"),
+        ("Never claim a fleet ran when it did not",
+         "a sequential fallback must be reported honestly"),
+    ]:
+        check(f"brain names: {why}", needle in brain, f"missing {needle!r}")
+
+    # Coordn8's own commands must be presented as part of the toolkit, or the agent
+    # re-derives by hand work the package already does better.
+    for cmd in ("coordn8 doctor --probe", "coordn8 orchestrate", "coordn8 quality",
+                "coordn8 perf", "coordn8 disk", "capture_scene.py stream",
+                "scene_runtime.js"):
+        check(f"brain points at its own tool: {cmd}", cmd in brain, f"missing {cmd!r}")
+
+    # A worked dispatch example must exist — a rule without a shape gets ignored.
+    check("the brain shows a WORKED fan-out wave (a concrete Task block)",
+          "Task(subagent_type=" in brain, "no concrete Task example")
+
+    # And it must reach the shipped adapter, byte-for-byte.
+    sys.path.insert(0, str(ROOT / "build"))
+    import generate_adapters as ga  # noqa
+    for path, contents in ga.build_all().items():
+        if "claude-code/SKILL.md" in str(path):
+            check("the Claude Code skill carries the host-integration rules",
+                  "Task tool" in contents and "ONE message" in contents, "")
+
+    doc = ROOT / "docs" / "HOST_INTEGRATION.md"
+    check("a host-integration docs page ships", doc.exists(), str(doc))
+    if doc.exists():
+        d = doc.read_text(encoding="utf-8")
+        for needle in ("Task tool", "TodoWrite", "BashOutput",
+                       "Blindness is a dispatch property", "Other hosts"):
+            check(f"docs page covers: {needle}", needle in d, "")
+
+
 def main() -> int:
     print("Coordn8 test suite")
     print("=" * 50)
@@ -2654,6 +3279,14 @@ def main() -> int:
     test_invariant_gates_C1_to_C8()
     test_line_count_change_warning()
     test_addendum_coverage_audit()
+    test_disk_safety_render_can_never_fill_the_volume()
+    test_disk_gate_flags_accumulation()
+    test_render_cleans_up_and_streams()
+    test_telemetry_and_observability()
+    test_perf_gate_names_which_failure()
+    test_doctor_measures_before_committing()
+    test_quality_observability_measures_output()
+    test_host_integration_names_real_mechanisms()
     test_orchestrator_fail_early_and_adaptive()
     test_adaptive_pool_never_floods_or_stalls()
     print("=" * 50)

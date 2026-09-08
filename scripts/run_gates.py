@@ -110,6 +110,18 @@ def main() -> int:
 
     plan = [
         ("env_detect", HERE / "env_detect.py", ["--json"]),
+        # Disk FIRST: a volume that is filling up invalidates every later stage, and a
+        # render that accumulates frames forever is a destructive bug, not a taste one.
+        ("disk", GATES / "check_disk.py", [str(build)]),
+        # Run HEALTH: was the render a sane speed, and was it gentle on the host?
+        # Both "too slow" and "too aggressive" are failures, and this names which.
+        ("perf", GATES / "check_perf.py", [str(build)]),
+        # Output QUALITY, measured per scene x dimension in parallel, with magnitudes
+        # (e.g. voice-sync drift in ms) rather than a bare pass/fail.
+        ("quality", HERE / "quality.py",
+         [str(build)] + (["--prev", str(build / "_build" / "prev" / "quality.json")]
+                         if (build / "_build" / "prev" / "quality.json").exists()
+                         else [])),
         ("tree_shape", GATES / "tree_shape.py", [str(flows)]),
         ("facts_trace", GATES / "facts_trace.py", [str(claims), "--repo", "."]),
         ("dom_smoke", GATES / "dom_smoke.py", [str(html)]),

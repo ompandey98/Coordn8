@@ -10,6 +10,11 @@
  *   npx coordn8 setup           auto-install missing runtime tools (ffmpeg/chromium/tts) to unlock video
  *   npx coordn8 detect          run environment/tier detection
  *   npx coordn8 gates <folder>  run the advisory gate report on a build folder
+ *   npx coordn8 doctor          measure engine speed, frame size, projected time + disk
+ *   npx coordn8 quality <fldr>  measured per-scene output quality (alignment/sync/overlap/...)
+ *   npx coordn8 perf <folder>   judge a finished render's speed / host impact
+ *   npx coordn8 disk <folder>   report intermediates + free space
+ *   npx coordn8 clean <paths>   reclaim render intermediates
  *   npx coordn8 orchestrate <f> supervised fail-early verification (parallel, adaptive, halts early)
  *   npx coordn8 check           verify adapters are in sync with PLAYBOOK.md
  *   npx coordn8 version
@@ -129,6 +134,17 @@ Usage (no clone needed — runs straight from GitHub; add -y so npx never prompt
                                                          run before anything expensive, in parallel on an adaptive pool that
                                                          ramps up on spare capacity and backs off under load
   npx -y github:ompandey98/coordn8 gates <folder>        Run every gate as a flat advisory report (no stage ordering)
+  npx -y github:ompandey98/coordn8 doctor --probe        PREFLIGHT: measure this machine — render engine, real
+                                                         frames/s, measured frame size — then project the time and
+                                                         disk a job will need (add --duration/--fps/--scenes)
+  npx -y github:ompandey98/coordn8 quality <folder>      MEASURED output quality per scene x dimension, in parallel:
+                                                         alignment, overlap, voice-sync DRIFT (ms), density,
+                                                         legibility, motion — scored, with the weakest named
+                                                         (add --prev <build> to see regressions vs the last cut)
+  npx -y github:ompandey98/coordn8 perf <folder>         Judge a finished render: too slow, or too hard on the host?
+                                                         Both are failures; it names which one happened
+  npx -y github:ompandey98/coordn8 disk <folder>         What intermediate data a build holds + free space
+  npx -y github:ompandey98/coordn8 clean <paths>         Reclaim render intermediates (try --dry-run first)
   npx -y github:ompandey98/coordn8 check                 Verify adapters are byte-in-sync with PLAYBOOK.md
   npx -y github:ompandey98/coordn8 version               Print version
 
@@ -159,6 +175,26 @@ switch (cmd) {
     break;
   case 'gates':
     runPy('scripts/run_gates.py', rest);
+    break;
+  // Disk safety. A render must never be able to fill the user's volume, and an
+  // abandoned run must never keep costing them space.
+  case 'clean':
+    runPy('scripts/render/capture_scene.py', ['clean', ...(rest.length ? rest : ['.'])]);
+    break;
+  case 'disk':
+    runPy('scripts/gates/check_disk.py', rest.length ? rest : ['.']);
+    break;
+  // Observability. `doctor` MEASURES this machine before you commit an hour to a
+  // render; `perf` judges a finished run's health from the telemetry it wrote.
+  case 'doctor':
+    runPy('scripts/doctor.py', rest);
+    break;
+  case 'perf':
+    runPy('scripts/gates/check_perf.py', rest.length ? rest : ['.']);
+    break;
+  // Output-QUALITY observability: measured per scene, per dimension, in parallel.
+  case 'quality':
+    runPy('scripts/quality.py', rest.length ? rest : ['.']);
     break;
   case 'orchestrate':
   case 'verify':

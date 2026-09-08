@@ -156,10 +156,14 @@ class PoolResult:
     done: list = field(default_factory=list)
     failed: list = field(default_factory=list)
     peak_workers: int = 0  # highest live concurrency the controller reached
+    aborted: bool = False  # an external kill switch (e.g. the disk watchdog) stopped us
 
     @property
     def ok(self) -> bool:
-        return not self.failed
+        # An aborted run is NOT ok even with zero failures: stopping early is a
+        # deliberate incomplete result, and calling it success is how a render
+        # "succeeded" while producing no video.
+        return not self.failed and not self.aborted
 
 
 def _controller_decision(cur: int, hard_max: int, cores: int,
@@ -203,6 +207,7 @@ def run_pool(
     adaptive: bool = True,
     control_interval_s: float = 0.5,
     log: Callable[[str], None] | None = None,
+    abort_event: 'threading.Event | None' = None,
 ) -> PoolResult:
     """Run `task(item)` over `items` with an ADAPTIVE, self-resizing pool.
 
@@ -213,6 +218,12 @@ def run_pool(
       as the machine allows (the fix for under-parallelized, painfully-long
       renders). Set respect_load=False (or adaptive=False) for a fixed-size pool —
       deterministic for tests / when capacity is already reserved.
+
+    abort_event: an external kill switch. When it is set, NO further items start and
+      the pool returns what it has. This exists because a render once filled a 1 TB
+      disk with frames and nothing could stop it: a worker that notices the volume
+      filling MUST be able to halt the run, not just log about it. In-flight items
+      are allowed to finish so nothing is left half-written.
 
     Returns PoolResult(done=[(item, result)...], failed=[(item, error)...]).
     """
@@ -247,10 +258,19 @@ def run_pool(
     attempts: dict[int, int] = {}
     pending = list(enumerate(items))
 
+    class _Aborted(Exception):
+        """Raised in place of running an item once the abort switch is set."""
+
     def _guarded(idx_item):
         idx, item = idx_item
+        # Cheapest possible check: never even acquire a permit once aborted, so a
+        # tripped disk watchdog stops the run within one in-flight item.
+        if abort_event is not None and abort_event.is_set():
+            raise _Aborted("aborted before start")
         sem.acquire()
         try:
+            if abort_event is not None and abort_event.is_set():
+                raise _Aborted("aborted while queued")
             return idx, item, task(item)
         finally:
             sem.release()
@@ -266,6 +286,10 @@ def run_pool(
         # controller modulates real concurrency underneath it.
         with ThreadPoolExecutor(max_workers=max(1, hard_max)) as ex:
             while pending:
+                if abort_event is not None and abort_event.is_set():
+                    _log(f"ABORTED — {len(pending)} item(s) not started")
+                    result.aborted = True
+                    break
                 batch = pending
                 pending = []
                 futures = {ex.submit(_guarded, ii): ii for ii in batch}
@@ -275,7 +299,13 @@ def run_pool(
                         _, _, out = fut.result()
                         with result_lock:
                             result.done.append((item, out))
+                    except _Aborted:
+                        result.aborted = True
+                        continue      # not a failure: we chose to stop
                     except Exception as e:  # noqa: BLE001
+                        if abort_event is not None and abort_event.is_set():
+                            result.aborted = True
+                            continue  # don't retry into a filling disk
                         attempts[idx] = attempts.get(idx, 0) + 1
                         if attempts[idx] <= max_retries:
                             _log(f"item {idx} failed ({e}); retry "

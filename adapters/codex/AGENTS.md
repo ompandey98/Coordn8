@@ -341,7 +341,7 @@ Then present the **build plan** and get explicit approval before Phase 1:
 
 **Before you present the plan, run the R.7 best-work pass ON THE PLAN ITSELF.** Planning is the first and cheapest place to reach for the ceiling, so do it here, unprompted: *Is this the strongest approach to explaining THIS system — or just the first one that occurred to me? Is the section/beat structure genuinely MECE and sequentially-building (doctrine 13), or a flat pile of topics? Did I deep-dive the code enough to plan well, or am I planning on a shallow read (if the latter, dive NOW — R.6: never hesitate from a needed deep-dive)? Is there a materially better framing, spine, or engine choice I can see but haven't chosen?* Name the better plan if one exists and adopt it before presenting. A weak plan waved through here is the most expensive defect in the whole build — everything downstream inherits it.
 
-**Do NOT start building until the user approves the plan.** This is where you also propose any creative deviations (see the Creative Freedom Clause).
+**Do NOT start building until the user approves the plan.** Present it through the host's own plan affordance where one exists (in Claude Code, plan mode / ExitPlanMode — R.3c), so approval is an explicit gate rather than a paragraph the user scrolls past. This is where you also propose any creative deviations (see the Creative Freedom Clause).
 
 ### 0.7a THE REQUIREMENT-COVERAGE LEDGER — capture every ask, prove every ask was covered (`_research/requirements.md`)
 
@@ -445,12 +445,62 @@ The fleet in R.1/F.6 needs a **supervisor** and a **communication channel**, or 
 
 | Host | Fleet execution | What stays identical |
 |---|---|---|
-| **Claude Code** | real sub-agents, dispatched in parallel, each with its own context; process-level parallelism for renders | everything |
+| **Claude Code** | real sub-agents via the **Task tool, dispatched in ONE message** so they run concurrently, each with its own context; **TodoWrite** for phase tracking; **background Bash + BashOutput** for long renders; process-level parallelism for frames (see R.3c) | everything |
 | **Codex / AGENTS.md CLIs** | shell-level parallelism (`orchestrate.py` + the adaptive pool); roles run as separate invocations | stage ladder, bus files, blindness |
 | **Cursor / Kiro** | agent runs the ladder; parallelism via the pool; roles as sequential passes with role-scoped prompts | stage ladder, bus files, blindness |
 | **A host with no spawn and no shell** (chat-only) | ONE agent performs each role **in sequence**, writing the same bus files, and **explicitly re-reading only the predecessor's artefact** for the next role | stage ladder, bus files, blindness |
 
 In the degraded case the **order and the blindness are what must survive**: run the verifier pass *without* re-reading your own claim list, on the artefact as it actually is. A single agent can be blind to its own claims by reading only the artefact and the sentence — and it must, because that is where the defects were found.
+
+### R.3c HOST INTEGRATION — use the host's REAL mechanisms, by name (Claude Code first)
+
+Everything above describes the fleet in the abstract. "Spawn sub-agents" is aspirational; **"dispatch these six Task calls in ONE message so they actually run concurrently" is executable.** A session that reads only the abstract version does the whole build single-threaded in one context and then wonders why it was slow. So this section names the mechanisms.
+
+**In Claude Code, use these — they are the difference between the fleet being real and being a metaphor:**
+
+| Do this | With | Why it matters here |
+|---|---|---|
+| Dispatch every independent fleet role | the **Task tool** (`subagent_type: general-purpose` unless a better-fitting agent exists), **all in a single message** | Independent Task calls issued in one message run **concurrently, each with its own context window**. Issued in separate messages they serialise, and the readers/adversaries are exactly the roles that must NOT share a context (F.5 blindness). One message per fan-out wave. |
+| Track the build's phases | **TodoWrite**, one item per phase and per in-flight scene | A build has many stages over a long session. Without a live list the user cannot see where it is, and a dropped stage is invisible — which is how "it silently skipped Stage V" happens. Mark exactly one item `in_progress`. |
+| Long renders, `setup_env.py`, installs | **Bash with `run_in_background: true`**, then poll with **BashOutput** | A render can run for an hour. Blocking the session on it means no progress reporting, no ability to answer a question mid-run, and a timeout kills work already done. Background it, poll, and report the progress lines the render is already emitting (2.5b). |
+| The Phase-0 plan (0.7) | **plan mode / ExitPlanMode** where the host offers it | The plan is a real approval gate, not a paragraph to scroll past. Using the host's own plan affordance makes approval explicit and gives the user a first-class chance to widen or narrow scope (DELIVERABLE SCOPE) before anything is built. |
+| Reading and searching the repo | **Read / Glob / Grep**, not `cat`/`find`/`grep` through Bash | The dedicated tools are faster, paginate large files, and do not blow the context on a stray binary. Reserve Bash for things that genuinely need a shell (the render, the gates, ffmpeg). |
+| Independent reads in the ingest phase | **multiple Read/Grep calls in ONE message** | 0.1 requires reading the whole repo. Batched calls are parallel; sequential ones are not. This is the cheapest speedup available and it is free. |
+| Design references, icon sets, open-licensed assets | **WebSearch / WebFetch**, when the environment allows and the user has not forbidden it | 0.4a rule 10 already permits this. It is an *enhancement*: everything fetched must still be vendored/inlined (offline contract) and open-licensed. Never a dependency. |
+| Continuing a role you already spawned | **SendMessage** to that agent, rather than a fresh Task | The agent keeps its context — its reads, its findings — so a follow-up question costs nothing to re-establish. A new Task starts cold. |
+
+**The concurrency rule, stated once:** *if two things do not depend on each other, they go out in the same message.* That applies to Task dispatches, Reads, Greps, and Bash calls alike. Serialising independent work is the single most common way a capable host is wasted.
+
+**Worked shape of one fan-out wave** (Phase 1 of the fleet, F.6) — one message containing:
+
+```
+Task(subagent_type="general-purpose", description="read auth subsystem",
+     prompt="Read <paths> END TO END. Emit _research/reads/auth.md: every fact with a
+             file:line. Do not summarise; do not skip long files. Report only what the
+             code says, flagging any doc that disagrees with it.")
+Task(... "read ingest subsystem"  -> _research/reads/ingest.md)
+Task(... "read render subsystem"  -> _research/reads/render.md)
+Task(... "transcribe prior cut"   -> _research/reference_transcript.md)
+Task(... "classify requester lines DIRECTION/CONTENT/CORRECTION" -> _research/brief.md)
+```
+
+Then a **serial** join (the cartographer) merges them — that one is serial because it genuinely needs all of the results at once (R.2).
+
+**Blindness is a dispatch property, not a good intention.** A verifier must be a **separate Task whose prompt does not contain the builder's claims** (F.5 rule 1). If you hand a reviewer your checklist, it verifies the checklist and misses everything else — which is exactly what happened. The claim-auditor is the *last* Task, and it is the only one that receives the claim list.
+
+**Other hosts: same discipline, different mechanism.** Where a host has no agent spawn, ONE agent performs each role **in sequence**, writing the same bus files (R.3b) and re-reading only its predecessor's artefact — the order and the blindness are what must survive, not the parallelism. Never claim a fleet ran when it did not: say which roles were sequential.
+
+**Coordn8's own commands are part of the toolkit, not an afterthought.** Reach for them rather than re-deriving their work by hand:
+
+| Command | Use it for |
+|---|---|
+| `coordn8 doctor --probe` | before any render: measured engine, frames/s, frame size, projected time + disk (2.5b) |
+| `coordn8 orchestrate <build>` | the fail-early stage ladder on an adaptive pool (R.3a) |
+| `coordn8 quality <build>` | measured per-scene output quality, six dimensions, parallel (2.5c) |
+| `coordn8 perf <build>` | run health: too slow / too aggressive (2.5b) |
+| `coordn8 disk <build>` / `clean` | what the build holds, and reclaiming it (2.5a) |
+| `capture_scene.py stream` | render with **zero** frames on disk (2.5a) |
+| `scene_runtime.js` | author scenes so D1–D5 are impossible, not merely detected (F.1) |
 
 ### R.4 Honesty & communication during orchestration
 
@@ -500,7 +550,7 @@ Coordn8 runs slower and burns more tokens than it needs to when **every** sub-ta
 - **Token discipline that never costs accuracy:**
   - **Don't re-read what the palace already holds.** The memory palace (`_research/`, `_build/`) exists so you read the code/decisions ONCE and reuse; re-deriving a fact you already wrote down is wasted tokens (0.4 memory-palace discipline).
   - **Summarize once, reference after.** A reader emits a compact `file:line`-anchored fact file; downstream roles cite that file, they don't re-ingest raw source.
-  - **Batch the mechanical, stream the rest.** Fan mechanical work out at high concurrency (R.3); reserve serial deep passes for judgment.
+  - **Batch the mechanical, stream the rest.** Fan mechanical work out at high concurrency (R.3); reserve serial deep passes for judgment. Concretely: independent tool calls go out in ONE message, and independent agent roles go out as one wave of Task calls (R.3c) — separate messages serialise them and waste the host.
   - **Right-size output.** FAST-lane steps return terse structured results (a status line, a JSON blob), not essays. Verbose narration belongs only where a human reads it (the handover, the deliverables themselves).
 - **The invariant.** Speed comes from *not wasting effort*, never from *skipping verification*. If a shortcut would reduce how thoroughly a load-bearing claim, fact, or frame is checked, it is not allowed — full stop. Every fidelity gate (facts, sync, coverage, subtitle fidelity, visual density) runs exactly as hard as before; only the deterministic plumbing around them got cheaper and more parallel.
 - **NEVER HESITATE FROM A DEEP-DIVE WHEN ONE IS NEEDED.** Effort tiering rations reasoning on *mechanical* work; it NEVER rations it on understanding, coverage, or correctness. If at any point you sense a gap — a module you skimmed, a branch you didn't trace, a claim you're "fairly sure" about, a design choice you picked without weighing the alternative, an area you'd feel uneasy defending if questioned — you STOP and dig in until the uncertainty is resolved. A deep-dive is never "too expensive," never "probably fine," never deferred to "if someone asks." The token cost of a deep-dive is trivial next to the cost of shipping something you hadn't actually examined. When in doubt, dive — the DEEP lane has no budget ceiling on the things that decide whether the work is right and complete.
@@ -891,6 +941,81 @@ Setup installs all of them (0.6). Manim and the vendored JS libs are **enhanceme
 
 **The blend is the point.** A single video can open with a Rough.js hand-sketched hook, teach architecture with a GSAP-eased HTML flow, drop into a Manim coordinate transform for the one hard piece of math, show the dependency graph with D3, and close on a GSAP count-up — all one file, one timeline, one consistent visual system (2.4a). That is how you match the studios: not by picking their tool, but by using the right tool per idea.
 
+### 2.5a RESOURCE SAFETY — a render may NEVER fill the user's disk (non-negotiable)
+
+**Provenance: this is a real incident, not a hypothetical.** A build accumulated frames without bound, produced **no video at all**, filled a **1 TB** volume and killed the machine. Nothing estimated the space a render needed, nothing watched free space while it ran, and nothing ever deleted a frame — so every retry ADDED to the pile. Every other rule in this brain is about the quality of the output; this one is about not damaging the host you were invited onto. **It outranks output quality: a beautiful video is worthless if producing it destroys the machine.**
+
+The arithmetic that makes it inevitable without a guard:
+
+| | |
+|---|---|
+| 1920×1080 PNG screenshot | ~1–3 MB |
+| 30 fps × 6 min | 10,800 frames per scene |
+| one scene | **~15–32 GB** |
+| × 11 scenes, never reclaimed, retries additive | **~170–350 GB and climbing** |
+
+**The five rules. All of them, every render.**
+
+1. **STREAM by default — do not accumulate.** `capture_scene.py stream` pipes frames straight into the encoder's stdin, so peak disk cost is the output mp4 plus **one** temporary frame. Reach for this first; it makes filling a volume *structurally impossible* rather than merely guarded. Only fall back to the on-disk `capture` + `encode` path when you genuinely need the frames (e.g. per-frame pixel gates), and then obey rules 2–5.
+2. **BUDGET FROM A MEASUREMENT, never a guess.** Capture frame 0, measure its **real** byte size, project the total, and **refuse to start** if it exceeds free space (minus a reserve) or the per-render cap. State the numbers in the refusal and name the fixes (`--stream`, lower `--fps`, shorter scene, `--format`, or a deliberately raised cap). A refusal costs one flag; a full disk costs the user's machine. A refusal must also leave **nothing** behind — including the probe frame.
+3. **WATCH FREE SPACE WHILE RUNNING, AND BE ABLE TO STOP.** A background watchdog samples free space and the frame directory's size and **trips an abort** the moment either crosses its limit; the worker pool honours that abort, so the run ends in seconds. Detecting a filling disk without the power to halt is what turned this into an incident — logging is not stopping.
+4. **CLEAN UP ALWAYS — success, failure, and Ctrl-C.** Frames are reclaimed immediately after a successful encode (they are a pure function of `t`, so keeping them after the mp4 exists is pure cost), partial output is deleted on failure or interrupt, and Manim's media cache is reclaimed after re-extraction. **An abandoned run must not keep costing the user disk.** `coordn8 clean` reclaims whatever a killed process left behind, and the cleanup routine refuses to touch anything that isn't recognisably a render intermediate.
+5. **ENCODE-AND-RECLAIM PER SCENE, not at the end.** Each scene's frames are turned into its mp4 and reclaimed *before* the next scene is captured, so the build's peak footprint is one scene, not all of them. `check_disk.py` measures the whole build folder, flags **stale** frame directories whose mp4 already exists, flags total intermediates over budget, and reports **CRITICAL** when free space is low — the one gate condition that is never softened.
+
+**Choose the frame format by MEASURING, not by folklore.** Neither PNG nor JPEG wins universally: flat synthetic frames (solid backgrounds, large type) often compress *smaller as PNG*, while gradient-, glow-, photo- and screenshot-heavy frames compress dramatically smaller as JPEG (measured 12.7× on a realistic gradient scene: 1.6 MB → 132 KB). `--format auto` probes both on frame 0 and keeps the smaller. That one measured choice is the difference between a ~350 GB build and a ~15 GB one, so do not assert a ratio — measure it.
+
+**Never report success when nothing shipped.** A run that aborted, or that produced frames but no video, is a **failure** with a stated reason and a cleanup — never a pass. The original incident ended with a dead machine and no deliverable; the honest report of that is "aborted, nothing produced, here is what it cost and how to recover", not silence.
+
+### 2.5b OBSERVABILITY & SPEED — a long render must be visible, fast, AND gentle
+
+**Provenance: two real incidents with the same root cause — nobody could see what the render was doing.** One filled a 1 TB disk and killed the machine. Another crawled while the host sat idle; when measured, the naive path cost **5.4 s per frame** and, run in parallel, drove the 1-minute load to **37 on 14 cores** — slow *and* abusive at once. Neither was visible until after the damage. **A job that can run for an hour without reporting anything is unshippable**, regardless of how good its output would have been.
+
+**MEASURE FIRST — `coordn8 doctor --probe`.** Before committing to a render, probe *this* machine: which engine is available, its **real** frames/second, the **measured** byte size of a representative frame in each format, and from those, the projected time and disk for the job. Every number is measured here or derived from something measured here — **never** an assumed rate, because an assumed rate is what made the disk incident possible. Measured on a 14-core laptop: persistent browser **20 frames/s** vs cold launch **5.41 s/frame** (≈108×), and a representative frame **1.4 MB as PNG vs 76 KB as JPEG** (≈18×). Those two measured choices turn a 99,000-frame job from *~138 GB and days* into *~7 GB and ~1.5 hours* — or **zero disk** when streaming.
+
+**ONE BROWSER, MANY FRAMES.** A scene is a pure function of `t`, so the page only needs loading **once**: each later frame is a re-render (`window.renderAt(t)`) plus a screenshot — milliseconds, not seconds. Cold-launching a process per frame is the single worst performance decision available, and it is *also* the one that abuses the host, because N parallel browser launches multiply into far more than N processes. Prefer the persistent engine; fall back to the cold-launch pool only when it is genuinely unavailable, **say so**, and give the one-line install that fixes it.
+
+**EVERY LONG RUN IS OBSERVABLE — this is not optional.** While rendering, report on a throttle (never per frame): **progress** (done/total, %), the **achieved rate**, an **ETA**, and what the run is **costing the host** (disk used, disk free). Persist, as the run goes: a **JSONL event stream**, a **time series** of load / available RAM / free disk, and a **summary** with per-stage timings. Write-as-you-go is the point — a run that is killed, or that kills the machine, must still leave a readable record of what it was doing and what it cost. A log that only appears on clean exit is useless for exactly the failures that matter.
+
+**LIVE QUALITY ASSESSMENT OF THE RUN ITSELF.** Speed has failed in *both* directions here, so a bare number is not an answer. Every run ends with a verdict that names which thing happened:
+
+| Verdict | Means |
+|---|---|
+| `ok` | rate above the floor, host not abused |
+| `slow` | below the throughput floor — **and the binding constraint is named** (busy machine, tight RAM, full disk, throttled pool, or per-item cost) |
+| `throttled` | used a small fraction of available workers *while resources were free* — the "needlessly slow while the machine idles" case |
+| `host-pressure` | sustained load over ~1.5× cores, RAM nearly gone, or disk near the floor — **too aggressive is also a failure** |
+
+`check_perf.py` re-derives this from the telemetry rather than echoing it (a gate that trusts the thing it audits is theatre), reports the resource-exhaustion conditions as **CRITICAL**, and flags a run that used the cold-launch engine when a persistent one was available.
+
+**The standing rule:** fast is not the goal and gentle is not the goal — **both**, with the evidence on disk to prove which one you got. If a run cannot be observed, it cannot be trusted, and it does not ship.
+
+### 2.5c QUALITY OBSERVABILITY — measure the OUTPUT, per scene, in parallel
+
+Resource observability (2.5b) tells you the render behaved. It says nothing about whether the *output* is any good. Gates alone did not close that, because they were **terminal pass/fail over the whole build**, which leaves three blind spots that each cost real review cycles:
+
+1. **No magnitude.** "voice sync: FAIL" does not distinguish a visual 40 ms off its sentence from one 2 s off — and those need completely different fixes. **A bare verdict is not an observation.**
+2. **No per-scene view.** One weak scene hides inside a build-level PASS, so nobody knows which scene to fix, or which is getting worse.
+3. **Not measured until the end.** A systematic defect cost a full re-render instead of being caught on scene 1.
+
+**So quality is MEASURED, per scene, per dimension, and scored** — `coordn8 quality <build>` (`scripts/quality.py`), reading the instrumentation trace that already exists:
+
+| Dimension | What is measured | Why it is a defect |
+|---|---|---|
+| **alignment** | safe-area violations, off-grid draws, elements sharing no edge with any sibling | "ragged / scattered" is a real complaint and it is measurable, even when nothing overlaps |
+| **overlap** | partially-overlapping visible panels; colliding legible text | one visual on top of another; old text bleeding through |
+| **voice_sync** | per spoken line, the **drift in milliseconds** between the sentence and its visual arriving; median drift, max lag, max lead, % on-beat, and lines where **no** new visual appears at all | lag always reads as broken; a short lead (~150 ms) is craft, not a fault. The **magnitude is the finding** |
+| **density** | ink per horizontal band per spoken line, plus the weakest-beat ranking | the measured "machine-generated / effortless" look |
+| **legibility** | smallest rendered type, smallest asset scale, de-duplicated **by defect** not by frame | one undersized caption is one fix; reporting it 300 times buries everything else |
+| **motion** | whether anything enters, moves or builds during each spoken line | a completely static frame under live narration |
+
+**Run it in PARALLEL.** Six dimensions × N scenes are independent measurements, so they fan out perfectly across the adaptive pool (measured: 18 measurements in 0.03 s on 11 workers). This matters beyond speed — **a check you avoid because it is slow is a check that does not protect you.**
+
+**Score, weakest link, and TREND.** Every dimension scores 0–100 with the worst offender named; scenes roll up to a build score; and `--prev <previous cut>` reports per-scene *and* per-dimension deltas so an **unrequested regression** is visible ("scene 4 dropped 30 points on density since the last cut") rather than hiding inside an absolute number.
+
+**A score is a MEASUREMENT, never a quality certificate.** 100/100 means "nothing measurable is wrong in these six ways". It does **not** mean the video is good — only Stage V (blind frame-vs-sentence review) or a human can say that, and the tool prints that caveat in its own output so a green scorecard can never be mistaken for a verdict. This is the same claim discipline as F.7, applied to a number instead of a sentence.
+
+**Assess EARLY and PER SCENE.** Quality is measured as each scene's trace lands, not after everything is rendered — so a systematic defect is caught on scene 1, while fixing it is still cheap.
+
 ### 2.6 Facts guard + full-file probes
 
 - Every on-screen number, comparison, and claim must trace to `_research/project_map.md`. **No invented metrics** — if you don't have the number, restructure the beat so it doesn't need one.
@@ -1073,12 +1198,21 @@ The worst output of the reference build was a status line of the form:
 - [ ] Storyboard passes: one idea per frame, non-text primary visual, ≥1 moving element, `explains` + source per element, `subjectId` per asset and beat, `from`/`to` per connector, `section` names declared (R6)
 - [ ] Static/trace gates on source: **I1/I2** beat-index, **S2** raw index, **DEN** on the storyboard
 
+- [ ] **`coordn8 doctor --probe` run first**: engine, MEASURED frames/s and frame size, and the projected
+      time + disk for this job — an assumed rate is never acceptable (2.5b)
+- [ ] **Disk plan stated before rendering**: `stream` preferred; otherwise the measured per-scene budget, the
+      cap, and the encode-and-reclaim-per-scene order (2.5a). `coordn8 disk <folder>` is clean
+
 **After rendering, before ANY claim**
 - [ ] Instrumented semantic gates: **S1, S3, S4, S5, S6, S7, S8**
 - [ ] Invariant gates **C1–C8** (`check_invariants.py`): panel overlap · declared-asset-never-drawn · cursor-in-dead-space · source provenance · sustained void under speech · panel legibility scale · cross-subsystem assets — plus sync, density, subtitle fidelity, and the identifier sweep over frames **and** sidecars
 - [ ] **Stage V on every spoken line of every changed scene** — blind reviewer, fresh artifact, previous-cut frame supplied
 - [ ] Claim manifest emitted; "Verified:" = claimed ∩ passed-with-evidence (semantic claims require frame verification)
 - [ ] Open items stated explicitly, including anything the tier could not verify
+- [ ] **Intermediates reclaimed** — `coordn8 disk <folder>` shows nothing stale or over budget (2.5a)
+- [ ] **Output quality measured** — `coordn8 quality <folder>`: per-scene scores reviewed, the weakest scene/dimension
+      consciously addressed or accepted, and `--prev` shows no unexplained regression (2.5c)
+- [ ] **Run health assessed** — `coordn8 perf <folder>`: not `slow`, not `throttled`, no `host-pressure`; telemetry is on disk (2.5b)
 
 **The standard.** A gate passing means *not provably broken in one mechanical way*. Only a human, or a blind vision reviewer comparing the actual frame to the actual sentence, can say a video is **good**. Build the pipeline so that judgement happens on the **first** cut, not the fiftieth.
 
@@ -1113,6 +1247,9 @@ The worst output of the reference build was a status line of the form:
 | Engine fit / medium use | video | Each scene uses the best-fitting engine for its idea (2.5): math/geometry → Manim; flow/architecture/UI → HTML/Canvas with GSAP-eased motion; graphs → D3; sketch warmth → Rough.js. Flat boxes where Manim was available, or linear-CSS jerks where GSAP was vendored, = under-using the medium (0.4a rule 9) → flagged. Enhancements missing is fine (base engine ships); choosing the *laziest available* engine is not |
 | Subtitles / captions | video | Captions ship as a soft toggle-able `mov_text` track (off by default) + sidecar `.srt` + `.vtt` for the page player (2.3a). `subtitle_check.py` proves caption text == narration verbatim, timings sane, and **every cue readable** (≤2 lines / ≤42 chars-per-line / ≤7 s / ≤20 cps). **A wall-of-paragraph caption is NEVER acceptable** — if a readable verbatim cue can't be made, fall back best-first: segment the sentence into more cues → split the video into parts → omit captions entirely (stated in handover). Also run the caption QC checks: **language** (right language, correct spelling, no mojibake), **freezing/timing** (no stuck/overlong/overlapping cue), **basic visual** (legible, in safe area, no collision), and **understandability/complexity** (comprehensible at reading speed; over-complex sentences simplified at the source). Burned-in only if the user asked |
 | Tier honesty | both | Setup attempted first; detected tier announced; any skipped deliverable stated with the *specific verified* blocker + unlock path (never a vague "not supported"), and never inside the deliverables; nothing faked |
+| **Quality observability** (2.5c) | video | `quality.py` measures SIX dimensions per scene, in parallel, with magnitudes — alignment (safe area, grid, shared edges) · overlap (panels, legible text) · **voice-sync drift in ms** (median, max lag, max lead, % on-beat, lines with no visual at all) · density (ink per band per line) · legibility (min type px, min panel scale, de-duplicated by defect) · motion (static holds under speech). Each scores 0–100 with the worst offender named; scenes roll into a build score; `--prev` reports per-dimension REGRESSIONS vs the last cut. A score is a MEASUREMENT, never a quality certificate — only Stage V or a human says the video is good |
+| **Observability / run health** (2.5b) | video | Every long run reports progress, achieved rate, ETA and host cost on a throttle, and persists a JSONL event stream + a resource time series + a per-stage summary **as it goes** (a killed run still leaves the record). `check_perf.py` then judges the run: `ok` / `slow` (with the binding constraint named) / `throttled` (needlessly slow while idle) / `host-pressure` (**CRITICAL** — too aggressive is also a failure). `coordn8 doctor --probe` MEASURES the engine, real frames/s and frame size up front and projects time + disk — never an assumed rate |
+| **Resource safety / disk** (2.5a) | video | `check_disk.py` runs FIRST: total intermediates within budget, no STALE frame directory whose mp4 already exists, and free space above the floor (**CRITICAL** below it — the one condition never softened). The render itself budgets from a MEASURED frame and refuses up front, a watchdog aborts mid-run if space falls, frames are reclaimed after encode / failure / Ctrl-C, and `stream` mode writes no frames at all. A render may never fill the user's disk, and an aborted run is a failure with a cleanup — never a pass |
 | **Semantic gates S1–S8** (F.3) | video | `check_semantics.py` on the instrumentation trace of every scene: no non-finite alpha (**S1** — an element that renders NOTHING, silently), no raw boundary index past the array (**S2**), no text escaping its own container (**S3**), no text on a connector (**S4**), no asset whose `subjectId` differs from the beat's (**S5**), no drawn direction/arrowhead contradicting the declared `from`→`to` (**S6**), no declared section that renders nothing (**S7**), no unexplained ink loss vs the previous cut (**S8**). **S1/S5/S6 are BLOCKING.** These measure MEANING; the geometry gates cannot see any of them |
 | **Invariant gates C1–C8** (F.4) | video | `check_invariants.py` on the instrumentation trace: no partial overlap of two visible content panels and no legible text collision (**C1**), no DECLARED asset that never draws (**C2**), no cursor parked in dead space (**C3**), a `// SRC:` provenance comment on every scene source (**C5**), no SUSTAINED void >0.6s while a line is SPOKEN — silence is never flagged (**C6**), no asset panel below 0.42× of source width (**C7**), no asset from another subsystem inside this scene (**C8**). Necessary, NEVER sufficient — a green board here is not a quality claim |
 | **Beat-index safety** (D2) | video | Beats are bound **BY NAME** through `scene_runtime.js` (which THROWS on an out-of-range index instead of clamping); `check_indices.py` reports zero stale helper/raw indices and zero `lineCount` fallback guards. This one change removes six of the ten historical defect classes at the source |
