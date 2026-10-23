@@ -16,6 +16,12 @@ This is the anti-drift backstop for the subtitle feature: if someone hand-edits
 the .srt, or a future change lets the caption text diverge from the voiced text,
 this gate flags it. It parses BOTH .srt and .vtt.
 
+Caption marks (E1): the narration's display text may carry colour marks
+(`⟦key:…⟧`, scripts/render/caption_marks.py) and a .vtt may carry them as WebVTT cue
+classes (`<c.key>…</c>`). Fidelity compares UNMARKED text on both sides; raw mark
+syntax that leaked into a caption a viewer would read is flagged. Text without marks
+is judged exactly as before.
+
 ADVISORY (same protocol as every Coordn8 gate): a finding is a REVIEW signal, not
 a hard veto. Exit 2 SKIPPED when there's nothing to check here.
 
@@ -31,6 +37,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "render"))
+import caption_marks  # noqa: E402
 from lib.common import (CAPTION_MAX_CHARS, CAPTION_MAX_CHARS_PER_LINE,  # noqa: E402
                         CAPTION_MAX_CPS, CAPTION_MAX_CUE_SECONDS,
                         CAPTION_MAX_LINES, EXIT_ERROR, EXIT_PASS, EXIT_REVIEW,
@@ -39,6 +47,8 @@ from lib.common import (CAPTION_MAX_CHARS, CAPTION_MAX_CHARS_PER_LINE,  # noqa: 
 # HH:MM:SS,mmm (srt) or HH:MM:SS.mmm (vtt), also tolerating MM:SS.mmm
 _TS = r"(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{1,3})"
 _CUE_LINE = re.compile(rf"{_TS}\s*-->\s*{_TS}")
+# WebVTT class spans used for caption marks: <c.key> … </c>  (VTT files only)
+_VTT_CLASS = re.compile(r"</?c(?:\.[^\s.<>]+)*>")
 
 
 def _ts_to_seconds(h, m, s, ms) -> float:
@@ -48,13 +58,16 @@ def _ts_to_seconds(h, m, s, ms) -> float:
 
 
 def _norm(text: str) -> str:
-    """Whitespace-normalize for verbatim comparison (no paraphrase tolerance)."""
-    return " ".join(str(text).split())
+    """Whitespace-normalize for verbatim comparison (no paraphrase tolerance).
+    Caption marks are display markup, not words, so they are removed first
+    (identity on text without marks)."""
+    return " ".join(caption_marks.strip(str(text)).split())
 
 
 def parse_subtitles(path: Path) -> list[dict]:
     """Parse .srt or .vtt into [{start, end, text}] in file order."""
     raw = path.read_text(encoding="utf-8-sig")  # tolerate BOM
+    is_vtt = raw.lstrip().upper().startswith("WEBVTT")
     # Normalize newlines, split into blocks on blank lines.
     blocks = re.split(r"\n\s*\n", raw.replace("\r\n", "\n").replace("\r", "\n"))
     cues = []
@@ -76,9 +89,15 @@ def parse_subtitles(path: Path) -> list[dict]:
         start = _ts_to_seconds(g[0], g[1], g[2], g[3])
         end = _ts_to_seconds(g[4], g[5], g[6], g[7])
         text_lines = [ln.strip() for ln in lines[tline_i + 1:] if ln.strip()]
+        if is_vtt:
+            # cue classes carry mark colour in a .vtt; they are not caption words
+            text_lines = [_VTT_CLASS.sub("", ln) for ln in text_lines]
+        raw_marks = any(caption_marks.has_marks(ln) for ln in text_lines)
+        if raw_marks:
+            text_lines = [caption_marks.strip(ln) for ln in text_lines]
         text = _norm(" ".join(text_lines))
         cues.append({"start": start, "end": end, "text": text,
-                     "lines": text_lines})
+                     "lines": text_lines, "raw_marks": raw_marks})
     return cues
 
 
@@ -134,6 +153,15 @@ def main() -> int:
         return EXIT_REVIEW
 
     findings = []
+
+    # 0) Display markup must never reach the text a viewer reads (only exists when
+    #    marks are present, so text without marks is unaffected).
+    leaked = [i for i, c in enumerate(cues, 1) if c.get("raw_marks")]
+    if leaked:
+        findings.append(
+            f"raw caption-mark syntax ({caption_marks.OPEN}…{caption_marks.CLOSE}) appears in "
+            f"cue(s) {leaked[:8]} — marks are display markup and must be stripped from .srt/.vtt "
+            f"text (use render/subtitles.py, which strips them)")
 
     # 1) Text fidelity: the caption WORD STREAM equals the narration word stream,
     #    verbatim and in order. Captions are segmented for readability (one long

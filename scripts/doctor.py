@@ -142,6 +142,28 @@ def probe_engine_and_rate(n_frames: int = 12) -> dict:
     return out
 
 
+def run_extension_checks() -> dict:
+    """Extra report sections from scripts/doctor_checks/*.py — each module exposes
+    probe() -> {"summary": str, "lines": [str], ...}. Purely additive: an extension
+    never changes the verdict above, and a crashing one reports itself and is skipped."""
+    out: dict = {}
+    d = HERE / "doctor_checks"
+    if not d.is_dir():
+        return out
+    import importlib.util
+    for f in sorted(d.glob("*.py")):
+        if f.name.startswith("_"):
+            continue
+        try:
+            spec = importlib.util.spec_from_file_location(f"doctor_check_{f.stem}", f)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            out[f.stem] = mod.probe()
+        except Exception as e:  # an extension must never break doctor
+            out[f.stem] = {"summary": f"check could not run: {type(e).__name__}: {e}", "lines": []}
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Coordn8 preflight doctor.")
     ap.add_argument("--probe", action="store_true",
@@ -268,6 +290,10 @@ def main() -> int:
     if report["verdict"] != "blocked":
         report["verdict"] = "ok" if not report["findings"] else "review"
 
+    report["extensions"] = run_extension_checks()
+    # where the package lives — agents on a non-plugin install resolve scripts/ and data/ from it
+    report["pkg_root"] = str(Path(__file__).resolve().parent.parent)
+
     if args.json:
         print(json.dumps(report, indent=2, default=str))
         return 0 if report["verdict"] == "ok" else 1
@@ -311,6 +337,11 @@ def main() -> int:
             print(f"  disk (on-disk)  {pr['disk_per_scene_ondisk']} per scene, "
                   f"{pr['disk_all_scenes_ondisk']} for all")
             print(f"  disk (stream)   {pr['disk_streaming']}")
+    for name, ext in report.get("extensions", {}).items():
+        print("-" * 66)
+        print(f"  {name:<15} {ext.get('summary', '')}")
+        for line in ext.get("lines", []):
+            print(f"  {'':<15} {line}")
     print("=" * 66)
     if report["findings"]:
         print(f"VERDICT: {report['verdict'].upper()}")

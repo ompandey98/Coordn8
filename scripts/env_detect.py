@@ -34,10 +34,28 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.common import find_chrome, have  # noqa: E402
 
+# Speech CLIs that send text to a hosted service. Detected only, so the operator
+# can see they are present; never used, never recommended.
+HOSTED_SPEECH_TOOLS = ("edge-tts", "edge-playback", "gtts-cli")
+
+
+def local_voice_engines() -> list[str]:
+    """Local voice models installed by `coordn8 voices install` (read-only probe)."""
+    try:
+        from lib.paths import user_home  # noqa: WPS433
+        vdir = user_home() / "voices"
+        if not vdir.is_dir():
+            return []
+        return [d.name for d in sorted(vdir.iterdir())
+                if d.is_dir() and not d.name.startswith((".", "_")) and any(d.rglob("*"))]
+    except Exception:  # noqa: BLE001
+        return []
+
 
 def tool_version(cmd: list[str]) -> str | None:
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=15,
+                             stdin=subprocess.DEVNULL)
         line = (out.stdout or out.stderr).splitlines()
         return line[0].strip() if line else "present"
     except Exception:
@@ -65,9 +83,11 @@ def free_ram_mb() -> int | None:
     if have("vm_stat") and have("sysctl"):
         try:
             page = subprocess.run(["sysctl", "-n", "hw.pagesize"],
-                                  capture_output=True, text=True, timeout=10)
+                                  capture_output=True, text=True, timeout=10,
+                                  stdin=subprocess.DEVNULL)
             page_size = int(page.stdout.strip() or 4096)
-            vm = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=10)
+            vm = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=10,
+                                stdin=subprocess.DEVNULL)
             pages = {"Pages free": 0, "Pages speculative": 0,
                      "Pages inactive": 0, "Pages purgeable": 0}
             for line in vm.stdout.splitlines():
@@ -132,15 +152,18 @@ def detect() -> dict:
     chrome_path = find_chrome()
     chrome_ver = tool_version([chrome_path, "--version"]) if chrome_path else None
 
+    # Local TTS engines only. A speech tool that sends text to a hosted service is
+    # DETECTED (so the operator knows it is there) but never listed as an engine
+    # and never recommended: Coordn8 sends no text to any hosted AI service.
     tts = []
     if sys.platform == "darwin" and have("say"):
         tts.append("say (macOS)")
-    if have("edge-tts"):
-        tts.append("edge-tts")
     if have("piper"):
         tts.append("piper")
     if have("espeak") or have("espeak-ng"):
         tts.append("espeak")
+    tts += [f"local voice: {e}" for e in local_voice_engines()]
+    hosted_tts_present = [t for t in HOSTED_SPEECH_TOOLS if have(t)]
 
     can_write = os.access(".", os.W_OK)
     has_video = bool(ffmpeg and ffprobe and chrome_path)
@@ -167,7 +190,8 @@ def detect() -> dict:
     if not chrome_path:
         unlock.append("install Google Chrome/Chromium, or `pip install playwright && playwright install chromium`")
     if not tts:
-        unlock.append("install a TTS engine (macOS `say` is built in; else `pip install edge-tts` or piper)")
+        unlock.append("install a local TTS engine: run `coordn8 voices install` (local "
+                      "open-source voices; macOS `say` is built in)")
 
     return {
         "gate": "env_detect",
@@ -186,6 +210,7 @@ def detect() -> dict:
             "ffprobe": ffprobe,
             "chrome": chrome_ver or (chrome_path if chrome_path else None),
             "tts_engines": tts or None,
+            "hosted_speech_tools_detected_not_used": hosted_tts_present or None,
         },
         "machine": {
             "platform": sys.platform,

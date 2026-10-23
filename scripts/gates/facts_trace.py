@@ -20,6 +20,17 @@ Data contract — claims.json (default shape; deviate if needed):
   ]
 }
 
+Inferred claims (C3, added in 2.0): *if you cannot point to a line, you do not know it — read
+more, or mark it inferred.* A claim may carry an explicit mark instead of a reference:
+    {"id": "c3", "text": "Copies can be up to ten minutes stale", "inferred": true}
+(`"status": "inferred"` or `"basis": "inferred"` mean the same). An inferred claim with no
+reference passes and is COUNTED and LISTED in the report (`inferred`, `inferred_ids`), so the
+reader sees exactly how much of the deliverable is inference. A claim with NEITHER a resolvable
+reference NOR the mark is flagged (rule `C3.no_line_no_knowledge`). A claim that carries a
+reference is judged exactly as in v1.5.0 — a broken reference is flagged even when the claim is
+also marked inferred, because a wrong pointer is worse than none. A bare file reference (no
+line) still resolves, as before, and is listed under `file_only` so it can be tightened.
+
 Usage:
     python3 scripts/gates/facts_trace.py claims.json --repo .
 """
@@ -35,6 +46,19 @@ from lib.common import (EXIT_ERROR, EXIT_PASS, EXIT_REVIEW, EXIT_SKIPPED,  # noq
                         emit, load_json)
 
 REF_RE = re.compile(r"^(?P<file>.+?):(?P<line>\d+)(?:-(?P<end>\d+))?$")
+NO_LINE_RULE = "C3.no_line_no_knowledge"
+INFERRED_WORDS = ("inferred", "inference")
+
+
+def is_inferred(claim: dict) -> bool:
+    """The explicit C3 mark: `inferred: true`, or status/basis "inferred"."""
+    if claim.get("inferred") is True:
+        return True
+    for key in ("status", "basis"):
+        v = claim.get(key)
+        if isinstance(v, str) and v.strip().lower() in INFERRED_WORDS:
+            return True
+    return False
 
 
 def resolve_ref(repo: Path, ref: str) -> tuple[bool, str]:
@@ -86,17 +110,45 @@ def main() -> int:
 
     findings = []
     checked = []
+    inferred_ids = []
+    unmarked_ids = []
+    file_only = []
     for c in claims:
         ref = c.get("ref", "")
+        inferred = is_inferred(c)
+        if inferred:
+            inferred_ids.append(c.get("id"))
         if not ref:
+            if inferred:
+                continue   # C3: no line, but honestly marked inferred -> counted, not flagged
+            unmarked_ids.append(c.get("id"))
             findings.append({"id": c.get("id"), "text": c.get("text", "")[:80],
-                             "problem": "claim has no file:line reference"})
+                             "problem": "claim has no file:line reference and is not marked "
+                                        "inferred (if you cannot point to a line, you do not "
+                                        "know it: read more, or mark it inferred: true)",
+                             "rule": NO_LINE_RULE})
             continue
         ok, why = resolve_ref(repo, ref)
         checked.append({"id": c.get("id"), "ref": ref, "ok": ok, "why": why})
+        if ok and not REF_RE.match(ref.strip()):
+            file_only.append(c.get("id"))
         if not ok:
             findings.append({"id": c.get("id"), "text": c.get("text", "")[:80],
                              "ref": ref, "problem": why})
+
+    n_inf = len(inferred_ids)
+    inf_set = set(inferred_ids)
+    n_read = sum(1 for d in checked if d["ok"] and d["id"] not in inf_set)
+    if findings:
+        summary = (f"{len(findings)}/{len(claims)} claim reference(s) do not resolve — review")
+        if unmarked_ids:
+            summary += (f"; {len(unmarked_ids)} claim(s) have no line and no inferred mark "
+                        f"({NO_LINE_RULE})")
+    elif n_inf:
+        summary = (f"all {len(claims)} claims trace: {n_read} by a resolving "
+                   f"file:line reference, {n_inf} marked inferred")
+    else:
+        summary = f"all {len(claims)} claim references resolve to real file:line"
 
     emit({
         "gate": "facts_trace",
@@ -106,10 +158,14 @@ def main() -> int:
         "unresolved": len(findings),
         "detail": checked,
         "findings": findings,
-        "summary": (f"{len(findings)}/{len(claims)} claim reference(s) do not "
-                    f"resolve — review" if findings
-                    else f"all {len(claims)} claim references resolve to real "
-                         f"file:line"),
+        "inferred": n_inf,
+        "inferred_ids": inferred_ids,
+        "read": n_read,
+        "unmarked": len(unmarked_ids),
+        "unmarked_ids": unmarked_ids,
+        "file_only": file_only,
+        "verdict": "FAIL" if unmarked_ids else ("REVIEW" if findings else "PASS"),
+        "summary": summary,
         "advisory_note": "Resolving to a real line proves the reference exists, "
                          "NOT that the line actually supports the claim. Spot-"
                          "check load-bearing claims by reading the code.",

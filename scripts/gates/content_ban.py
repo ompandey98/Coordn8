@@ -273,10 +273,24 @@ def line_hits(text: str, jargon: list[str], allow: set[str]):
     return findings
 
 
+def _blank_code_blocks(text: str) -> str:
+    """Blank <style>/<script> bodies (keeping line numbers); keep JSON data blocks."""
+    def blank(m):
+        if m.group(1).lower() == "script" and "application/json" in (m.group(2) or "").lower():
+            return m.group(0)
+        body = m.group(3)
+        return m.group(0).replace(body, "\n" * body.count("\n"), 1) if body else m.group(0)
+    return re.sub(r"<(style|script)(\s[^>]*)?>(.*?)</\1>", blank, text, flags=re.S | re.I)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("payload")
     ap.add_argument("--jargon", help="file with one banned term per line")
+    ap.add_argument("--skip-code", action="store_true",
+                    help="HTML only: ignore the bodies of <style> and executable <script> blocks "
+                         "(JSON data blocks are still swept). Use on template-built pages, whose "
+                         "inline CSS/JS is not reader-facing text. Off by default.")
     ap.add_argument("--allow", nargs="*", default=[],
                     help="tokens to allow (e.g. an author name the user approved)")
     args = ap.parse_args()
@@ -299,6 +313,8 @@ def main() -> int:
         jargon = [ln for ln in Path(args.jargon).read_text(
             encoding="utf-8").splitlines() if ln.strip()]
 
+    if args.skip_code and path.suffix.lower() in (".html", ".htm"):
+        text = _blank_code_blocks(text)
     findings = line_hits(text, jargon, set(args.allow))
     by_kind: dict[str, int] = {}
     for f in findings:
