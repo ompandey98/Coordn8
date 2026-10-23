@@ -106,22 +106,58 @@ def gen_claude_code(brain: str, version: str) -> dict[str, str]:
         "gates). Open at the repo root in a fresh session."
     )
     skill = skill_front + preamble("Claude Code", hint, version) + fenced(brain)
-
-    cmd = (
-        "---\n"
-        "description: Run Coordn8 on this repository — interactive page + narrated video\n"
-        "---\n\n"
-        "You are being invoked as the Coordn8 engine. Before anything else, run "
-        "the precondition check: confirm this is a fresh session opened at the "
-        "repository root. If the context is already polluted with unrelated work, "
-        "warn the user that output quality degrades in a dirty context and "
-        "recommend a fresh session, then proceed only if they confirm.\n\n"
-        "Then load and execute the embedded brain verbatim, starting at PHASE 0.\n\n"
-        + fenced(brain)
-    )
+    cmd = CLAUDE_COMMAND_HEAD + fenced(brain)
     return {
         "claude-code/SKILL.md": skill,
         "claude-code/commands/coordn8.md": cmd,
+    }
+
+
+CLAUDE_COMMAND_HEAD = (
+    "---\n"
+    "description: Run Coordn8 on this repository — interactive page + narrated video\n"
+    "---\n\n"
+    "You are being invoked as the Coordn8 engine. Before anything else, run "
+    "the precondition check: confirm this is a fresh session opened at the "
+    "repository root. If the context is already polluted with unrelated work, "
+    "warn the user that output quality degrades in a dirty context and "
+    "recommend a fresh session, then proceed only if they confirm.\n\n"
+    "Then load and execute the embedded brain verbatim, starting at PHASE 0.\n\n"
+)
+
+# Plugin-only note, placed OUTSIDE the brain fence. Claude Code substitutes
+# ${CLAUDE_PLUGIN_ROOT} in plugin skill/command bodies, so a plugin session learns
+# where the package's scripts and catalogs live without any pointer indirection:
+# the full brain is still embedded below, byte-for-byte.
+PLUGIN_ROOT_NOTE = (
+    "Installed as the Coordn8 Claude Code plugin. The package root is "
+    "`${CLAUDE_PLUGIN_ROOT}`: every `scripts/`, `data/`, `templates/`, `bench/` "
+    "and `engine/` path in the brain is relative to it, the plugin's role agents "
+    "are named `coordn8:coordn8-<role>`, and the `coordn8` command is on the "
+    "Bash tool's PATH while the plugin is enabled."
+)
+
+
+def gen_claude_plugin(brain: str, version: str) -> dict[str, str]:
+    """Claude Code PLUGIN layout — the same monolithic skill and command as
+    gen_claude_code, at the paths a plugin is scanned from (skills/<name>/SKILL.md
+    and commands/<name>.md at the package root). Rendered from the SAME text as
+    the adapter files; the only addition is one location note outside the fence.
+    The brain fence is byte-identical, so --check verifies these files too."""
+    adapter = gen_claude_code(brain, version)
+    skill = adapter["claude-code/SKILL.md"]
+    marker = "> The full engine brain is embedded verbatim below."
+    if marker not in skill:
+        raise SystemExit("generate_adapters: preamble marker missing; cannot place the plugin note")
+    skill = skill.replace(marker, "> " + PLUGIN_ROOT_NOTE + "\n>\n" + marker, 1)
+    cmd = adapter["claude-code/commands/coordn8.md"]
+    head = "Then load and execute the embedded brain verbatim, starting at PHASE 0.\n\n"
+    if head not in cmd:
+        raise SystemExit("generate_adapters: command head missing; cannot place the plugin note")
+    cmd = cmd.replace(head, PLUGIN_ROOT_NOTE + "\n\n" + head, 1)
+    return {
+        "skills/coordn8/SKILL.md": skill,
+        "commands/coordn8.md": cmd,
     }
 
 
@@ -182,6 +218,9 @@ def gen_generic(brain: str, version: str) -> dict[str, str]:
 
 GENERATORS = [gen_claude_code, gen_cursor, gen_codex, gen_kiro, gen_generic]
 ADAPTERS_DIR = ROOT / "adapters"
+# Generators whose paths are relative to the PACKAGE ROOT (the Claude Code plugin
+# scans skills/ and commands/ at the plugin root, which is this package's root).
+ROOT_GENERATORS = [gen_claude_plugin]
 
 
 def build_all() -> dict[Path, str]:
@@ -191,6 +230,9 @@ def build_all() -> dict[Path, str]:
     for gen in GENERATORS:
         for rel, contents in gen(brain, version).items():
             out[ADAPTERS_DIR / rel] = contents
+    for gen in ROOT_GENERATORS:
+        for rel, contents in gen(brain, version).items():
+            out[ROOT / rel] = contents
     return out
 
 
@@ -234,7 +276,7 @@ def main() -> int:
                 print("  - " + d)
             print("\nRun: python3 build/generate_adapters.py")
             return 1
-        print(f"OK — all {len(planned)} adapter files in sync "
+        print(f"OK — all {len(planned)} adapter files in sync (incl. the plugin skill + command) "
               f"(brain sha256:{canon_hash}).")
         return 0
 

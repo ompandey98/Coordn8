@@ -1,0 +1,365 @@
+{
+ "schema": 1,
+ "id": "night-gallery",
+ "name": "Night Gallery",
+ "base": "dark",
+ "palette_family": "gambit-crimson",
+ "mood": [
+  "dramatic",
+  "thoughtful",
+  "elegant",
+  "suspenseful",
+  "reflective"
+ ],
+ "use_when": [
+  "strategy, game theory, philosophy and ideas",
+  "a single model that explains a behaviour",
+  "a cinematic opening for a thoughtful audience"
+ ],
+ "avoid_when": [
+  "step-by-step operational procedures",
+  "children",
+  "dense reference material"
+ ],
+ "signals": {
+  "for": [
+   "game",
+   "theory",
+   "strategy",
+   "strategic",
+   "philosophy",
+   "ethics",
+   "decision",
+   "choice",
+   "dilemma",
+   "economics",
+   "behaviour",
+   "behavior",
+   "incentive",
+   "psychology",
+   "idea",
+   "concept",
+   "model",
+   "equilibrium",
+   "auction",
+   "negotiation"
+  ],
+  "against": [
+   "kids",
+   "children",
+   "procedure",
+   "checklist",
+   "runbook",
+   "invoice"
+  ]
+ },
+ "palette": {
+  "family": "night-gallery",
+  "roles": {
+   "paper": "#faf6f2",
+   "ink": "#21171f",
+   "muted": "#5e5059",
+   "accent": "#b22f64",
+   "link": "#2a59a8",
+   "positive": "#2a7346",
+   "negative": "#ad3d13",
+   "warning": "#7f5800",
+   "deterministic": "#2a59a8",
+   "model-judgement": "#6b3aa6",
+   "data-field": "#2a7346",
+   "vision": "#7f5800"
+  },
+  "dark": {
+   "paper": "#16111a",
+   "ink": "#f3ece6",
+   "muted": "#b9adb3",
+   "accent": "#ec7fa6",
+   "link": "#9cc2f2",
+   "positive": "#8fd6a6",
+   "negative": "#ff9a6b",
+   "warning": "#efca6c",
+   "deterministic": "#9cc2f2",
+   "model-judgement": "#c9a6ff",
+   "data-field": "#8fd6a6",
+   "vision": "#efca6c"
+  },
+  "note": "the kit's own built-in skin (light in roles, dark in dark); when the Palette Director has chosen a palette for the build, that palette replaces this one"
+ },
+ "theme": {
+  "family": {
+   "display": "Didot, 'Bodoni 72', 'Bodoni MT', 'Times New Roman', serif",
+   "body": "'Avenir Next', Avenir, 'Century Gothic', 'Segoe UI', sans-serif",
+   "mono": "Menlo, Consolas, monospace"
+  },
+  "weights": {
+   "display": 400,
+   "body": 400,
+   "strong": 600
+  },
+  "scale": {
+   "title": 92,
+   "h1": 54,
+   "h2": 38,
+   "body": 32,
+   "caption": 32,
+   "label": 28
+  },
+  "page_scale": {
+   "title": 54,
+   "h1": 34,
+   "h2": 24,
+   "body": 18,
+   "caption": 15,
+   "small": 14
+  },
+  "line_height": 1.4,
+  "tracking_em": 0.01,
+  "numerals": "lining",
+  "vendorable": [
+   {
+    "name": "Bodoni Moda",
+    "licence": "OFL-1.1",
+    "shipped": false,
+    "note": "optional display face where Didot / Bodoni 72 are missing"
+   }
+  ]
+ },
+ "stage": {
+  "background": {
+   "treatment": "spotlit-dark",
+   "base_role": "paper",
+   "texture": {
+    "kind": "grain",
+    "alpha": 0.03
+   },
+   "vignette": 0.28,
+   "spot": {
+    "role": "ink",
+    "alpha": 0.05,
+    "radius_pct": 45
+   }
+  },
+  "grid": {
+   "columns": 12,
+   "gutter_px": 40,
+   "margin_px": 144,
+   "baseline_px": 8
+  },
+  "safe_area": {
+   "x_pct": 7.5,
+   "y_pct": 7.5
+  },
+  "radius": {
+   "card": 0,
+   "chip": 0,
+   "node": 0
+  },
+  "stroke": {
+   "hairline": 1,
+   "connector": 2,
+   "emphasis": 3
+  },
+  "depth": {
+   "shadow": "none",
+   "glow": 0.0
+  }
+ },
+ "props": {
+  "card": {
+   "fill": {
+    "role": "ink",
+    "alpha": 0.04
+   },
+   "border": {
+    "role": "ink",
+    "alpha": 0.3
+   },
+   "border_width": 1,
+   "radius": 0,
+   "pad_px": 34,
+   "shadow": "none",
+   "frame": "gallery-mat"
+  },
+  "chip": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "muted"
+   },
+   "text": {
+    "role": "ink"
+   },
+   "shape": "small-caps-label",
+   "radius": 0,
+   "weight": 400
+  },
+  "node": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "ink",
+    "alpha": 0.6
+   },
+   "border_width": 1.5,
+   "radius": 0,
+   "text_px": 30
+  },
+  "connector": {
+   "stroke": {
+    "role": "muted"
+   },
+   "width": 2,
+   "dash": [],
+   "arrow": "fine-chevron",
+   "routing": "curved",
+   "draw_on": true
+  },
+  "callout": {
+   "style": "spotlight",
+   "stroke": {
+    "role": "accent"
+   },
+   "width": 2,
+   "label": {
+    "role": "ink"
+   },
+   "leader": "none",
+   "dim_rest": 0.55
+  }
+ },
+ "charts": {
+  "series": {
+   "role": "ink",
+   "steps": [
+    1.0,
+    0.6,
+    0.34
+   ]
+  },
+  "highlight": {
+   "role": "accent",
+   "max": 1
+  },
+  "gridline": {
+   "stroke": {
+    "role": "muted",
+    "alpha": 0.15
+   },
+   "width": 1,
+   "dash": []
+  },
+  "axis": {
+   "stroke": {
+    "role": "muted"
+   },
+   "width": 1
+  },
+  "label": {
+   "role": "muted",
+   "size_px": 28
+  },
+  "increase_decrease": {
+   "increase": "filled",
+   "decrease": "hollow"
+  },
+  "draw_on": true
+ },
+ "motion": {
+  "ease": "cubic-bezier(.16,1,.3,1)",
+  "enter_ms": 720,
+  "exit_ms": 500,
+  "stagger_ms": 180,
+  "lead_ms": 160,
+  "hold_min_ms": 1500,
+  "entrance": {
+   "kind": "focus-pull",
+   "opacity_from": 0,
+   "scale_from": 1.04,
+   "blur_px": 10
+  },
+  "exit": {
+   "kind": "defocus",
+   "opacity_to": 0,
+   "blur_px": 8
+  }
+ },
+ "transitions": [
+  {
+   "id": "dissolve-through-dark",
+   "use": "section",
+   "ms": 760,
+   "blend": "via",
+   "via_role": "paper"
+  },
+  {
+   "id": "iris",
+   "use": "emphasis",
+   "ms": 640,
+   "mask": "iris"
+  },
+  {
+   "id": "morph",
+   "use": "within-section",
+   "ms": 680,
+   "morph": true
+  }
+ ],
+ "continuity": {
+  "prefer": "morph",
+  "first_second_anchor": "the dilemma is posed in one line under a single pool of light at frame 0"
+ },
+ "caption_style": {
+  "font_px": 32,
+  "weight": 400,
+  "max_lines": 2,
+  "max_marks": 2,
+  "overflow": "truncate",
+  "position": "bottom-center",
+  "width_pct": 68,
+  "text": {
+   "role": "ink"
+  },
+  "scrim": {
+   "role": "paper",
+   "alpha": 0.86,
+   "radius_px": 0,
+   "pad_px": 18
+  },
+  "reveal": "phrase",
+  "dim_previous": true,
+  "marks": {
+   "good": {
+    "role": "positive",
+    "styles": [
+     "underline"
+    ]
+   },
+   "bad": {
+    "role": "negative",
+    "styles": [
+     "strike-through"
+    ]
+   },
+   "key": {
+    "role": "accent",
+    "styles": [
+     "italic",
+     "weight-700"
+    ]
+   }
+  },
+  "markup": "⟦good:…⟧ ⟦bad:…⟧ ⟦key:…⟧ — spoken form strips the marks"
+ },
+ "do": [
+  "one subject in a pool of light; everything else dimmed",
+  "let the key line sit alone on screen for a beat before the next idea",
+  "use the accent once per frame, on the choice that matters"
+ ],
+ "dont": [
+  "no busy backgrounds or particle effects",
+  "no hard cuts inside a section — let it breathe",
+  "never more than two options shown side by side"
+ ]
+}

@@ -1,0 +1,356 @@
+{
+ "schema": 1,
+ "id": "drafting-table",
+ "name": "Drafting Table",
+ "base": "light",
+ "palette_family": "cobalt-blueprint",
+ "mood": [
+  "exact",
+  "structural",
+  "constructive",
+  "engineered"
+ ],
+ "use_when": [
+  "architecture and system design",
+  "hardware, mechanisms and how parts fit",
+  "anything best explained as a labelled drawing"
+ ],
+ "avoid_when": [
+  "emotional or human stories",
+  "very young children",
+  "luxury or fashion subjects"
+ ],
+ "signals": {
+  "for": [
+   "architecture",
+   "design",
+   "system",
+   "hardware",
+   "mechanism",
+   "engineering",
+   "schema",
+   "diagram",
+   "component",
+   "api",
+   "interface",
+   "protocol",
+   "structure",
+   "blueprint",
+   "database",
+   "distributed",
+   "service",
+   "microservice"
+  ],
+  "against": [
+   "kids",
+   "children",
+   "emotion",
+   "poetry",
+   "fashion",
+   "wellness"
+  ]
+ },
+ "palette": {
+  "family": "drafting-table",
+  "roles": {
+   "paper": "#eef4f8",
+   "ink": "#10283f",
+   "muted": "#476075",
+   "accent": "#b95400",
+   "link": "#1c5ea6",
+   "positive": "#2a7448",
+   "negative": "#ad2235",
+   "warning": "#7a5d00",
+   "deterministic": "#1c5ea6",
+   "model-judgement": "#6b3fa8",
+   "data-field": "#2a7448",
+   "vision": "#7a5d00"
+  },
+  "dark": {
+   "paper": "#0f2236",
+   "ink": "#e6f0f8",
+   "muted": "#a6bccd",
+   "accent": "#ff9c4d",
+   "link": "#8cc3f5",
+   "positive": "#7dd3a0",
+   "negative": "#ff8f9c",
+   "warning": "#e9cb6a",
+   "deterministic": "#8cc3f5",
+   "model-judgement": "#c7aaf5",
+   "data-field": "#7dd3a0",
+   "vision": "#e9cb6a"
+  },
+  "note": "the kit's own built-in skin (light in roles, dark in dark); when the Palette Director has chosen a palette for the build, that palette replaces this one"
+ },
+ "theme": {
+  "family": {
+   "display": "'DIN Condensed', 'Avenir Next Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif",
+   "body": "'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif",
+   "mono": "'Andale Mono', Menlo, Consolas, monospace"
+  },
+  "weights": {
+   "display": 700,
+   "body": 400,
+   "strong": 600
+  },
+  "scale": {
+   "title": 72,
+   "h1": 48,
+   "h2": 36,
+   "body": 30,
+   "caption": 30,
+   "label": 28
+  },
+  "page_scale": {
+   "title": 46,
+   "h1": 32,
+   "h2": 22,
+   "body": 17,
+   "caption": 14,
+   "small": 13
+  },
+  "line_height": 1.35,
+  "tracking_em": 0.02,
+  "numerals": "lining, tabular in tables",
+  "vendorable": [
+   {
+    "name": "Barlow Condensed",
+    "licence": "OFL-1.1",
+    "shipped": false,
+    "note": "optional display face where the condensed system fonts are missing"
+   }
+  ]
+ },
+ "stage": {
+  "background": {
+   "treatment": "drafting-film",
+   "base_role": "paper",
+   "texture": {
+    "kind": "grid",
+    "alpha": 0.07,
+    "spacing_px": 40,
+    "major_every": 5
+   },
+   "vignette": 0.0
+  },
+  "grid": {
+   "columns": 12,
+   "gutter_px": 40,
+   "margin_px": 104,
+   "baseline_px": 8
+  },
+  "safe_area": {
+   "x_pct": 5.5,
+   "y_pct": 5.5
+  },
+  "radius": {
+   "card": 2,
+   "chip": 2,
+   "node": 2
+  },
+  "stroke": {
+   "hairline": 1.25,
+   "connector": 2.5,
+   "emphasis": 4,
+   "dimension": 1.25
+  },
+  "depth": {
+   "shadow": "none"
+  }
+ },
+ "props": {
+  "card": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "ink",
+    "alpha": 0.7
+   },
+   "border_width": 1.5,
+   "radius": 2,
+   "pad_px": 24,
+   "shadow": "none",
+   "corner_ticks": true
+  },
+  "chip": {
+   "fill": {
+    "role": "ink"
+   },
+   "text": {
+    "role": "paper"
+   },
+   "shape": "label-plate",
+   "radius": 2,
+   "weight": 700
+  },
+  "node": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "ink"
+   },
+   "border_width": 2,
+   "radius": 2,
+   "text_px": 28
+  },
+  "connector": {
+   "stroke": {
+    "role": "ink",
+    "alpha": 0.85
+   },
+   "width": 2.5,
+   "dash": [],
+   "arrow": "filled-triangle",
+   "routing": "orthogonal",
+   "draw_on": true,
+   "hop_at_crossings": true
+  },
+  "callout": {
+   "style": "dimension-line",
+   "stroke": {
+    "role": "accent"
+   },
+   "width": 2,
+   "label": {
+    "role": "accent"
+   },
+   "leader": "straight"
+  }
+ },
+ "charts": {
+  "series": {
+   "role": "ink",
+   "steps": [
+    1.0,
+    0.7,
+    0.45
+   ]
+  },
+  "highlight": {
+   "role": "accent",
+   "max": 1
+  },
+  "gridline": {
+   "stroke": {
+    "role": "link",
+    "alpha": 0.18
+   },
+   "width": 1,
+   "dash": []
+  },
+  "axis": {
+   "stroke": {
+    "role": "ink"
+   },
+   "width": 1.5
+  },
+  "label": {
+   "role": "muted",
+   "size_px": 28
+  },
+  "increase_decrease": {
+   "increase": "solid",
+   "decrease": "cross-hatched"
+  },
+  "draw_on": true
+ },
+ "motion": {
+  "ease": "cubic-bezier(.45,0,.2,1)",
+  "enter_ms": 560,
+  "exit_ms": 300,
+  "stagger_ms": 80,
+  "lead_ms": 120,
+  "hold_min_ms": 1000,
+  "entrance": {
+   "kind": "draw-on",
+   "opacity_from": 0.0,
+   "stroke_draw": true,
+   "blur_px": 0
+  },
+  "exit": {
+   "kind": "retract",
+   "opacity_to": 0,
+   "stroke_undraw": true
+  }
+ },
+ "transitions": [
+  {
+   "id": "morph",
+   "use": "within-section",
+   "ms": 560,
+   "morph": true
+  },
+  {
+   "id": "zoom-to-detail",
+   "use": "section",
+   "ms": 620,
+   "scale_from": 1.0,
+   "scale_to": 1.8,
+   "blend": "crossfade",
+   "note": "push into the part the next section explains"
+  },
+  {
+   "id": "cut",
+   "use": "within-section",
+   "ms": 0
+  }
+ ],
+ "continuity": {
+  "prefer": "morph",
+  "first_second_anchor": "the outline of the whole system is on the sheet at frame 0"
+ },
+ "caption_style": {
+  "font_px": 30,
+  "weight": 500,
+  "max_lines": 2,
+  "max_marks": 2,
+  "overflow": "truncate",
+  "position": "bottom-center",
+  "width_pct": 72,
+  "text": {
+   "role": "ink"
+  },
+  "scrim": {
+   "role": "paper",
+   "alpha": 0.92,
+   "radius_px": 2,
+   "pad_px": 18
+  },
+  "reveal": "phrase",
+  "dim_previous": true,
+  "marks": {
+   "good": {
+    "role": "positive",
+    "styles": [
+     "underline"
+    ]
+   },
+   "bad": {
+    "role": "negative",
+    "styles": [
+     "wavy-underline"
+    ]
+   },
+   "key": {
+    "role": "accent",
+    "styles": [
+     "box",
+     "caps"
+    ]
+   }
+  },
+  "markup": "⟦good:…⟧ ⟦bad:…⟧ ⟦key:…⟧ — spoken form strips the marks"
+ },
+ "do": [
+  "label parts with leader lines and dimension marks, never floating text",
+  "draw every connector on in its direction of travel",
+  "zoom into a part only when the next section is about that part"
+ ],
+ "dont": [
+  "no rounded bubbly cards — corners stay square",
+  "no gradients or shadows; line weight carries hierarchy",
+  "never show two unrelated drawings on one sheet"
+ ]
+}

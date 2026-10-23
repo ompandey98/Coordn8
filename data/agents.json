@@ -1,0 +1,427 @@
+{
+ "schema": 1,
+ "about": "Registry of the Coordn8 subagents shipped in agents/. Generated from the agent files; tests/v2/test_agents.py fails on any drift between this file and the frontmatter.",
+ "limits": "**Limits:** never send text, audio or code to any non-Anthropic hosted AI service. Local open-source voice models installed by Coordn8 are allowed. Read-only on anything outside the build folder unless your role says otherwise. Never name any external project in output that ships.",
+ "pkg_root_resolution": [
+  "${CLAUDE_PLUGIN_ROOT} (substituted in agent bodies when installed as a plugin)",
+  "pkg_root: line in the dispatching brief",
+  "coordn8 doctor --json -> pkg_root (npx install path)"
+ ],
+ "in_flight_references": [
+  "scripts/gates/check_language.py",
+  "scripts/gates/check_terms.py",
+  "scripts/gates/check_truth.py",
+  "scripts/memory/curate.py",
+  "scripts/memory/recall.py",
+  "scripts/index/query.py",
+  "scripts/index/build_index.py",
+  "scripts/reflect.py",
+  "scripts/render/contact_sheet.py",
+  "data/cause_taxonomy.json"
+ ],
+ "agents": [
+  {
+   "name": "coordn8-audience",
+   "file": "agents/coordn8-audience.md",
+   "tools": [
+    "Read",
+    "Write",
+    "Bash"
+   ],
+   "model": "inherit",
+   "color": "green",
+   "phase": "0",
+   "spec_row": true,
+   "blind": false,
+   "role": "Infer the audience from the live brief with audience.py; never default to a child; write the reason",
+   "inputs": [
+    "live brief",
+    "Coordn8/_research/project_map.md",
+    "data/audiences.json"
+   ],
+   "outputs": [
+    "Coordn8/_build/audience.json",
+    "Coordn8/_research/audience.md"
+   ],
+   "references": [
+    "data/audiences.json",
+    "scripts/design/audience.py"
+   ]
+  },
+  {
+   "name": "coordn8-cartographer",
+   "file": "agents/coordn8-cartographer.md",
+   "tools": [
+    "Read",
+    "Write",
+    "Glob"
+   ],
+   "model": "inherit",
+   "color": "cyan",
+   "phase": "0",
+   "spec_row": true,
+   "blind": false,
+   "role": "Merge reader files into project_map.md; code beats docs; list conflicts and gaps",
+   "inputs": [
+    "Coordn8/_research/reads/*.md",
+    "Coordn8/_research/index/maps/*.md",
+    "Coordn8/_research/decisions.md"
+   ],
+   "outputs": [
+    "Coordn8/_research/project_map.md"
+   ],
+   "references": []
+  },
+  {
+   "name": "coordn8-claims-auditor",
+   "file": "agents/coordn8-claims-auditor.md",
+   "tools": [
+    "Read",
+    "Grep",
+    "Glob"
+   ],
+   "model": "inherit",
+   "color": "red",
+   "phase": "R",
+   "spec_row": true,
+   "blind": true,
+   "role": "Runs last: inspects artefacts blind, then marks each builder claim supported/unsupported/unverifiable",
+   "inputs": [
+    "phase A: shipped artefacts, stage_v verdicts, raw gate output, cited source lines",
+    "phase B (last): Coordn8/_build/verification.json claim text, Coordn8/_build/claims.json"
+   ],
+   "outputs": [
+    "final message -> Coordn8/_build/orchestration/claims_audit.json (saved by the supervisor)"
+   ],
+   "references": []
+  },
+  {
+   "name": "coordn8-coverage-critic",
+   "file": "agents/coordn8-coverage-critic.md",
+   "tools": [
+    "Read",
+    "Grep",
+    "Glob",
+    "Bash"
+   ],
+   "model": "inherit",
+   "color": "blue",
+   "phase": "V",
+   "spec_row": false,
+   "blind": true,
+   "role": "Compare the deliverable with the requirement ledger and project map; missing, partial, padding",
+   "inputs": [
+    "Coordn8/_research/requirements.md",
+    "Coordn8/_research/project_map.md",
+    "Coordn8/_build/beatmap.json",
+    "Coordn8/<slug>.html"
+   ],
+   "outputs": [
+    "final message -> Coordn8/_build/orchestration/coverage_review.json (saved by the supervisor)"
+   ],
+   "references": [
+    "scripts/gates/content_coverage.py"
+   ],
+   "why_added": "PLAYBOOK 0.4b rule 5 and R.1 require a coverage critic; no SPEC section 6 role compares the deliverable with the requirement ledger"
+  },
+  {
+   "name": "coordn8-diagram-architect",
+   "file": "agents/coordn8-diagram-architect.md",
+   "tools": [
+    "Read",
+    "Write",
+    "Bash"
+   ],
+   "model": "inherit",
+   "color": "purple",
+   "phase": "D",
+   "spec_row": true,
+   "blind": false,
+   "role": "B1-B3 behaviour -> type -> budget -> layered layout; plan before draw; may invent a form",
+   "inputs": [
+    "figure request",
+    "Coordn8/_research/project_map.md",
+    "Coordn8/_build/design_system.json"
+   ],
+   "outputs": [
+    "Coordn8/_build/diagram_plan.json",
+    "Coordn8/_build/diagrams/<fig-id>.{desc.json,layout.json,svg}"
+   ],
+   "references": [
+    "scripts/design/kit_export.py",
+    "scripts/design/pick_diagram.py",
+    "scripts/gates/check_connectors.py",
+    "scripts/gates/check_diagram_budget.py",
+    "scripts/gates/check_diagram_plan.py",
+    "scripts/render/layout_cli.js",
+    "scripts/render/vendor/dagre.min.js"
+   ]
+  },
+  {
+   "name": "coordn8-failure-analyst",
+   "file": "agents/coordn8-failure-analyst.md",
+   "tools": [
+    "Read",
+    "Grep",
+    "Bash"
+   ],
+   "model": "inherit",
+   "color": "orange",
+   "phase": "V",
+   "spec_row": true,
+   "blind": false,
+   "role": "F4: classify the cause against the taxonomy, record via reflect.py, retry addendum, escalate after 2 retries",
+   "inputs": [
+    "failing gate JSON + item id",
+    "Coordn8/_research/failure_log.jsonl",
+    "data/cause_taxonomy.json"
+   ],
+   "outputs": [
+    "Coordn8/_research/failure_log.jsonl (appended by reflect.py)",
+    "final message: record + retry addendum + decision"
+   ],
+   "references": [
+    "data/cause_taxonomy.json",
+    "scripts/reflect.py"
+   ]
+  },
+  {
+   "name": "coordn8-frame-reviewer",
+   "file": "agents/coordn8-frame-reviewer.md",
+   "tools": [
+    "Read"
+   ],
+   "model": "inherit",
+   "color": "red",
+   "phase": "V",
+   "spec_row": true,
+   "blind": true,
+   "role": "Blind Stage V: frames + exact sentences only; fills the fixed answer schema",
+   "inputs": [
+    "Coordn8/_build/stage_v/packets.json",
+    "the packet frame images and previous-cut frames",
+    "contact sheets named in the brief"
+   ],
+   "outputs": [
+    "final message {verdicts:[...]} -> Coordn8/_build/stage_v/verdicts.json (saved by the supervisor)"
+   ],
+   "references": []
+  },
+  {
+   "name": "coordn8-idea-critic",
+   "file": "agents/coordn8-idea-critic.md",
+   "tools": [
+    "Read",
+    "Write"
+   ],
+   "model": "inherit",
+   "color": "red",
+   "phase": "D",
+   "spec_row": true,
+   "blind": true,
+   "role": "Apply the three rejection tests to every option; never lowers the bar; blind to the generator's preference",
+   "inputs": [
+    "Coordn8/_build/divergence/<decision-slug>.options.json",
+    "Coordn8/_research/{audience,project_map}.md"
+   ],
+   "outputs": [
+    "Coordn8/_build/divergence/<decision-slug>.critic.json"
+   ],
+   "references": []
+  },
+  {
+   "name": "coordn8-idea-generator",
+   "file": "agents/coordn8-idea-generator.md",
+   "tools": [
+    "Read",
+    "Write",
+    "Bash"
+   ],
+   "model": "inherit",
+   "color": "yellow",
+   "phase": "D",
+   "spec_row": true,
+   "blind": false,
+   "role": "For one pivotal decision: >= 3 genuinely different options from seed.py draws; never ranks",
+   "inputs": [
+    "decision {kind, subject, what, problem_type}",
+    "Coordn8/_research/{project_map,audience,decisions}.md"
+   ],
+   "outputs": [
+    "Coordn8/_build/divergence/<decision-slug>.options.json"
+   ],
+   "references": [
+    "scripts/design/seed.py"
+   ]
+  },
+  {
+   "name": "coordn8-memory-curator",
+   "file": "agents/coordn8-memory-curator.md",
+   "tools": [
+    "Read",
+    "Grep",
+    "Bash"
+   ],
+   "model": "haiku",
+   "color": "green",
+   "phase": "any",
+   "spec_row": true,
+   "blind": false,
+   "role": "K1/K5: typed append-only memory entries with quote and scope; supersede, never delete; surface conflicts",
+   "inputs": [
+    "the user's statement, quoted",
+    "store.py list",
+    "Coordn8/_research/{decisions.md,slop_lessons.md,failure_log.jsonl}"
+   ],
+   "outputs": [
+    "~/.coordn8/memory/entries.jsonl (via store.py)",
+    "~/.coordn8/memory/index.md"
+   ],
+   "references": [
+    "scripts/memory/curate.py",
+    "scripts/memory/project.py",
+    "scripts/memory/recall.py",
+    "scripts/memory/store.py"
+   ]
+  },
+  {
+   "name": "coordn8-palette-director",
+   "file": "agents/coordn8-palette-director.md",
+   "tools": [
+    "Read",
+    "Write",
+    "Bash"
+   ],
+   "model": "inherit",
+   "color": "pink",
+   "phase": "D",
+   "spec_row": true,
+   "blind": false,
+   "role": "A1 palette via palette.py; honour stated colours with the quote; >= 2 rejections; contrast check",
+   "inputs": [
+    "live brief colour/mood words",
+    "Coordn8/_research/audience.md",
+    "Coordn8/_build/divergence.json",
+    "data/palettes.json"
+   ],
+   "outputs": [
+    "Coordn8/_build/design_system.json#palette"
+   ],
+   "references": [
+    "data/palettes.json",
+    "scripts/design/palette.py",
+    "scripts/design/pick_kit.py",
+    "scripts/gates/check_palette.py"
+   ]
+  },
+  {
+   "name": "coordn8-reader",
+   "file": "agents/coordn8-reader.md",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep"
+   ],
+   "model": "sonnet",
+   "color": "blue",
+   "phase": "0",
+   "spec_row": true,
+   "blind": false,
+   "role": "Read one assigned area end to end; emit facts with path:line, inferred ones marked",
+   "inputs": [
+    "brief: repo root + area paths",
+    "Coordn8/_research/index/{maps/*.md,symbols.jsonl,xref.jsonl,entrypoints.json}",
+    "the area's files"
+   ],
+   "outputs": [
+    "final message -> Coordn8/_research/reads/<area-slug>.md (saved by the supervisor)"
+   ],
+   "references": []
+  },
+  {
+   "name": "coordn8-storyboarder",
+   "file": "agents/coordn8-storyboarder.md",
+   "tools": [
+    "Read",
+    "Write"
+   ],
+   "model": "inherit",
+   "color": "orange",
+   "phase": "D",
+   "spec_row": true,
+   "blind": false,
+   "role": "One idea per scene; non-text primary visual; motion; subjectId, from/to and sections declared",
+   "inputs": [
+    "Coordn8/_build/beatmap.json",
+    "Coordn8/_build/{design_system,diagram_plan,divergence}.json",
+    "data/scene_types.json",
+    "Coordn8/_research/slop_lessons.md"
+   ],
+   "outputs": [
+    "Coordn8/_build/storyboard.json"
+   ],
+   "references": [
+    "data/scene_types.json"
+   ]
+  },
+  {
+   "name": "coordn8-voice-caster",
+   "file": "agents/coordn8-voice-caster.md",
+   "tools": [
+    "Read",
+    "Write",
+    "Bash"
+   ],
+   "model": "inherit",
+   "color": "cyan",
+   "phase": "D",
+   "spec_row": true,
+   "blind": false,
+   "role": "V2: rank local voices with cast.py for narrative and audience; reject >= 2 with reasons; stated preference wins",
+   "inputs": [
+    "live brief voice words",
+    "Coordn8/_build/audience.json",
+    "data/voices.json",
+    "voices.py list"
+   ],
+   "outputs": [
+    "Coordn8/_build/design_system.json#voice"
+   ],
+   "references": [
+    "data/voices.json",
+    "scripts/voice/cast.py",
+    "scripts/voice/voices.py"
+   ]
+  },
+  {
+   "name": "coordn8-writing-critic",
+   "file": "agents/coordn8-writing-critic.md",
+   "tools": [
+    "Read",
+    "Bash"
+   ],
+   "model": "sonnet",
+   "color": "yellow",
+   "phase": "V",
+   "spec_row": true,
+   "blind": false,
+   "role": "D1/D2/D3 and I2-I5 checkers on page, captions and narration; reports, never rewrites",
+   "inputs": [
+    "Coordn8/<slug>.html",
+    "Coordn8/<slug>.srt",
+    "Coordn8/_build/beatmap.json",
+    "Coordn8/_build/audience.json"
+   ],
+   "outputs": [
+    "Coordn8/_build/writing/*.json",
+    "final message: ranked fixes"
+   ],
+   "references": [
+    "scripts/gates/check_explain.py",
+    "scripts/gates/check_language.py",
+    "scripts/gates/check_terms.py",
+    "scripts/gates/check_truth.py"
+   ]
+  }
+ ]
+}

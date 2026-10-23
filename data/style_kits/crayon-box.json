@@ -1,0 +1,362 @@
+{
+ "schema": 1,
+ "id": "crayon-box",
+ "name": "Crayon Box",
+ "base": "light",
+ "palette_family": "playground-berry",
+ "mood": [
+  "playful",
+  "friendly",
+  "bright",
+  "encouraging",
+  "bouncy"
+ ],
+ "use_when": [
+  "children and first-time learners",
+  "school and classroom material",
+  "a first friendly introduction to an idea"
+ ],
+ "avoid_when": [
+  "executives or board decisions",
+  "medical risk communication",
+  "legal or compliance detail"
+ ],
+ "signals": {
+  "for": [
+   "kids",
+   "kid",
+   "children",
+   "child",
+   "school",
+   "classroom",
+   "education",
+   "learn",
+   "beginner",
+   "beginners",
+   "student",
+   "students",
+   "fun",
+   "young",
+   "primary",
+   "teacher",
+   "playful"
+  ],
+  "against": [
+   "executive",
+   "board",
+   "investor",
+   "compliance",
+   "legal",
+   "regulatory",
+   "audit",
+   "incident",
+   "clinical"
+  ]
+ },
+ "palette": {
+  "family": "crayon-box",
+  "roles": {
+   "paper": "#fff7e6",
+   "ink": "#1d2a4d",
+   "muted": "#4b5675",
+   "accent": "#c9400a",
+   "link": "#1f58bd",
+   "positive": "#2a7e35",
+   "negative": "#a8174e",
+   "warning": "#835c00",
+   "deterministic": "#1f58bd",
+   "model-judgement": "#7a37b5",
+   "data-field": "#2a7e35",
+   "vision": "#835c00"
+  },
+  "dark": {
+   "paper": "#1a1d33",
+   "ink": "#fff3da",
+   "muted": "#c8c4b4",
+   "accent": "#ff9a5c",
+   "link": "#8fb5ff",
+   "positive": "#86d98f",
+   "negative": "#ff8db6",
+   "warning": "#f5c856",
+   "deterministic": "#8fb5ff",
+   "model-judgement": "#d2a3ff",
+   "data-field": "#86d98f",
+   "vision": "#f5c856"
+  },
+  "note": "the kit's own built-in skin (light in roles, dark in dark); when the Palette Director has chosen a palette for the build, that palette replaces this one"
+ },
+ "theme": {
+  "family": {
+   "display": "'Avenir Next Rounded', Nunito, 'Varela Round', 'Trebuchet MS', Verdana, sans-serif",
+   "body": "Verdana, 'DejaVu Sans', Tahoma, sans-serif",
+   "mono": "Menlo, Consolas, monospace"
+  },
+  "weights": {
+   "display": 700,
+   "body": 400,
+   "strong": 700
+  },
+  "scale": {
+   "title": 84,
+   "h1": 60,
+   "h2": 44,
+   "body": 38,
+   "caption": 38,
+   "label": 32
+  },
+  "page_scale": {
+   "title": 48,
+   "h1": 34,
+   "h2": 26,
+   "body": 19,
+   "caption": 16,
+   "small": 15
+  },
+  "line_height": 1.4,
+  "tracking_em": 0.01,
+  "numerals": "lining",
+  "vendorable": [
+   {
+    "name": "Nunito",
+    "licence": "OFL-1.1",
+    "shipped": false,
+    "note": "optional rounded display face; without it the stack falls back to Trebuchet MS"
+   }
+  ]
+ },
+ "stage": {
+  "background": {
+   "treatment": "dot-paper",
+   "base_role": "paper",
+   "texture": {
+    "kind": "dots",
+    "alpha": 0.08,
+    "spacing_px": 36
+   },
+   "vignette": 0.0
+  },
+  "grid": {
+   "columns": 6,
+   "gutter_px": 48,
+   "margin_px": 120,
+   "baseline_px": 12
+  },
+  "safe_area": {
+   "x_pct": 7,
+   "y_pct": 7
+  },
+  "radius": {
+   "card": 28,
+   "chip": 999,
+   "node": 24
+  },
+  "stroke": {
+   "hairline": 2.5,
+   "connector": 5,
+   "emphasis": 7
+  },
+  "depth": {
+   "shadow": "hard-offset",
+   "shadow_alpha": 0.9,
+   "offset_px": 6,
+   "shadow_role": "ink"
+  }
+ },
+ "props": {
+  "card": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "ink"
+   },
+   "border_width": 3.5,
+   "radius": 28,
+   "pad_px": 30,
+   "shadow": "hard-offset"
+  },
+  "chip": {
+   "fill": {
+    "role": "accent"
+   },
+   "text": {
+    "role": "paper"
+   },
+   "shape": "pill",
+   "radius": 999,
+   "weight": 700
+  },
+  "node": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "ink"
+   },
+   "border_width": 3.5,
+   "radius": 24,
+   "text_px": 34
+  },
+  "connector": {
+   "stroke": {
+    "role": "ink"
+   },
+   "width": 5,
+   "dash": [],
+   "arrow": "fat-triangle",
+   "routing": "curved",
+   "draw_on": true
+  },
+  "callout": {
+   "style": "speech-bubble",
+   "stroke": {
+    "role": "ink"
+   },
+   "width": 3.5,
+   "label": {
+    "role": "ink"
+   },
+   "leader": "tail"
+  }
+ },
+ "charts": {
+  "series": {
+   "role": "ink",
+   "steps": [
+    1.0,
+    0.62,
+    0.36
+   ]
+  },
+  "highlight": {
+   "role": "accent",
+   "max": 1
+  },
+  "gridline": {
+   "stroke": {
+    "role": "muted",
+    "alpha": 0.2
+   },
+   "width": 2,
+   "dash": [
+    1,
+    10
+   ]
+  },
+  "axis": {
+   "stroke": {
+    "role": "ink"
+   },
+   "width": 3
+  },
+  "label": {
+   "role": "ink",
+   "size_px": 32
+  },
+  "increase_decrease": {
+   "increase": "stacked blocks",
+   "decrease": "blocks with gaps"
+  },
+  "draw_on": true
+ },
+ "motion": {
+  "ease": "cubic-bezier(.34,1.56,.64,1)",
+  "enter_ms": 420,
+  "exit_ms": 260,
+  "stagger_ms": 90,
+  "lead_ms": 100,
+  "hold_min_ms": 1200,
+  "entrance": {
+   "kind": "pop",
+   "opacity_from": 0,
+   "scale_from": 0.6,
+   "blur_px": 0
+  },
+  "exit": {
+   "kind": "shrink",
+   "opacity_to": 0,
+   "scale_to": 0.85
+  }
+ },
+ "transitions": [
+  {
+   "id": "pop-swap",
+   "use": "within-section",
+   "ms": 360,
+   "scale_from": 0.8,
+   "blend": "crossfade"
+  },
+  {
+   "id": "slide-push-up",
+   "use": "section",
+   "ms": 460,
+   "move": {
+    "x": 0,
+    "y": -1
+   }
+  },
+  {
+   "id": "morph",
+   "use": "within-section",
+   "ms": 480,
+   "morph": true
+  }
+ ],
+ "continuity": {
+  "prefer": "morph",
+  "first_second_anchor": "a big friendly question in the middle of the frame at frame 0"
+ },
+ "caption_style": {
+  "font_px": 38,
+  "weight": 600,
+  "max_lines": 2,
+  "max_marks": 2,
+  "overflow": "truncate",
+  "position": "bottom-center",
+  "width_pct": 76,
+  "text": {
+   "role": "ink"
+  },
+  "scrim": {
+   "role": "paper",
+   "alpha": 0.95,
+   "radius_px": 18,
+   "pad_px": 18
+  },
+  "reveal": "phrase",
+  "dim_previous": true,
+  "marks": {
+   "good": {
+    "role": "positive",
+    "styles": [
+     "underline",
+     "weight-700"
+    ]
+   },
+   "bad": {
+    "role": "negative",
+    "styles": [
+     "wavy-underline"
+    ]
+   },
+   "key": {
+    "role": "accent",
+    "styles": [
+     "box",
+     "weight-700"
+    ]
+   }
+  },
+  "markup": "⟦good:…⟧ ⟦bad:…⟧ ⟦key:…⟧ — spoken form strips the marks"
+ },
+ "do": [
+  "use one big object per frame that a child could point at",
+  "count things out one by one as the voice counts them",
+  "repeat the key word on screen when it is said"
+ ],
+ "dont": [
+  "no more than three things on screen at once",
+  "no small labels — if it cannot be read from across a classroom, cut it",
+  "never rely on red versus green to mean right versus wrong"
+ ]
+}

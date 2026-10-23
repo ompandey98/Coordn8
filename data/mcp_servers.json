@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "checked": "2026-10-22",
+  "about": "Open-source MCP servers Coordn8 registers for the host (Claude Code, user scope) and the sign-in-only tools it only OFFERS. Every server below was checked against its own registry metadata (npm registry JSON / PyPI JSON) and source repository LICENSE on the date above; the version is pinned to the one checked so a later licence change upstream cannot slip in unreviewed. Policy: no entry may be, or proxy, a hosted non-Anthropic AI model, hosted search, hosted web reader or hosted docs-AI service. Installed by scripts/mcp/install_mcp.py; this file is a menu, not a fence - a user may add their own servers alongside.",
+  "servers": [
+    {
+      "id": "coordn8-browser",
+      "name": "Browser automation (Playwright MCP)",
+      "package": "@playwright/mcp",
+      "registry": "npm",
+      "registry_url": "https://registry.npmjs.org/@playwright/mcp",
+      "version_checked": "0.0.83",
+      "integrity": "sha512-oNcl+Ae2/IAjhfPeP46BfIkSakfmprY+aOtkv5MjrQ4lPav4/yNtPhL0iq8SlIM90oApWgBDUxaNKvktazUKOg==",
+      "licence": "Apache-2.0",
+      "licence_evidence": "npm registry 'license' field for 0.0.83 = Apache-2.0; repository LICENSE file = Apache License 2.0",
+      "source_url": "https://github.com/microsoft/playwright-mcp",
+      "runner": "npx -y",
+      "requires_tool": "npx",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@0.0.83", "--headless", "--isolated"],
+      "purpose": "Open the built page in a real browser, click through it and take screenshots, so the page and frame reviews look at the rendered artefact rather than its source.",
+      "stages": ["verify", "page review", "frame capture spot checks"],
+      "needs_signin": false,
+      "notes": "Local browser only; no account, no hosted service. --headless avoids popping windows during a build; --isolated keeps the profile in memory so parallel sessions do not collide."
+    },
+    {
+      "id": "coordn8-fetch",
+      "name": "Web fetch to Markdown (MCP fetch server)",
+      "package": "mcp-server-fetch",
+      "registry": "pypi",
+      "registry_url": "https://pypi.org/pypi/mcp-server-fetch/json",
+      "version_checked": "2026.10.19",
+      "integrity": "sha256:3d16a5ebc68bf5a7dc8947ed4b1eaafb21a860f08a2503f05958e77bab427821",
+      "licence": "MIT",
+      "licence_evidence": "PyPI 2026.10.19: license=MIT, classifier 'License :: OSI Approved :: MIT License'; the source monorepo LICENSE states a transition from MIT to Apache-2.0 (both OSI-approved)",
+      "source_url": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
+      "runner": "uvx",
+      "requires_tool": "uvx",
+      "command": "uvx",
+      "args": ["mcp-server-fetch@2026.10.19"],
+      "purpose": "Read current public documentation (release notes, library docs, the Claude Code docs index) straight from the publisher's page and turn it into Markdown on this machine, so 'as of <date>' facts come from the primary source with no hosted reader in between.",
+      "stages": ["research", "reference refresh", "claims audit"],
+      "needs_signin": false,
+      "notes": "Runs locally under uvx; fetches the URL itself (honours robots.txt, refuses private addresses by default). No model, no hosted summariser."
+    },
+    {
+      "id": "coordn8-filesystem",
+      "name": "Filesystem (MCP filesystem server)",
+      "package": "@modelcontextprotocol/server-filesystem",
+      "registry": "npm",
+      "registry_url": "https://registry.npmjs.org/@modelcontextprotocol/server-filesystem",
+      "version_checked": "2.0.0",
+      "integrity": "sha512-JT+bt9wrNIMqhGvOr49vEE9NpbkBxdjQxyLVqh3lYHsB2zGgbzePmDOGrm1glBT1DPR5YvkM6h/NXztWSRhywg==",
+      "licence": "Apache-2.0 AND MIT",
+      "licence_evidence": "npm 'license' for 2.0.0 = 'SEE LICENSE IN LICENSE'; the repository LICENSE says new code is Apache-2.0 and contributions not yet relicensed remain MIT (both OSI-approved)",
+      "source_url": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+      "runner": "npx -y",
+      "requires_tool": "npx",
+      "min_node": 24,
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2.0.0", "${CLAUDE_PROJECT_DIR:-.}"],
+      "purpose": "Scoped read/write of the project folder for hosts and agent roles that have no native file tools, limited to the project the session runs in.",
+      "stages": ["ingest", "build"],
+      "needs_signin": false,
+      "notes": "The allowed directory is the project root: Claude Code sets CLAUDE_PROJECT_DIR in a spawned server's environment and expands ${VAR:-default} in user-scope args. Version 2.0.0 declares node >= 24; the installer skips it with that reason on an older node."
+    },
+    {
+      "id": "coordn8-blender",
+      "name": "Blender bridge (headless, local Blender only)",
+      "package": "threenative-blender-mcp",
+      "registry": "npm",
+      "registry_url": "https://registry.npmjs.org/threenative-blender-mcp",
+      "version_checked": "0.1.6",
+      "integrity": "sha512-UDQoCVSOkukpsw0LTqi5x86Ssl0UNLI4Q7P/qpiNlTXfpfTdcBigt4LlvgMzt1Fhtfi/vx0lbsoAysKJTmMbVg==",
+      "licence": "MIT AND GPL-2.0-or-later",
+      "licence_evidence": "npm 'license' for 0.1.6 = MIT (the Node server); the Python scripts it runs inside Blender sit under gpl/ with SPDX GPL-2.0-or-later headers and gpl/LICENSE.GPL; repository LICENSE = MIT",
+      "source_url": "https://github.com/ThreeNativeHQ/threenative/tree/main/packages/blender-mcp",
+      "runner": "npx -y",
+      "requires_tool": "npx",
+      "requires_app": {"name": "Blender", "mac_app": "Blender.app", "bins": ["blender"]},
+      "command": "npx",
+      "args": ["-y", "threenative-blender-mcp@0.1.6"],
+      "purpose": "Drive the Blender already installed on this machine in background mode: inspect a 3-D file, convert it to GLB for a page or scene, or run a bpy script that renders a still for a video scene.",
+      "stages": ["design", "scene assets"],
+      "needs_signin": false,
+      "notes": "Checked: zero runtime dependencies and no network calls in the published code; it never downloads or installs Blender. Registered only when Blender is present (requires_app)."
+    }
+  ],
+  "signin_offers": [
+    {
+      "id": "claude-ai-connectors",
+      "name": "claude.ai connectors (design, 3-D and image tools you choose)",
+      "why": "Connectors you add at claude.ai appear in Claude Code automatically, so a stage can use a design, 3-D or image tool you already have an account for.",
+      "link": "https://claude.ai/customize/connectors",
+      "browse": "https://claude.ai/directory",
+      "steps": [
+        "Open https://claude.ai/customize/connectors (browse reviewed connectors at https://claude.ai/directory) and add the tool you want.",
+        "Complete that tool's sign-in at claude.ai.",
+        "In Claude Code run /mcp - connectors from claude.ai are listed with a claude.ai marker."
+      ],
+      "limits": "Only works when Claude Code is signed in with a claude.ai subscription (not an API key or a cloud provider). On Team and Enterprise plans only admins can add connectors. Coordn8 policy: choose only tools that do not run a non-Anthropic AI model on your content.",
+      "needs_signin": true,
+      "auto_install": false
+    },
+    {
+      "id": "figma",
+      "name": "Figma (design files, account sign-in)",
+      "why": "Lets a design stage read frames, components and variables from your own Figma files instead of re-deriving them from screenshots.",
+      "command": "claude mcp add --scope user --transport http figma https://mcp.figma.com/mcp",
+      "link": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+      "steps": [
+        "Run: claude mcp add --scope user --transport http figma https://mcp.figma.com/mcp",
+        "Start a new Claude Code session, run /mcp, select figma, choose Authenticate and allow access in the browser."
+      ],
+      "limits": "Needs a Figma account on a plan Figma lists for its MCP server. Coordn8 never runs this command or the sign-in for you.",
+      "needs_signin": true,
+      "auto_install": false
+    },
+    {
+      "id": "claude-design",
+      "name": "Claude Design artboards (/design)",
+      "why": "Drafts editable UI artboards from a brief, useful when a page layout needs several options to pick from.",
+      "command": "/design <brief>",
+      "link": "https://code.claude.com/docs/en/whats-new/2026-w34",
+      "steps": [
+        "Sign in to Claude Code with a Pro, Max, Team or Enterprise claude.ai account (Claude Code v2.1.234 or later).",
+        "In a session run: /design <what you want designed> and open the canvas link it prints."
+      ],
+      "limits": "Research preview; available only where artifacts are available on your account. Nothing to install.",
+      "needs_signin": true,
+      "auto_install": false
+    }
+  ],
+  "not_listed": [
+    {"package": "mcp-for-blender (and its wrapper blender-mcp)", "checked": "2026-10-22", "reason": "ships a tool that sends prompts to hosted third-party 3-D generation models and an always-on usage record unless an environment variable disables it"},
+    {"package": "@three-ws/blender-mcp", "checked": "2026-10-22", "reason": "ships a text-to-3-D tool that calls a hosted generation pipeline"},
+    {"package": "blender-cli", "checked": "2026-10-22", "reason": "not an MCP server, and its generate command calls a hosted 3-D generation model"}
+  ]
+}

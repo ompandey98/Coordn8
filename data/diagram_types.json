@@ -1,0 +1,4287 @@
+{
+ "schema": 1,
+ "doctrine": "A menu of starting points, never a fence. Combine, bend or ignore any entry, or invent a new form (invented: {name, why}); gates judge the outcome (budget, legibility, honesty), never whether a form is listed here.",
+ "selection": {
+  "step1": "score every behaviour: distinct text signals matched (capped) + weights of structural features present; the DOMINANT behaviour wins, the runner-up is recorded",
+  "step2": "score the suggested layout types of the dominant (and runner-up) behaviour: suggestion rank + fit weights of features present + type-level text signals - a penalty per unmet requirement (requirements are not penalised when no items are given: unknown is not absent)",
+  "text_signal_cap": 5,
+  "unmet_requirement_penalty": 4,
+  "type_signal_weight": 1.0,
+  "type_signal_cap": 3
+ },
+ "tie_breakers": [
+  {
+   "id": "table-attributes",
+   "rule": "items carry 3 or more attributes, there are no relations and no branches, and the dominant behaviour is not one where the shape of the values is the message -> table"
+  },
+  {
+   "id": "table-equivalent",
+   "rule": "the chosen type is marked table_equivalent and a 3-column table holds the same content (no relations, no branches, at most 2 attributes per item, at most 12 items) -> table"
+  },
+  {
+   "id": "dominant-axis",
+   "rule": "when two behaviours both fit, the higher score is the layout grammar; the runner-up may add at most one primitive, otherwise split into two figures"
+  }
+ ],
+ "global_budget": {
+  "nodes": 9,
+  "edges": 12,
+  "accents": 2,
+  "callouts": 2
+ },
+ "faithful_exemption": {
+  "detail": "high",
+  "min_zones": 2,
+  "nodes": 24,
+  "edges": 32,
+  "why": "a zoned faithful redraw may exceed the overview budget; above 24 nodes, split"
+ },
+ "split_advice": "split into overview + detail",
+ "detail_levels": {
+  "low": {
+   "keep": "half the nodes (rounded up), most important first"
+  },
+  "medium": {
+   "keep": "all nodes up to the type's node budget; the least connected beyond it are cut"
+  },
+  "high": {
+   "keep": "every node; the budget gate proposes a split if over"
+  },
+  "rank": "importance (if given), then degree, then input order",
+  "rule": "the detail dial changes HOW MANY nodes are drawn, never what they are called"
+ },
+ "audience_levels": {
+  "plain": "plain words: the item's `plain` label, else its label with code punctuation removed",
+  "mixed": "plain name with the exact field name as a sublabel",
+  "field": "exact field / code names",
+  "rule": "the audience dial changes WHAT nodes are called, never how many are drawn"
+ },
+ "features": {
+  "no_relations": "the description has no relations between items",
+  "fan_in": "some item receives 3 or more relations (many sources, one sink)",
+  "branching": "an item has 2 or more outgoing relations carrying conditions, or an item is a decision",
+  "linear_chain": "the relations form one unbranched path through 3 or more items",
+  "tree_shaped": "one root, every other item has exactly one parent, no cycle, and something branches",
+  "multi_parent": "some item has 2 or more incoming relations (a shared dependency)",
+  "has_cycle": "following the relations can return to an item already visited",
+  "edge_quantities": "relations carry numeric amounts",
+  "item_quantities": "2 or more items carry a numeric value",
+  "signed_values": "item values include both increases and decreases",
+  "time_axis": "the content is ordered in time (has_time_axis, or items/relations carry times)",
+  "messages": "2 or more relations are messages (call, request, response, event...)",
+  "actors": "2 or more items are actors or participants",
+  "zones": "items sit in 2 or more named zones",
+  "zone_crossing": "a relation joins items in different zones",
+  "layered_items": "3 or more items carry a layer or level",
+  "attributes3": "items carry 3 or more attributes each (on average)",
+  "two_numeric_axes": "3 or more items, each with 2 or 3 numeric attributes",
+  "states": "3 or more items are states, or 2 or more relations are transitions",
+  "containment": "2 or more relations mean contains / part of / child of",
+  "depends": "2 or more relations mean depends on / requires / imports",
+  "two_traces": "exactly two traces (two policies or inputs) are compared",
+  "owners": "2 or more items are people, teams, roles or owners",
+  "many_items": "more than 9 items",
+  "has_relations": "the description has relations between items"
+ },
+ "behaviours": [
+  {
+   "id": "fan-in",
+   "label": "fan-in / bottleneck",
+   "signals": [
+    "many sources",
+    "one sink",
+    "bottleneck",
+    "queue",
+    "queues",
+    "backlog",
+    "converge",
+    "converges",
+    "funnel into",
+    "all go to",
+    "collector",
+    "single reviewer",
+    "capacity",
+    "backpressure",
+    "throughput",
+    "contention",
+    "wait time",
+    "fan-in",
+    "aggregates",
+    "collected into",
+    "merged into",
+    "feed into",
+    "feeds into",
+    "send their"
+   ],
+   "structure": {
+    "fan_in": 3
+   },
+   "suggest": [
+    "data-flow",
+    "bottleneck-flow",
+    "hub-and-spoke",
+    "process",
+    "funnel"
+   ],
+   "shape_is_message": false,
+   "budget": {
+    "nodes": 9,
+    "sources": 5,
+    "queue_slots": 5
+   },
+   "required_primitives": [
+    "distinct sources",
+    "ordered queue with a count",
+    "capacity label",
+    "one constrained point",
+    "admitted and deferred outcomes"
+   ]
+  },
+  {
+   "id": "staged-process",
+   "label": "staged process",
+   "signals": [
+    "stage",
+    "stages",
+    "step",
+    "steps",
+    "pipeline",
+    "then",
+    "next",
+    "handoff",
+    "hand-off",
+    "hands off",
+    "workflow",
+    "in order",
+    "goes through",
+    "passes to",
+    "inputs",
+    "outputs"
+   ],
+   "structure": {
+    "linear_chain": 2
+   },
+   "suggest": [
+    "process",
+    "swimlane",
+    "flowchart",
+    "data-flow",
+    "tier-ladder",
+    "funnel"
+   ],
+   "shape_is_message": false,
+   "budget": {
+    "stages": 6,
+    "slots": 4
+   }
+  },
+  {
+   "id": "decision-branching",
+   "label": "decision branching",
+   "signals": [
+    "if",
+    "else",
+    "otherwise",
+    "whether",
+    "decide",
+    "decides",
+    "decision",
+    "branch",
+    "branches",
+    "condition",
+    "conditions",
+    "eligible",
+    "eligibility",
+    "depending on",
+    "rule",
+    "rules",
+    "triage",
+    "approve",
+    "approved",
+    "reject",
+    "rejected",
+    "routes to"
+   ],
+   "structure": {
+    "branching": 3
+   },
+   "suggest": [
+    "flowchart",
+    "decision-tree",
+    "paired-trace"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "policy-divergence",
+   "label": "divergence of two policies",
+   "signals": [
+    "two policies",
+    "diverge",
+    "diverges",
+    "divergence",
+    "differ",
+    "differs",
+    "same request",
+    "different outcome",
+    "different outcomes",
+    "first difference",
+    "first divergence",
+    "pass",
+    "fail",
+    "skipped",
+    "not reached",
+    "old rule",
+    "new rule",
+    "two traces"
+   ],
+   "structure": {
+    "two_traces": 4
+   },
+   "suggest": [
+    "paired-trace",
+    "flowchart",
+    "architecture-delta"
+   ],
+   "shape_is_message": false,
+   "budget": {
+    "traces": 2,
+    "rules": 6,
+    "status_cells": 12
+   }
+  },
+  {
+   "id": "trust-boundaries",
+   "label": "trust boundaries",
+   "signals": [
+    "trust boundary",
+    "trust boundaries",
+    "boundary",
+    "boundaries",
+    "zone",
+    "zones",
+    "perimeter",
+    "untrusted",
+    "trusted",
+    "ingress",
+    "egress",
+    "sandbox",
+    "dmz",
+    "firewall",
+    "public internet",
+    "private",
+    "permitted",
+    "forbidden",
+    "blocked path",
+    "cross the",
+    "crosses"
+   ],
+   "structure": {
+    "zones": 2,
+    "zone_crossing": 3
+   },
+   "suggest": [
+    "architecture",
+    "boundary-map",
+    "deployment",
+    "nested"
+   ],
+   "shape_is_message": false,
+   "budget": {
+    "zones": 3,
+    "nodes": 8,
+    "paths": 10,
+    "forbidden_paths": 2
+   }
+  },
+  {
+   "id": "layered-controls",
+   "label": "layered controls",
+   "signals": [
+    "layer",
+    "layers",
+    "layered",
+    "defence in depth",
+    "defense in depth",
+    "controls",
+    "control",
+    "enforced",
+    "enforcement",
+    "guard",
+    "guards",
+    "safeguard",
+    "safeguards",
+    "stack",
+    "levels",
+    "residual risk",
+    "mitigation",
+    "mitigations",
+    "catches"
+   ],
+   "structure": {
+    "layered_items": 3
+   },
+   "suggest": [
+    "layers",
+    "control-catalog",
+    "compensating-layers",
+    "nested"
+   ],
+   "shape_is_message": false,
+   "budget": {
+    "layers": 6
+   }
+  },
+  {
+   "id": "decomposition",
+   "label": "decomposition into parts",
+   "signals": [
+    "consists of",
+    "made of",
+    "made up of",
+    "composed of",
+    "decompose",
+    "decomposes",
+    "decomposition",
+    "breaks down",
+    "breaks into",
+    "subsystem",
+    "subsystems",
+    "sub-system",
+    "modules",
+    "part of",
+    "parts",
+    "components of",
+    "contains"
+   ],
+   "structure": {
+    "containment": 3,
+    "tree_shaped": 1
+   },
+   "suggest": [
+    "tree",
+    "nested",
+    "exploded-view",
+    "treemap"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "lifecycle",
+   "label": "lifecycle of one subject",
+   "signals": [
+    "lifecycle",
+    "life cycle",
+    "state",
+    "states",
+    "status",
+    "statuses",
+    "transition",
+    "transitions",
+    "pending",
+    "retry",
+    "retries",
+    "cancel",
+    "cancels",
+    "cancelled",
+    "canceled",
+    "expired",
+    "terminal",
+    "becomes",
+    "moves to",
+    "moves from",
+    "timeout",
+    "resumed",
+    "delivered",
+    "shipped"
+   ],
+   "structure": {
+    "states": 3,
+    "has_cycle": 1
+   },
+   "suggest": [
+    "state-machine",
+    "lifecycle-map",
+    "timeline"
+   ],
+   "shape_is_message": false,
+   "budget": {
+    "phases": 5,
+    "states": 9,
+    "transitions": 10,
+    "terminal_states": 2
+   }
+  },
+  {
+   "id": "messages-over-time",
+   "label": "messages over time",
+   "signals": [
+    "request",
+    "requests",
+    "response",
+    "responds",
+    "reply",
+    "replies",
+    "calls",
+    "sends",
+    "message",
+    "messages",
+    "handshake",
+    "returns",
+    "acknowledges",
+    "callback",
+    "token",
+    "round trip",
+    "round-trip",
+    "protocol",
+    "api call"
+   ],
+   "structure": {
+    "messages": 3,
+    "actors": 1,
+    "time_axis": 1
+   },
+   "suggest": [
+    "sequence",
+    "swimlane"
+   ],
+   "shape_is_message": false,
+   "budget": {
+    "lifelines": 5,
+    "messages": 12
+   }
+  },
+  {
+   "id": "quantity-split-merge",
+   "label": "quantity split / merge",
+   "signals": [
+    "split",
+    "splits",
+    "merge",
+    "merges",
+    "allocated",
+    "allocation",
+    "budget",
+    "flows into",
+    "volume",
+    "amount",
+    "quantity",
+    "spent",
+    "distributed",
+    "where it goes",
+    "bridge",
+    "adds",
+    "subtracts",
+    "net"
+   ],
+   "structure": {
+    "edge_quantities": 4,
+    "signed_values": 3
+   },
+   "suggest": [
+    "sankey",
+    "waterfall",
+    "treemap",
+    "bar",
+    "funnel"
+   ],
+   "shape_is_message": true
+  },
+  {
+   "id": "attribute-comparison",
+   "label": "comparison over attributes",
+   "signals": [
+    "compare",
+    "comparison",
+    "versus",
+    "vs",
+    "options",
+    "alternatives",
+    "trade-offs across",
+    "pros",
+    "cons",
+    "criteria",
+    "attributes",
+    "scored",
+    "scorecard",
+    "which is better",
+    "side by side"
+   ],
+   "structure": {
+    "attributes3": 2,
+    "no_relations": 1
+   },
+   "suggest": [
+    "table",
+    "radar",
+    "heatmap",
+    "bar",
+    "small-multiples"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "change-over-time",
+   "label": "change over time",
+   "signals": [
+    "over time",
+    "trend",
+    "trends",
+    "grew",
+    "growth",
+    "declined",
+    "decline",
+    "by month",
+    "by week",
+    "per month",
+    "per week",
+    "monthly",
+    "weekly",
+    "history",
+    "timeline",
+    "since",
+    "over the last",
+    "releases",
+    "milestone",
+    "milestones",
+    "quarter",
+    "quarters"
+   ],
+   "structure": {
+    "time_axis": 3,
+    "item_quantities": 1
+   },
+   "suggest": [
+    "line",
+    "timeline",
+    "bump",
+    "slopegraph",
+    "gantt",
+    "streamgraph",
+    "polar",
+    "small-multiples"
+   ],
+   "shape_is_message": true
+  },
+  {
+   "id": "hierarchy",
+   "label": "hierarchy",
+   "signals": [
+    "hierarchy",
+    "hierarchical",
+    "parent",
+    "child",
+    "children",
+    "reports to",
+    "taxonomy",
+    "tree",
+    "nested under",
+    "root",
+    "leaf",
+    "leaves",
+    "org",
+    "organisation",
+    "organization",
+    "sections"
+   ],
+   "structure": {
+    "tree_shaped": 3
+   },
+   "suggest": [
+    "tree",
+    "org-chart",
+    "nested",
+    "mind-map",
+    "pyramid"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "dependency",
+   "label": "dependency",
+   "signals": [
+    "depends on",
+    "depend on",
+    "dependency",
+    "dependencies",
+    "requires",
+    "imports",
+    "needs",
+    "prerequisite",
+    "prerequisites",
+    "blocked by",
+    "upstream",
+    "downstream",
+    "shared library",
+    "circular"
+   ],
+   "structure": {
+    "depends": 3,
+    "multi_parent": 2,
+    "has_cycle": 1
+   },
+   "suggest": [
+    "dependency-graph",
+    "dependency-matrix",
+    "tree"
+   ],
+   "shape_is_message": false,
+   "budget": {
+    "nodes": 9,
+    "edges": 14,
+    "ranks": 4,
+    "cycles": 1
+   }
+  },
+  {
+   "id": "proportion",
+   "label": "proportion of a whole",
+   "signals": [
+    "share",
+    "shares",
+    "percent",
+    "percentage",
+    "proportion",
+    "part of the whole",
+    "of the total",
+    "fraction",
+    "dominates",
+    "makes up",
+    "accounts for",
+    "split by",
+    "composition",
+    "mix"
+   ],
+   "structure": {
+    "item_quantities": 2,
+    "no_relations": 1
+   },
+   "suggest": [
+    "treemap",
+    "bar",
+    "pyramid",
+    "marimekko",
+    "streamgraph"
+   ],
+   "shape_is_message": true
+  },
+  {
+   "id": "two-axis-positioning",
+   "label": "two-axis positioning / trade-off",
+   "signals": [
+    "2x2",
+    "2×2",
+    "two by two",
+    "quadrant",
+    "quadrants",
+    "trade-off",
+    "tradeoff",
+    "effort",
+    "impact",
+    "plotted against",
+    "against",
+    "two axes",
+    "prioritise",
+    "prioritize",
+    "prioritisation",
+    "prioritization",
+    "positioning"
+   ],
+   "structure": {
+    "two_numeric_axes": 3
+   },
+   "suggest": [
+    "quadrant",
+    "scatter",
+    "scenario-matrix",
+    "bubble"
+   ],
+   "shape_is_message": true
+  },
+  {
+   "id": "feedback-loop",
+   "label": "feedback loop",
+   "signals": [
+    "flywheel",
+    "feedback",
+    "feedback loop",
+    "loop",
+    "reinforces",
+    "reinforcing",
+    "virtuous",
+    "vicious",
+    "cycle",
+    "self-improving",
+    "feeds back",
+    "compounding",
+    "balancing"
+   ],
+   "structure": {
+    "has_cycle": 2
+   },
+   "suggest": [
+    "loop",
+    "cycle",
+    "causal-loop"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "root-cause",
+   "label": "root cause of one effect",
+   "signals": [
+    "root cause",
+    "root-cause",
+    "caused by",
+    "contributing",
+    "contributing factors",
+    "post-mortem",
+    "postmortem",
+    "incident",
+    "why did",
+    "why it failed",
+    "failure analysis",
+    "five whys"
+   ],
+   "structure": {},
+   "suggest": [
+    "fishbone",
+    "tree",
+    "timeline"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "set-overlap",
+   "label": "overlap between sets",
+   "signals": [
+    "overlap",
+    "overlaps",
+    "intersection",
+    "in common",
+    "shared by",
+    "common to",
+    "union",
+    "only in"
+   ],
+   "structure": {},
+   "suggest": [
+    "venn",
+    "heatmap",
+    "table"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "before-after",
+   "label": "before / after change",
+   "signals": [
+    "before",
+    "after",
+    "migration",
+    "migrate",
+    "migrated",
+    "changed from",
+    "replaced",
+    "redesign",
+    "delta",
+    "used to"
+   ],
+   "structure": {},
+   "suggest": [
+    "architecture-delta",
+    "current-state-map",
+    "slopegraph",
+    "dumbbell",
+    "table"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "ownership",
+   "label": "ownership and responsibility",
+   "signals": [
+    "who owns",
+    "owner",
+    "owners",
+    "owns",
+    "responsible",
+    "accountable",
+    "team",
+    "teams",
+    "escalation",
+    "escalate",
+    "on-call",
+    "raci",
+    "roles",
+    "who does"
+   ],
+   "structure": {
+    "owners": 2
+   },
+   "suggest": [
+    "org-chart",
+    "swimlane",
+    "access-matrix",
+    "table"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "topology",
+   "label": "components and connections",
+   "signals": [
+    "component",
+    "components",
+    "service",
+    "services",
+    "architecture",
+    "system",
+    "connects",
+    "talks to",
+    "calls into",
+    "integrates",
+    "integration",
+    "overview",
+    "database",
+    "client",
+    "server"
+   ],
+   "structure": {},
+   "suggest": [
+    "architecture",
+    "hub-and-spoke",
+    "deployment",
+    "network"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "schedule",
+   "label": "tasks on a schedule",
+   "signals": [
+    "schedule",
+    "project plan",
+    "roadmap",
+    "deadline",
+    "start date",
+    "end date",
+    "tasks",
+    "sprint",
+    "sprints",
+    "parallel tracks",
+    "critical path"
+   ],
+   "structure": {
+    "time_axis": 1
+   },
+   "suggest": [
+    "gantt",
+    "timeline",
+    "story-map"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "distribution",
+   "label": "distribution of values",
+   "signals": [
+    "distribution",
+    "spread",
+    "outlier",
+    "outliers",
+    "variance",
+    "histogram",
+    "skew",
+    "percentile",
+    "p99",
+    "median",
+    "range of values"
+   ],
+   "structure": {},
+   "suggest": [
+    "histogram",
+    "beeswarm",
+    "box-plot",
+    "ridgeline"
+   ],
+   "shape_is_message": true
+  },
+  {
+   "id": "correlation",
+   "label": "correlation of two variables",
+   "signals": [
+    "correlate",
+    "correlates",
+    "correlation",
+    "relationship between",
+    "the more",
+    "the higher",
+    "scatter",
+    "cluster",
+    "clusters"
+   ],
+   "structure": {
+    "two_numeric_axes": 3
+   },
+   "suggest": [
+    "scatter",
+    "bubble",
+    "quadrant"
+   ],
+   "shape_is_message": true
+  },
+  {
+   "id": "experience-journey",
+   "label": "a person's experience across stages",
+   "signals": [
+    "customer",
+    "user journey",
+    "journey",
+    "experience",
+    "feels",
+    "feeling",
+    "sentiment",
+    "touchpoint",
+    "touchpoints",
+    "frontstage",
+    "backstage",
+    "front-stage",
+    "back-stage",
+    "line of visibility",
+    "persona"
+   ],
+   "structure": {},
+   "suggest": [
+    "journey-map",
+    "service-blueprint",
+    "story-map"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "cross-tabulation",
+   "label": "row × column cross-tabulation",
+   "signals": [
+    "matrix",
+    "per role",
+    "who can",
+    "permission",
+    "permissions",
+    "access rights",
+    "cross-tab",
+    "grid of",
+    "each combination",
+    "by team and"
+   ],
+   "structure": {},
+   "suggest": [
+    "heatmap",
+    "access-matrix",
+    "table"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "ranking",
+   "label": "ranking",
+   "signals": [
+    "rank",
+    "ranking",
+    "ranked",
+    "top",
+    "largest",
+    "smallest",
+    "leaderboard",
+    "order of size"
+   ],
+   "structure": {},
+   "suggest": [
+    "bar",
+    "bump",
+    "pyramid",
+    "table"
+   ],
+   "shape_is_message": true
+  },
+  {
+   "id": "spatial-layout",
+   "label": "where things are in a space",
+   "signals": [
+    "floor",
+    "room",
+    "rooms",
+    "site",
+    "building",
+    "buildings",
+    "campus",
+    "warehouse",
+    "map of",
+    "location",
+    "locations",
+    "where things are"
+   ],
+   "structure": {},
+   "suggest": [
+    "floor-plan",
+    "nested"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "physical-parts",
+   "label": "physical parts of one object",
+   "signals": [
+    "teardown",
+    "inside the device",
+    "assembly",
+    "assembled",
+    "parts of the",
+    "unboxing",
+    "exploded"
+   ],
+   "structure": {},
+   "suggest": [
+    "exploded-view",
+    "layers"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "work-in-progress",
+   "label": "work in progress by state",
+   "signals": [
+    "kanban",
+    "in progress",
+    "wip",
+    "to do",
+    "todo",
+    "blocked",
+    "board"
+   ],
+   "structure": {},
+   "suggest": [
+    "kanban",
+    "table"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "release-slicing",
+   "label": "release slicing",
+   "signals": [
+    "mvp",
+    "slice",
+    "slices",
+    "story map",
+    "user stories",
+    "walking skeleton",
+    "cut line",
+    "first release"
+   ],
+   "structure": {},
+   "suggest": [
+    "story-map",
+    "gantt"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "unstructured-to-structured",
+   "label": "loose input becomes a structured record",
+   "signals": [
+    "extract",
+    "extracts",
+    "extracted",
+    "parse",
+    "parses",
+    "transcript",
+    "conversation",
+    "free text",
+    "structured record",
+    "normalise",
+    "normalize",
+    "fills the fields"
+   ],
+   "structure": {},
+   "suggest": [
+    "extraction-map",
+    "data-flow"
+   ],
+   "shape_is_message": false,
+   "budget": {
+    "exchanges": 4,
+    "fields": 6
+   }
+  },
+  {
+   "id": "evolution-strategy",
+   "label": "build vs buy on an evolution axis",
+   "signals": [
+    "build or buy",
+    "build vs buy",
+    "commodity",
+    "commoditised",
+    "commoditized",
+    "evolution",
+    "genesis",
+    "value chain",
+    "custom-built"
+   ],
+   "structure": {},
+   "suggest": [
+    "wardley-map",
+    "quadrant"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "data-model",
+   "label": "data model",
+   "signals": [
+    "entity",
+    "entities",
+    "schema",
+    "foreign key",
+    "foreign keys",
+    "column",
+    "columns",
+    "cardinality",
+    "one-to-many",
+    "many-to-many",
+    "classes",
+    "inheritance",
+    "inherits",
+    "interface"
+   ],
+   "structure": {},
+   "suggest": [
+    "er",
+    "db-schema",
+    "uml-class"
+   ],
+   "shape_is_message": false
+  },
+  {
+   "id": "connected-network",
+   "label": "many-to-many connections",
+   "signals": [
+    "network",
+    "connected to",
+    "links between",
+    "who knows whom",
+    "peer",
+    "peers",
+    "mesh",
+    "graph"
+   ],
+   "structure": {
+    "multi_parent": 1,
+    "has_cycle": 0.5
+   },
+   "suggest": [
+    "network",
+    "dependency-graph",
+    "architecture"
+   ],
+   "shape_is_message": false
+  }
+ ],
+ "types": [
+  {
+   "id": "architecture",
+   "name": "Architecture",
+   "layout": "layered",
+   "use_when": [
+    "components and the connections between them in one snapshot",
+    "grouping by tier or trust zone (zones variant)"
+   ],
+   "not_this": [
+    {
+     "type": "deployment",
+     "when": "the point is which host, zone or replica runs what"
+    },
+    {
+     "type": "architecture-delta",
+     "when": "two snapshots, before and after"
+    },
+    {
+     "type": "sequence",
+     "when": "the order of messages over time matters"
+    },
+    {
+     "type": "data-flow",
+     "when": "who does what at each step of a pipeline"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "components",
+    "connections"
+   ],
+   "fit": {
+    "zones": 1,
+    "zone_crossing": 1
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "variants": [
+    {
+     "id": "zones",
+     "when_feature": "zones"
+    }
+   ],
+   "behaviours": [
+    "trust-boundaries",
+    "topology",
+    "connected-network"
+   ]
+  },
+  {
+   "id": "boundary-map",
+   "name": "Trust-boundary map",
+   "layout": "layered",
+   "use_when": [
+    "which routes cross a trust boundary and which are blocked",
+    "permitted versus forbidden ingress or deploy paths"
+   ],
+   "not_this": [
+    {
+     "type": "architecture",
+     "when": "there is no permitted/forbidden distinction, only topology"
+    },
+    {
+     "type": "control-catalog",
+     "when": "the controls themselves, grouped by where they are enforced"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 10,
+    "accents": 2,
+    "callouts": 2,
+    "zones": 3
+   },
+   "fields": [
+    "zones",
+    "components",
+    "permitted_paths",
+    "forbidden_paths"
+   ],
+   "fit": {
+    "zones": 1,
+    "zone_crossing": 1
+   },
+   "requires": [
+    "zones",
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "permitted",
+    "forbidden",
+    "blocked path",
+    "bypass"
+   ],
+   "behaviours": [
+    "trust-boundaries"
+   ]
+  },
+  {
+   "id": "architecture-delta",
+   "name": "Architecture delta",
+   "layout": "layered",
+   "use_when": [
+    "structural change between two topology snapshots, with a ledger of what changed"
+   ],
+   "not_this": [
+    {
+     "type": "architecture",
+     "when": "there is only one snapshot"
+    },
+    {
+     "type": "table",
+     "when": "only attributes change, the topology does not"
+    },
+    {
+     "type": "timeline",
+     "when": "the order of the migration phases matters"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 10,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "before",
+    "after",
+    "changes"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "policy-divergence",
+    "before-after"
+   ]
+  },
+  {
+   "id": "current-state-map",
+   "name": "Current-state landscape",
+   "layout": "grid",
+   "use_when": [
+    "today's tools and hand-offs grouped by phase or department, with pain points flagged"
+   ],
+   "not_this": [
+    {
+     "type": "architecture-delta",
+     "when": "you also have the target picture"
+    },
+    {
+     "type": "architecture",
+     "when": "there are no pain points to show, just a neutral snapshot"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "zones": 4
+   },
+   "fields": [
+    "zones",
+    "components",
+    "pain_points",
+    "handoffs"
+   ],
+   "fit": {
+    "zones": 0.5
+   },
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "before-after"
+   ]
+  },
+  {
+   "id": "hub-and-spoke",
+   "name": "Hub and spoke",
+   "layout": "radial",
+   "use_when": [
+    "what plugs into a central system, what it exposes, and over which interface"
+   ],
+   "not_this": [
+    {
+     "type": "data-flow",
+     "when": "data moves through ordered steps"
+    },
+    {
+     "type": "architecture",
+     "when": "peer components with no single hub"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "hub",
+    "sources",
+    "consumers",
+    "interfaces"
+   ],
+   "fit": {
+    "fan_in": 2
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "hub",
+    "plugs into",
+    "exposes",
+    "central"
+   ],
+   "behaviours": [
+    "fan-in",
+    "topology"
+   ]
+  },
+  {
+   "id": "data-flow",
+   "name": "Data flow",
+   "layout": "layered",
+   "use_when": [
+    "how data or work moves through a pipeline: sources converging, typed payloads, who touches it",
+    "fan-in into a constrained point"
+   ],
+   "not_this": [
+    {
+     "type": "swimlane",
+     "when": "business hand-offs where the payload type does not matter"
+    },
+    {
+     "type": "sankey",
+     "when": "the amounts on each path are the story"
+    },
+    {
+     "type": "process",
+     "when": "the steps, not the sources, dominate"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "sources",
+    "steps",
+    "payloads"
+   ],
+   "fit": {
+    "fan_in": 2,
+    "linear_chain": 0.5
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "fan-in",
+    "staged-process",
+    "unstructured-to-structured"
+   ]
+  },
+  {
+   "id": "bottleneck-flow",
+   "name": "Queue / bottleneck",
+   "layout": "layered",
+   "use_when": [
+    "many arrivals compete for one finite service point; queue depth, capacity and wait are the story"
+   ],
+   "not_this": [
+    {
+     "type": "data-flow",
+     "when": "there is no capacity limit, only convergence"
+    },
+    {
+     "type": "bar",
+     "when": "only the queue lengths matter"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "sources": 5
+   },
+   "fields": [
+    "sources",
+    "queue",
+    "capacity",
+    "outcomes"
+   ],
+   "fit": {
+    "fan_in": 1.5
+   },
+   "requires": [
+    "fan_in",
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "bottleneck",
+    "queue",
+    "capacity",
+    "wait time",
+    "backpressure"
+   ],
+   "behaviours": [
+    "fan-in"
+   ]
+  },
+  {
+   "id": "process",
+   "name": "Process",
+   "layout": "layered",
+   "use_when": [
+    "sequential steps with owners, inputs and outputs per step",
+    "a stage framework that repeats the same slots per stage"
+   ],
+   "not_this": [
+    {
+     "type": "swimlane",
+     "when": "payloads and tools do not matter, only who hands off to whom"
+    },
+    {
+     "type": "flowchart",
+     "when": "the steps branch on decisions"
+    },
+    {
+     "type": "service-blueprint",
+     "when": "front-stage versus back-stage is the point"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "stages": 6
+   },
+   "fields": [
+    "steps",
+    "owners",
+    "inputs",
+    "outputs"
+   ],
+   "fit": {
+    "linear_chain": 2
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "fan-in",
+    "staged-process"
+   ]
+  },
+  {
+   "id": "swimlane",
+   "name": "Swimlane",
+   "layout": "grid",
+   "use_when": [
+    "a cross-functional process with hand-offs between named owners"
+   ],
+   "not_this": [
+    {
+     "type": "service-blueprint",
+     "when": "what the customer sees versus what stays hidden"
+    },
+    {
+     "type": "org-chart",
+     "when": "the question is who owns what, not the flow"
+    },
+    {
+     "type": "process",
+     "when": "each step's payload must be legible"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "lanes": 5
+   },
+   "fields": [
+    "lanes",
+    "steps",
+    "handoffs"
+   ],
+   "fit": {
+    "owners": 1.5,
+    "linear_chain": 1
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "team",
+    "teams",
+    "department",
+    "departments",
+    "across teams",
+    "lanes"
+   ],
+   "behaviours": [
+    "staged-process",
+    "messages-over-time",
+    "ownership"
+   ]
+  },
+  {
+   "id": "flowchart",
+   "name": "Flowchart",
+   "layout": "layered",
+   "use_when": [
+    "decision logic with branches and outcomes",
+    "algorithms, triage and eligibility rules"
+   ],
+   "not_this": [
+    {
+     "type": "decision-tree",
+     "when": "branches never re-join and every path ends in its own outcome"
+    },
+    {
+     "type": "state-machine",
+     "when": "states and transitions, not decisions"
+    },
+    {
+     "type": "sequence",
+     "when": "messages between actors over time"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "decision_exits": 3
+   },
+   "fields": [
+    "steps",
+    "decisions",
+    "outcomes"
+   ],
+   "fit": {
+    "branching": 2
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "staged-process",
+    "decision-branching",
+    "policy-divergence"
+   ]
+  },
+  {
+   "id": "decision-tree",
+   "name": "Decision tree",
+   "layout": "layered",
+   "use_when": [
+    "a cascade of questions where each answer narrows to a distinct outcome and paths never re-merge"
+   ],
+   "not_this": [
+    {
+     "type": "flowchart",
+     "when": "paths re-join or loop back"
+    },
+    {
+     "type": "table",
+     "when": "each outcome is one row of conditions with no order between questions"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "depth": 4
+   },
+   "fields": [
+    "questions",
+    "answers",
+    "outcomes"
+   ],
+   "fit": {
+    "branching": 1.5,
+    "tree_shaped": 1
+   },
+   "requires": [
+    "branching",
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "narrows",
+    "each answer",
+    "questions"
+   ],
+   "behaviours": [
+    "decision-branching"
+   ]
+  },
+  {
+   "id": "paired-trace",
+   "name": "Paired policy traces",
+   "layout": "grid",
+   "use_when": [
+    "two similar inputs reach different outcomes; rule-by-rule pass / fail / skipped / not reached and the first divergence"
+   ],
+   "not_this": [
+    {
+     "type": "flowchart",
+     "when": "there is one decision path and nothing to compare"
+    },
+    {
+     "type": "table",
+     "when": "the order of the rules does not matter"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "traces": 2
+   },
+   "fields": [
+    "rules",
+    "trace_a",
+    "trace_b",
+    "first_divergence",
+    "outcomes"
+   ],
+   "fit": {
+    "two_traces": 3
+   },
+   "requires": [
+    "two_traces"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "decision-branching",
+    "policy-divergence"
+   ]
+  },
+  {
+   "id": "sequence",
+   "name": "Sequence",
+   "layout": "timeline",
+   "use_when": [
+    "time-ordered messages between actors: request/response, protocol exchanges, call traces"
+   ],
+   "not_this": [
+    {
+     "type": "swimlane",
+     "when": "work hand-offs, not messages"
+    },
+    {
+     "type": "state-machine",
+     "when": "one subject's states, not messages between actors"
+    },
+    {
+     "type": "timeline",
+     "when": "events on a calendar with no actors"
+    }
+   ],
+   "budget": {
+    "nodes": 5,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "fragments": 1
+   },
+   "fields": [
+    "actors",
+    "messages",
+    "order"
+   ],
+   "fit": {
+    "messages": 3,
+    "actors": 1,
+    "time_axis": 0.5
+   },
+   "requires": [
+    "messages"
+   ],
+   "table_equivalent": false,
+   "note": "nodes = lifelines; edges = messages",
+   "behaviours": [
+    "messages-over-time"
+   ]
+  },
+  {
+   "id": "state-machine",
+   "name": "State machine",
+   "layout": "layered",
+   "use_when": [
+    "finite states, transitions and guards: order status, connection lifecycle, job status"
+   ],
+   "not_this": [
+    {
+     "type": "sequence",
+     "when": "messages between actors carry the story"
+    },
+    {
+     "type": "flowchart",
+     "when": "decisions, not states"
+    },
+    {
+     "type": "lifecycle-map",
+     "when": "one subject's happy path with separate wait and terminal bands"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "states",
+    "transitions",
+    "guards"
+   ],
+   "fit": {
+    "states": 2,
+    "has_cycle": 1
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "lifecycle"
+   ]
+  },
+  {
+   "id": "lifecycle-map",
+   "name": "Lifecycle phase map",
+   "layout": "layered",
+   "use_when": [
+    "one subject moves through 4-5 phases while waits, retries, cancellation and terminal outcomes matter as much as the happy path"
+   ],
+   "not_this": [
+    {
+     "type": "state-machine",
+     "when": "dense guards and events matter more than the subject's progress"
+    },
+    {
+     "type": "sequence",
+     "when": "actors exchange messages"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 10,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "phases",
+    "waits",
+    "terminal_states",
+    "transitions"
+   ],
+   "fit": {
+    "states": 1.5
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "lifecycle",
+    "phases",
+    "terminal",
+    "cancellation"
+   ],
+   "behaviours": [
+    "lifecycle"
+   ]
+  },
+  {
+   "id": "er",
+   "name": "Entity-relationship",
+   "layout": "freeform",
+   "use_when": [
+    "entities and cardinality in a conceptual or domain model"
+   ],
+   "not_this": [
+    {
+     "type": "db-schema",
+     "when": "physical tables, SQL types and column-level keys"
+    },
+    {
+     "type": "uml-class",
+     "when": "operations and inheritance matter"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "entities",
+    "fields",
+    "relationships",
+    "cardinality"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "entity",
+    "entities",
+    "cardinality",
+    "one-to-many",
+    "many-to-many"
+   ],
+   "behaviours": [
+    "data-model"
+   ]
+  },
+  {
+   "id": "db-schema",
+   "name": "Database schema",
+   "layout": "layered",
+   "use_when": [
+    "real tables, types, constraints and column-to-column foreign keys"
+   ],
+   "not_this": [
+    {
+     "type": "er",
+     "when": "the conversation is about what an entity is, not how it is stored"
+    }
+   ],
+   "budget": {
+    "nodes": 5,
+    "edges": 6,
+    "accents": 2,
+    "callouts": 2,
+    "columns_shown": 8
+   },
+   "fields": [
+    "tables",
+    "columns",
+    "foreign_keys"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "foreign key",
+    "foreign keys",
+    "column",
+    "columns",
+    "sql",
+    "index"
+   ],
+   "behaviours": [
+    "data-model"
+   ]
+  },
+  {
+   "id": "uml-class",
+   "name": "Class diagram",
+   "layout": "layered",
+   "use_when": [
+    "classes with operations, inheritance and composition"
+   ],
+   "not_this": [
+    {
+     "type": "er",
+     "when": "there are no operations and no inheritance"
+    },
+    {
+     "type": "dependency-graph",
+     "when": "only who uses whom"
+    }
+   ],
+   "budget": {
+    "nodes": 7,
+    "edges": 8,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "classes",
+    "members",
+    "relationships"
+   ],
+   "fit": {},
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "class",
+    "classes",
+    "inheritance",
+    "inherits",
+    "interface",
+    "method"
+   ],
+   "behaviours": [
+    "data-model"
+   ]
+  },
+  {
+   "id": "dependency-graph",
+   "name": "Dependency graph",
+   "layout": "layered",
+   "use_when": [
+    "what depends on what, with shared dependencies (several parents) or a cycle a tree cannot show"
+   ],
+   "not_this": [
+    {
+     "type": "tree",
+     "when": "every node has one parent and nothing points back"
+    },
+    {
+     "type": "dependency-matrix",
+     "when": "too many nodes and edges for a readable graph"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 14,
+    "accents": 2,
+    "callouts": 2,
+    "ranks": 4
+   },
+   "fields": [
+    "nodes",
+    "depends_on"
+   ],
+   "fit": {
+    "depends": 2,
+    "multi_parent": 2,
+    "has_cycle": 1
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "dependency",
+    "connected-network"
+   ]
+  },
+  {
+   "id": "dependency-matrix",
+   "name": "Dependency structure matrix",
+   "layout": "matrix",
+   "use_when": [
+    "dense dependencies among many modules, where a graph would be a hairball"
+   ],
+   "not_this": [
+    {
+     "type": "dependency-graph",
+     "when": "9 nodes or fewer: a ranked graph reads faster"
+    },
+    {
+     "type": "heatmap",
+     "when": "values, not dependencies, fill the cells"
+    }
+   ],
+   "budget": {
+    "nodes": 16,
+    "edges": 60,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "modules",
+    "depends_on"
+   ],
+   "fit": {
+    "depends": 1,
+    "many_items": 2
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "dependency"
+   ]
+  },
+  {
+   "id": "tree",
+   "name": "Tree",
+   "layout": "layered",
+   "use_when": [
+    "parent-to-child hierarchy, taxonomy, decomposition into addressable blocks"
+   ],
+   "not_this": [
+    {
+     "type": "dependency-graph",
+     "when": "a node has several parents or there is a cycle"
+    },
+    {
+     "type": "org-chart",
+     "when": "the nodes are people, teams or owners"
+    },
+    {
+     "type": "nested",
+     "when": "containment or scope is the point, not the branching"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "depth": 4,
+    "breadth": 5
+   },
+   "fields": [
+    "root",
+    "children"
+   ],
+   "fit": {
+    "tree_shaped": 2,
+    "containment": 1
+   },
+   "requires": [
+    "tree_shaped"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "decomposition",
+    "hierarchy",
+    "dependency",
+    "root-cause"
+   ]
+  },
+  {
+   "id": "org-chart",
+   "name": "Org chart / responsibility map",
+   "layout": "layered",
+   "use_when": [
+    "who owns what: teams, roles, escalation and routing"
+   ],
+   "not_this": [
+    {
+     "type": "tree",
+     "when": "a generic hierarchy, not ownership"
+    },
+    {
+     "type": "swimlane",
+     "when": "the process, not the ownership, is the question"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "depth": 4
+   },
+   "fields": [
+    "owners",
+    "reports_to",
+    "scope"
+   ],
+   "fit": {
+    "owners": 2,
+    "tree_shaped": 1
+   },
+   "requires": [
+    "owners",
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "reports to",
+    "who owns",
+    "escalation",
+    "on-call"
+   ],
+   "behaviours": [
+    "hierarchy",
+    "ownership"
+   ]
+  },
+  {
+   "id": "nested",
+   "name": "Nested containment",
+   "layout": "freeform",
+   "use_when": [
+    "containment or scope: outer is broader, inner is more specific (blast radius, scope levels)"
+   ],
+   "not_this": [
+    {
+     "type": "tree",
+     "when": "siblings must sit side by side"
+    },
+    {
+     "type": "layers",
+     "when": "ordered levels, not containment"
+    },
+    {
+     "type": "venn",
+     "when": "partial overlap, not full containment"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "levels"
+   ],
+   "fit": {
+    "containment": 1
+   },
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "contains",
+    "scope",
+    "blast radius",
+    "inside"
+   ],
+   "behaviours": [
+    "trust-boundaries",
+    "layered-controls",
+    "decomposition",
+    "hierarchy",
+    "spatial-layout"
+   ]
+  },
+  {
+   "id": "mind-map",
+   "name": "Mind map",
+   "layout": "radial",
+   "use_when": [
+    "a central idea with loosely related branches; exploration rather than strict levels"
+   ],
+   "not_this": [
+    {
+     "type": "tree",
+     "when": "strict levels matter"
+    },
+    {
+     "type": "network",
+     "when": "branches link to each other"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "centre",
+    "branches"
+   ],
+   "fit": {
+    "tree_shaped": 1
+   },
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "brainstorm",
+    "ideas",
+    "central idea"
+   ],
+   "behaviours": [
+    "hierarchy"
+   ]
+  },
+  {
+   "id": "layers",
+   "name": "Layer stack",
+   "layout": "grid",
+   "use_when": [
+    "stacked abstraction levels or layered controls in a fixed order"
+   ],
+   "not_this": [
+    {
+     "type": "nested",
+     "when": "containment boundaries, not order"
+    },
+    {
+     "type": "control-catalog",
+     "when": "many controls per enforcement surface"
+    },
+    {
+     "type": "exploded-view",
+     "when": "the physical parts of one object"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 6,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "layers",
+    "notes"
+   ],
+   "fit": {
+    "layered_items": 2
+   },
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "layered-controls",
+    "physical-parts"
+   ]
+  },
+  {
+   "id": "control-catalog",
+   "name": "Control catalog",
+   "layout": "grid",
+   "use_when": [
+    "controls grouped by where they are enforced, with who enforces them and when"
+   ],
+   "not_this": [
+    {
+     "type": "layers",
+     "when": "one control per layer: a plain stack"
+    },
+    {
+     "type": "access-matrix",
+     "when": "who may do what is the comparison"
+    }
+   ],
+   "budget": {
+    "nodes": 24,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "surfaces": 5
+   },
+   "fields": [
+    "surfaces",
+    "controls",
+    "enforced_by",
+    "timing"
+   ],
+   "fit": {
+    "layered_items": 1
+   },
+   "requires": [],
+   "table_equivalent": true,
+   "signals": [
+    "enforced",
+    "enforcement",
+    "catalog of controls"
+   ],
+   "behaviours": [
+    "layered-controls"
+   ]
+  },
+  {
+   "id": "compensating-layers",
+   "name": "Compensating layers",
+   "layout": "layered",
+   "use_when": [
+    "each defence covers a gap the previous one left, and residual risk narrows through the stack"
+   ],
+   "not_this": [
+    {
+     "type": "layers",
+     "when": "no risk propagates between the layers"
+    },
+    {
+     "type": "nested",
+     "when": "containment carries the meaning"
+    }
+   ],
+   "budget": {
+    "nodes": 5,
+    "edges": 8,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "threat",
+    "layers",
+    "mitigations",
+    "residual_risk"
+   ],
+   "fit": {
+    "layered_items": 1.5,
+    "linear_chain": 0.5
+   },
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "residual risk",
+    "catches what",
+    "mitigation",
+    "mitigations"
+   ],
+   "behaviours": [
+    "layered-controls"
+   ]
+  },
+  {
+   "id": "exploded-view",
+   "name": "Exploded view",
+   "layout": "freeform",
+   "use_when": [
+    "the physical parts of one object pulled apart along one axis"
+   ],
+   "not_this": [
+    {
+     "type": "layers",
+     "when": "nothing has a footprint or a thickness"
+    },
+    {
+     "type": "architecture",
+     "when": "the parts connect at runtime"
+    }
+   ],
+   "budget": {
+    "nodes": 5,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "parts",
+    "order"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "decomposition",
+    "physical-parts"
+   ]
+  },
+  {
+   "id": "floor-plan",
+   "name": "Floor / site plan",
+   "layout": "freeform",
+   "use_when": [
+    "rooms or buildings on one floor or site, seen from above"
+   ],
+   "not_this": [
+    {
+     "type": "nested",
+     "when": "containment without geography"
+    },
+    {
+     "type": "table",
+     "when": "a list of rooms and capacities"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "areas",
+    "positions"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "spatial-layout"
+   ]
+  },
+  {
+   "id": "venn",
+   "name": "Venn / set overlap",
+   "layout": "freeform",
+   "use_when": [
+    "overlap between 2-3 sets where the intersection is the point"
+   ],
+   "not_this": [
+    {
+     "type": "heatmap",
+     "when": "4 or more sets: use a matrix"
+    },
+    {
+     "type": "nested",
+     "when": "one set fully contains the other"
+    }
+   ],
+   "budget": {
+    "nodes": 3,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "sets",
+    "intersections"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "note": "nodes = circles",
+   "signals": [
+    "overlap",
+    "intersection",
+    "in common",
+    "sweet spot"
+   ],
+   "behaviours": [
+    "set-overlap"
+   ]
+  },
+  {
+   "id": "pyramid",
+   "name": "Pyramid",
+   "layout": "grid",
+   "use_when": [
+    "a ranked hierarchy: the narrow apex is rarest or most valuable"
+   ],
+   "not_this": [
+    {
+     "type": "funnel",
+     "when": "a conversion drop-off"
+    },
+    {
+     "type": "tree",
+     "when": "the data is not ranked"
+    },
+    {
+     "type": "bar",
+     "when": "exact values matter"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "levels"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": true,
+   "signals": [
+    "pyramid",
+    "apex",
+    "rarest",
+    "hierarchy of needs"
+   ],
+   "behaviours": [
+    "hierarchy",
+    "proportion",
+    "ranking"
+   ]
+  },
+  {
+   "id": "funnel",
+   "name": "Funnel",
+   "layout": "grid",
+   "use_when": [
+    "an ordered drop-off through the stages of one population"
+   ],
+   "not_this": [
+    {
+     "type": "sankey",
+     "when": "the quantity splits or merges"
+    },
+    {
+     "type": "waterfall",
+     "when": "signed steps bridge two totals"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "stages",
+    "counts"
+   ],
+   "fit": {
+    "item_quantities": 1,
+    "linear_chain": 0.5
+   },
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "funnel",
+    "drop-off",
+    "drop off",
+    "conversion",
+    "converts"
+   ],
+   "behaviours": [
+    "fan-in",
+    "staged-process",
+    "quantity-split-merge"
+   ]
+  },
+  {
+   "id": "bar",
+   "name": "Bar chart",
+   "layout": "grid",
+   "use_when": [
+    "one value compared across categories"
+   ],
+   "not_this": [
+    {
+     "type": "dumbbell",
+     "when": "two values per category and the gap between them"
+    },
+    {
+     "type": "line",
+     "when": "the categories are time and the trend matters"
+    },
+    {
+     "type": "treemap",
+     "when": "the values are parts of one whole"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "categories",
+    "values"
+   ],
+   "fit": {
+    "item_quantities": 1.5
+   },
+   "requires": [
+    "item_quantities"
+   ],
+   "table_equivalent": false,
+   "note": "nodes = bars",
+   "signals": [
+    "compare",
+    "per category",
+    "by category",
+    "largest",
+    "smallest"
+   ],
+   "behaviours": [
+    "quantity-split-merge",
+    "attribute-comparison",
+    "proportion",
+    "ranking"
+   ]
+  },
+  {
+   "id": "dumbbell",
+   "name": "Dumbbell",
+   "layout": "grid",
+   "use_when": [
+    "two values per category where the gap is the message: before/after, target/actual"
+   ],
+   "not_this": [
+    {
+     "type": "waterfall",
+     "when": "the steps between the two totals matter"
+    },
+    {
+     "type": "slopegraph",
+     "when": "the rank change across the two states matters"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "categories",
+    "value_a",
+    "value_b"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "target vs actual",
+    "target versus actual",
+    "gap between",
+    "before and after"
+   ],
+   "behaviours": [
+    "before-after"
+   ]
+  },
+  {
+   "id": "waterfall",
+   "name": "Waterfall",
+   "layout": "grid",
+   "use_when": [
+    "a start total bridged to an end total by signed contributions"
+   ],
+   "not_this": [
+    {
+     "type": "dumbbell",
+     "when": "only the two endpoints matter"
+    },
+    {
+     "type": "sankey",
+     "when": "the quantity branches"
+    },
+    {
+     "type": "bar",
+     "when": "the categories are independent"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "start",
+    "steps",
+    "end"
+   ],
+   "fit": {
+    "signed_values": 3
+   },
+   "requires": [
+    "signed_values"
+   ],
+   "table_equivalent": false,
+   "note": "nodes = bars including totals",
+   "signals": [
+    "bridge",
+    "bridges",
+    "net change",
+    "adds",
+    "subtracts",
+    "start total",
+    "end total",
+    "walk"
+   ],
+   "behaviours": [
+    "quantity-split-merge"
+   ]
+  },
+  {
+   "id": "treemap",
+   "name": "Treemap",
+   "layout": "grid",
+   "use_when": [
+    "part of a whole where the relative sizes are the story"
+   ],
+   "not_this": [
+    {
+     "type": "bar",
+     "when": "exact values matter more than proportion"
+    },
+    {
+     "type": "nested",
+     "when": "containment with no quantity"
+    },
+    {
+     "type": "tree",
+     "when": "you must trace parent to child"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "parts",
+    "values"
+   ],
+   "fit": {
+    "item_quantities": 2,
+    "no_relations": 0.5
+   },
+   "requires": [
+    "item_quantities"
+   ],
+   "table_equivalent": false,
+   "note": "nodes = cells",
+   "signals": [
+    "share",
+    "part of the whole",
+    "dominates",
+    "of the total"
+   ],
+   "behaviours": [
+    "decomposition",
+    "quantity-split-merge",
+    "proportion"
+   ]
+  },
+  {
+   "id": "marimekko",
+   "name": "Marimekko",
+   "layout": "grid",
+   "use_when": [
+    "a two-level share: column width is the category's share, segment height the series' share"
+   ],
+   "not_this": [
+    {
+     "type": "treemap",
+     "when": "only one level of parts"
+    },
+    {
+     "type": "heatmap",
+     "when": "the cells carry rates, not shares"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "series": 5
+   },
+   "fields": [
+    "categories",
+    "series",
+    "values"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "proportion"
+   ]
+  },
+  {
+   "id": "heatmap",
+   "name": "Heatmap",
+   "layout": "matrix",
+   "use_when": [
+    "a row x column grid where one combination stands out"
+   ],
+   "not_this": [
+    {
+     "type": "table",
+     "when": "fewer than 3 rows: a table says it with less ink"
+    },
+    {
+     "type": "bar",
+     "when": "single values compared"
+    }
+   ],
+   "budget": {
+    "nodes": 40,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "rows",
+    "columns",
+    "values"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": true,
+   "note": "nodes = cells",
+   "signals": [
+    "stands out",
+    "hot spot",
+    "per week and",
+    "by team and"
+   ],
+   "behaviours": [
+    "attribute-comparison",
+    "set-overlap",
+    "cross-tabulation"
+   ]
+  },
+  {
+   "id": "access-matrix",
+   "name": "Access matrix",
+   "layout": "matrix",
+   "use_when": [
+    "who can do what: roles x resources with a permission in each cell"
+   ],
+   "not_this": [
+    {
+     "type": "heatmap",
+     "when": "the cells carry quantities"
+    },
+    {
+     "type": "hub-and-spoke",
+     "when": "who talks to what over which interface"
+    }
+   ],
+   "budget": {
+    "nodes": 40,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "roles",
+    "resources",
+    "permissions"
+   ],
+   "fit": {
+    "owners": 1
+   },
+   "requires": [],
+   "table_equivalent": true,
+   "signals": [
+    "permission",
+    "permissions",
+    "who can",
+    "read",
+    "write"
+   ],
+   "behaviours": [
+    "ownership",
+    "cross-tabulation"
+   ]
+  },
+  {
+   "id": "line",
+   "name": "Line chart",
+   "layout": "timeline",
+   "use_when": [
+    "continuous change over time: the direction and rate of change"
+   ],
+   "not_this": [
+    {
+     "type": "bar",
+     "when": "discrete categories"
+    },
+    {
+     "type": "slopegraph",
+     "when": "exactly two time points"
+    },
+    {
+     "type": "timeline",
+     "when": "discrete events with no values"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "series": 5
+   },
+   "fields": [
+    "x",
+    "series"
+   ],
+   "fit": {
+    "time_axis": 2,
+    "item_quantities": 2
+   },
+   "requires": [
+    "time_axis"
+   ],
+   "table_equivalent": false,
+   "note": "nodes = points",
+   "signals": [
+    "trend",
+    "grew",
+    "declined",
+    "rate of change",
+    "weekly",
+    "monthly"
+   ],
+   "behaviours": [
+    "change-over-time"
+   ]
+  },
+  {
+   "id": "slopegraph",
+   "name": "Slopegraph",
+   "layout": "timeline",
+   "use_when": [
+    "exactly two states and several series, read as slope and rank change"
+   ],
+   "not_this": [
+    {
+     "type": "line",
+     "when": "three or more time points"
+    },
+    {
+     "type": "dumbbell",
+     "when": "the gap matters, not the rank"
+    }
+   ],
+   "budget": {
+    "nodes": 10,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "series",
+    "state_a",
+    "state_b"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "two points",
+    "then and now",
+    "rank change"
+   ],
+   "behaviours": [
+    "change-over-time",
+    "before-after"
+   ]
+  },
+  {
+   "id": "bump",
+   "name": "Bump chart",
+   "layout": "timeline",
+   "use_when": [
+    "rank movement across 3-6 snapshots"
+   ],
+   "not_this": [
+    {
+     "type": "line",
+     "when": "values, not ranks, matter"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "series",
+    "snapshots",
+    "ranks"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "rank",
+    "ranking",
+    "positions"
+   ],
+   "behaviours": [
+    "change-over-time",
+    "ranking"
+   ]
+  },
+  {
+   "id": "ridgeline",
+   "name": "Ridgeline",
+   "layout": "timeline",
+   "use_when": [
+    "one distribution per series, stacked on one shared scale"
+   ],
+   "not_this": [
+    {
+     "type": "histogram",
+     "when": "a single distribution"
+    },
+    {
+     "type": "box-plot",
+     "when": "only summary statistics matter"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "series",
+    "bins"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "distribution"
+   ]
+  },
+  {
+   "id": "streamgraph",
+   "name": "Streamgraph",
+   "layout": "timeline",
+   "use_when": [
+    "a total and its composition changing across many periods"
+   ],
+   "not_this": [
+    {
+     "type": "line",
+     "when": "the series are independent, not parts of a total"
+    },
+    {
+     "type": "bar",
+     "when": "there are few periods"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "periods",
+    "layers",
+    "values"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "change-over-time",
+    "proportion"
+   ]
+  },
+  {
+   "id": "timeline",
+   "name": "Timeline",
+   "layout": "timeline",
+   "use_when": [
+    "dated events and milestones, spaced honestly in time"
+   ],
+   "not_this": [
+    {
+     "type": "gantt",
+     "when": "tasks have durations and overlap"
+    },
+    {
+     "type": "line",
+     "when": "a measured value changes"
+    },
+    {
+     "type": "sequence",
+     "when": "actors exchange messages"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "events",
+    "dates"
+   ],
+   "fit": {
+    "time_axis": 2
+   },
+   "requires": [
+    "time_axis"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "milestone",
+    "milestones",
+    "release history",
+    "events",
+    "dates"
+   ],
+   "behaviours": [
+    "lifecycle",
+    "change-over-time",
+    "root-cause",
+    "schedule"
+   ]
+  },
+  {
+   "id": "gantt",
+   "name": "Gantt chart",
+   "layout": "timeline",
+   "use_when": [
+    "tasks with start and end dates grouped by phase: overlap and parallel tracks"
+   ],
+   "not_this": [
+    {
+     "type": "timeline",
+     "when": "point events with no durations"
+    },
+    {
+     "type": "kanban",
+     "when": "current state, not dates"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "tasks",
+    "start",
+    "end"
+   ],
+   "fit": {
+    "time_axis": 1
+   },
+   "requires": [
+    "time_axis"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "start date",
+    "end date",
+    "tasks",
+    "critical path",
+    "parallel tracks"
+   ],
+   "behaviours": [
+    "change-over-time",
+    "schedule",
+    "release-slicing"
+   ]
+  },
+  {
+   "id": "scatter",
+   "name": "Scatter plot",
+   "layout": "matrix",
+   "use_when": [
+    "two continuous variables: correlation, clusters, outliers"
+   ],
+   "not_this": [
+    {
+     "type": "bubble",
+     "when": "a third value genuinely matters"
+    },
+    {
+     "type": "quadrant",
+     "when": "the four regions, not the exact positions, are the message"
+    },
+    {
+     "type": "beeswarm",
+     "when": "one variable, one dot per item"
+    }
+   ],
+   "budget": {
+    "nodes": 30,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "x",
+    "y"
+   ],
+   "fit": {
+    "two_numeric_axes": 2
+   },
+   "requires": [
+    "two_numeric_axes"
+   ],
+   "table_equivalent": false,
+   "note": "nodes = points",
+   "signals": [
+    "correlate",
+    "correlation",
+    "outliers",
+    "clusters"
+   ],
+   "behaviours": [
+    "two-axis-positioning",
+    "correlation"
+   ]
+  },
+  {
+   "id": "bubble",
+   "name": "Bubble chart",
+   "layout": "matrix",
+   "use_when": [
+    "two variables plus a third shown as area"
+   ],
+   "not_this": [
+    {
+     "type": "scatter",
+     "when": "the third value does not change the story"
+    }
+   ],
+   "budget": {
+    "nodes": 20,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "x",
+    "y",
+    "size"
+   ],
+   "fit": {
+    "two_numeric_axes": 1
+   },
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "size of each",
+    "third variable",
+    "weighted by"
+   ],
+   "behaviours": [
+    "two-axis-positioning",
+    "correlation"
+   ]
+  },
+  {
+   "id": "beeswarm",
+   "name": "Beeswarm",
+   "layout": "matrix",
+   "use_when": [
+    "one variable, one dot per item, where the shape of the crowd is the story"
+   ],
+   "not_this": [
+    {
+     "type": "histogram",
+     "when": "individual items do not matter"
+    }
+   ],
+   "budget": {
+    "nodes": 60,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "value",
+    "items"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "distribution"
+   ]
+  },
+  {
+   "id": "histogram",
+   "name": "Histogram",
+   "layout": "grid",
+   "use_when": [
+    "the distribution of one variable in bins"
+   ],
+   "not_this": [
+    {
+     "type": "beeswarm",
+     "when": "individual items matter"
+    },
+    {
+     "type": "box-plot",
+     "when": "only the quartiles matter"
+    }
+   ],
+   "budget": {
+    "nodes": 20,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "bins",
+    "counts"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "histogram",
+    "bins",
+    "frequency"
+   ],
+   "behaviours": [
+    "distribution"
+   ]
+  },
+  {
+   "id": "box-plot",
+   "name": "Box plot",
+   "layout": "grid",
+   "use_when": [
+    "distributions of a few groups compared by median, spread and outliers"
+   ],
+   "not_this": [
+    {
+     "type": "ridgeline",
+     "when": "the full shape of each distribution matters"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "groups",
+    "quartiles"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "median",
+    "quartile",
+    "spread",
+    "across groups"
+   ],
+   "behaviours": [
+    "distribution"
+   ]
+  },
+  {
+   "id": "radar",
+   "name": "Radar",
+   "layout": "radial",
+   "use_when": [
+    "3-5 entities scored on 3-5 quantitative criteria, compared by shape"
+   ],
+   "not_this": [
+    {
+     "type": "table",
+     "when": "two entities, or the exact values matter"
+    },
+    {
+     "type": "bar",
+     "when": "only one criterion"
+    },
+    {
+     "type": "heatmap",
+     "when": "more than 5 criteria"
+    }
+   ],
+   "budget": {
+    "nodes": 5,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "axes": 5
+   },
+   "fields": [
+    "entities",
+    "criteria",
+    "scores"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": true,
+   "note": "nodes = series",
+   "behaviours": [
+    "attribute-comparison"
+   ]
+  },
+  {
+   "id": "polar",
+   "name": "Polar chart",
+   "layout": "radial",
+   "use_when": [
+    "one series across 4-8 categories whose circular order means something (hours, months)"
+   ],
+   "not_this": [
+    {
+     "type": "radar",
+     "when": "several series"
+    },
+    {
+     "type": "bar",
+     "when": "the categories are not cyclic"
+    },
+    {
+     "type": "line",
+     "when": "more than 8 ordered buckets"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "categories",
+    "values"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "change-over-time"
+   ]
+  },
+  {
+   "id": "quadrant",
+   "name": "Quadrant (2x2)",
+   "layout": "matrix",
+   "use_when": [
+    "two-axis positioning or prioritisation: impact x effort, 2x2 trade-offs"
+   ],
+   "not_this": [
+    {
+     "type": "scatter",
+     "when": "exact positions and correlation matter"
+    },
+    {
+     "type": "scenario-matrix",
+     "when": "four named futures, not positioned items"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "x_axis",
+    "y_axis",
+    "items"
+   ],
+   "fit": {
+    "two_numeric_axes": 2
+   },
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "2x2",
+    "2×2",
+    "quadrant",
+    "prioritise",
+    "prioritize",
+    "effort",
+    "impact"
+   ],
+   "behaviours": [
+    "two-axis-positioning",
+    "correlation",
+    "evolution-strategy"
+   ]
+  },
+  {
+   "id": "scenario-matrix",
+   "name": "Scenario matrix",
+   "layout": "matrix",
+   "use_when": [
+    "four named scenarios across two independent drivers"
+   ],
+   "not_this": [
+    {
+     "type": "quadrant",
+     "when": "items are positioned inside the cells"
+    }
+   ],
+   "budget": {
+    "nodes": 4,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "drivers",
+    "scenarios"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "scenarios",
+    "futures",
+    "drivers"
+   ],
+   "behaviours": [
+    "two-axis-positioning"
+   ]
+  },
+  {
+   "id": "loop",
+   "name": "Loop / flywheel",
+   "layout": "radial",
+   "use_when": [
+    "a reinforcing cycle where each pass writes back to a shared hub"
+   ],
+   "not_this": [
+    {
+     "type": "cycle",
+     "when": "no shared hub accumulates state"
+    },
+    {
+     "type": "flowchart",
+     "when": "the path ends or branches to an outcome"
+    },
+    {
+     "type": "causal-loop",
+     "when": "the influences have signs (+/-)"
+    }
+   ],
+   "budget": {
+    "nodes": 7,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "stations",
+    "hub",
+    "write_backs"
+   ],
+   "fit": {
+    "has_cycle": 2
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "flywheel",
+    "hub",
+    "writes back"
+   ],
+   "behaviours": [
+    "feedback-loop"
+   ]
+  },
+  {
+   "id": "cycle",
+   "name": "Cycle",
+   "layout": "radial",
+   "use_when": [
+    "a repeating sequence of steps that returns to the start, with no hub"
+   ],
+   "not_this": [
+    {
+     "type": "loop",
+     "when": "a hub accumulates state"
+    },
+    {
+     "type": "process",
+     "when": "the sequence ends"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "steps"
+   ],
+   "fit": {
+    "has_cycle": 1.5
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "repeats",
+    "returns to the start",
+    "each iteration"
+   ],
+   "behaviours": [
+    "feedback-loop"
+   ]
+  },
+  {
+   "id": "causal-loop",
+   "name": "Causal loop",
+   "layout": "freeform",
+   "use_when": [
+    "variables that push each other up or down, with reinforcing and balancing loops"
+   ],
+   "not_this": [
+    {
+     "type": "loop",
+     "when": "steps, not variables"
+    },
+    {
+     "type": "dependency-graph",
+     "when": "there is no feedback"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "variables",
+    "influences",
+    "signs"
+   ],
+   "fit": {
+    "has_cycle": 1
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "pushes",
+    "increases",
+    "decreases",
+    "balancing"
+   ],
+   "behaviours": [
+    "feedback-loop"
+   ]
+  },
+  {
+   "id": "sankey",
+   "name": "Sankey",
+   "layout": "layered",
+   "use_when": [
+    "a quantity splitting and merging across up to 3 stages, band width = amount"
+   ],
+   "not_this": [
+    {
+     "type": "funnel",
+     "when": "a single narrowing quantity with no splits"
+    },
+    {
+     "type": "waterfall",
+     "when": "one-dimensional signed steps"
+    },
+    {
+     "type": "process",
+     "when": "nothing varies in thickness"
+    }
+   ],
+   "budget": {
+    "nodes": 8,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "stages": 3
+   },
+   "fields": [
+    "nodes",
+    "flows",
+    "amounts"
+   ],
+   "fit": {
+    "edge_quantities": 3
+   },
+   "requires": [
+    "edge_quantities",
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "splits",
+    "split",
+    "flows into",
+    "allocated",
+    "band"
+   ],
+   "behaviours": [
+    "quantity-split-merge"
+   ]
+  },
+  {
+   "id": "fishbone",
+   "name": "Fishbone (cause and effect)",
+   "layout": "freeform",
+   "use_when": [
+    "the causes of one observed effect, grouped by category"
+   ],
+   "not_this": [
+    {
+     "type": "timeline",
+     "when": "a chronology of failures"
+    },
+    {
+     "type": "tree",
+     "when": "a strict decomposition, not causes"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "sub_causes": 18
+   },
+   "fields": [
+    "effect",
+    "categories",
+    "causes"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "note": "nodes = bones",
+   "behaviours": [
+    "root-cause"
+   ]
+  },
+  {
+   "id": "wardley-map",
+   "name": "Value-chain evolution map",
+   "layout": "matrix",
+   "use_when": [
+    "components of a value chain placed by how evolved they are: what to build, buy, or expect to move"
+   ],
+   "not_this": [
+    {
+     "type": "architecture",
+     "when": "runtime connections"
+    },
+    {
+     "type": "quadrant",
+     "when": "two measured axes"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "components",
+    "visibility",
+    "evolution",
+    "links"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "evolution-strategy"
+   ]
+  },
+  {
+   "id": "kanban",
+   "name": "Kanban board",
+   "layout": "grid",
+   "use_when": [
+    "a snapshot of work by state, with WIP limits and blocked items"
+   ],
+   "not_this": [
+    {
+     "type": "swimlane",
+     "when": "the flow between states needs arrows"
+    },
+    {
+     "type": "story-map",
+     "when": "release slices over a narrative"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 0,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "columns",
+    "cards",
+    "limits"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": true,
+   "signals": [
+    "kanban",
+    "wip",
+    "in progress",
+    "blocked",
+    "board"
+   ],
+   "behaviours": [
+    "work-in-progress"
+   ]
+  },
+  {
+   "id": "journey-map",
+   "name": "Journey map",
+   "layout": "grid",
+   "use_when": [
+    "what one person does across the stages of an experience and how it feels"
+   ],
+   "not_this": [
+    {
+     "type": "service-blueprint",
+     "when": "front-stage versus back-stage"
+    },
+    {
+     "type": "process",
+     "when": "there is no sentiment to name"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "stages",
+    "actions",
+    "sentiment"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "signals": [
+    "feels",
+    "feeling",
+    "sentiment",
+    "journey"
+   ],
+   "behaviours": [
+    "experience-journey"
+   ]
+  },
+  {
+   "id": "service-blueprint",
+   "name": "Service blueprint",
+   "layout": "grid",
+   "use_when": [
+    "customer actions versus what the service hides, across stages, with a line of visibility"
+   ],
+   "not_this": [
+    {
+     "type": "journey-map",
+     "when": "sentiment with no back-stage"
+    },
+    {
+     "type": "swimlane",
+     "when": "a flow with hand-offs"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2,
+    "cells": 20
+   },
+   "fields": [
+    "stages",
+    "customer",
+    "frontstage",
+    "backstage"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": true,
+   "signals": [
+    "frontstage",
+    "backstage",
+    "front-stage",
+    "back-stage",
+    "line of visibility"
+   ],
+   "behaviours": [
+    "experience-journey"
+   ]
+  },
+  {
+   "id": "deployment",
+   "name": "Deployment",
+   "layout": "layered",
+   "use_when": [
+    "where software runs: zones, hosts, replicas and versions"
+   ],
+   "not_this": [
+    {
+     "type": "architecture",
+     "when": "there is no placement decision, only logical topology"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 8,
+    "accents": 2,
+    "callouts": 2,
+    "zones": 3
+   },
+   "fields": [
+    "zones",
+    "hosts",
+    "artifacts",
+    "replicas"
+   ],
+   "fit": {
+    "zones": 1
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "signals": [
+    "host",
+    "hosts",
+    "replica",
+    "replicas",
+    "cluster",
+    "region",
+    "deployed"
+   ],
+   "behaviours": [
+    "trust-boundaries",
+    "topology"
+   ]
+  },
+  {
+   "id": "story-map",
+   "name": "Story map",
+   "layout": "grid",
+   "use_when": [
+    "a narrative backbone sliced into releases, with the cut line"
+   ],
+   "not_this": [
+    {
+     "type": "kanban",
+     "when": "state columns"
+    },
+    {
+     "type": "journey-map",
+     "when": "a feeling curve"
+    },
+    {
+     "type": "gantt",
+     "when": "dates matter"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "activities",
+    "steps",
+    "slices"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "schedule",
+    "experience-journey",
+    "release-slicing"
+   ]
+  },
+  {
+   "id": "extraction-map",
+   "name": "Loose input to structured record",
+   "layout": "layered",
+   "use_when": [
+    "a conversation or notes become a structured record, with provenance from statement to field"
+   ],
+   "not_this": [
+    {
+     "type": "data-flow",
+     "when": "already-structured data moves between steps"
+    },
+    {
+     "type": "table",
+     "when": "only the final fields matter"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 9,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "source",
+    "questions",
+    "fields",
+    "provenance"
+   ],
+   "fit": {},
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "unstructured-to-structured"
+   ]
+  },
+  {
+   "id": "tier-ladder",
+   "name": "Tier ladder",
+   "layout": "grid",
+   "use_when": [
+    "the same artefact promoted through quality tiers, each with its own contents and access"
+   ],
+   "not_this": [
+    {
+     "type": "process",
+     "when": "a workflow with role lanes"
+    },
+    {
+     "type": "layers",
+     "when": "abstraction levels, not promotion"
+    }
+   ],
+   "budget": {
+    "nodes": 6,
+    "edges": 6,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "tiers",
+    "contents",
+    "promotions"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "behaviours": [
+    "staged-process"
+   ]
+  },
+  {
+   "id": "network",
+   "name": "Network",
+   "layout": "freeform",
+   "use_when": [
+    "many-to-many links with no hierarchy or rank: who is connected to whom"
+   ],
+   "not_this": [
+    {
+     "type": "dependency-graph",
+     "when": "the edges have direction and rank"
+    },
+    {
+     "type": "architecture",
+     "when": "the components have roles"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 14,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "nodes",
+    "links"
+   ],
+   "fit": {
+    "multi_parent": 1,
+    "has_cycle": 1
+   },
+   "requires": [
+    "has_relations"
+   ],
+   "table_equivalent": false,
+   "behaviours": [
+    "topology",
+    "connected-network"
+   ]
+  },
+  {
+   "id": "small-multiples",
+   "name": "Small multiples",
+   "layout": "grid",
+   "use_when": [
+    "the same small chart repeated per category so shapes can be compared"
+   ],
+   "not_this": [
+    {
+     "type": "line",
+     "when": "5 series or fewer fit on one chart"
+    },
+    {
+     "type": "heatmap",
+     "when": "one value per cell"
+    }
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "panels",
+    "x",
+    "y"
+   ],
+   "fit": {},
+   "requires": [],
+   "table_equivalent": false,
+   "note": "nodes = panels",
+   "behaviours": [
+    "attribute-comparison",
+    "change-over-time"
+   ]
+  },
+  {
+   "id": "table",
+   "name": "Table",
+   "layout": "grid",
+   "use_when": [
+    "items x attributes where no relation, branch or shape carries meaning: a 3-column table says the same"
+   ],
+   "not_this": [
+    {
+     "type": "radar",
+     "when": "3-5 entities whose score shapes must be compared at a glance"
+    },
+    {
+     "type": "heatmap",
+     "when": "one combination must stand out in a large grid"
+    },
+    {
+     "type": "flowchart",
+     "when": "relations or branches matter"
+    }
+   ],
+   "budget": {
+    "nodes": 12,
+    "edges": 0,
+    "accents": 2,
+    "callouts": 2
+   },
+   "fields": [
+    "rows",
+    "columns"
+   ],
+   "fit": {
+    "attributes3": 2,
+    "no_relations": 1
+   },
+   "requires": [
+    "no_relations"
+   ],
+   "table_equivalent": true,
+   "note": "nodes = rows",
+   "signals": [
+    "list of",
+    "columns of",
+    "spec sheet",
+    "compare",
+    "options"
+   ],
+   "behaviours": [
+    "attribute-comparison",
+    "set-overlap",
+    "before-after",
+    "ownership",
+    "cross-tabulation",
+    "ranking",
+    "work-in-progress"
+   ]
+  }
+ ]
+}

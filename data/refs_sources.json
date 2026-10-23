@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "about": "Public reference sources Coordn8 keeps a dated local copy of. Fetched by scripts/refs/refresh.py into <user_home>/refs/<id>.<format> with an index.json of fetch dates; checked at run time by scripts/refs/check.py, which lists anything older than max_age_days so the agent re-fetches it before relying on it and stamps 'as of <date>' on what it used. Only public pages are listed; nothing is ever sent to a hosted AI service; a failed or offline refresh keeps the last good copy.",
+  "default_max_age_days": 14,
+  "sources": [
+    {
+      "id": "claude-code-docs-index",
+      "url": "https://code.claude.com/docs/llms.txt",
+      "kind": "docs-index",
+      "format": "md",
+      "max_age_days": 7,
+      "used_for": "the current Claude Code documentation index (skills, subagents, hooks, plugins, MCP, settings): read it before relying on any host feature, then fetch the one page it points to"
+    },
+    {
+      "id": "npm-gsap",
+      "url": "https://registry.npmjs.org/gsap/latest",
+      "kind": "package-release",
+      "format": "json",
+      "max_age_days": 30,
+      "package": "gsap",
+      "vendored_lib": "gsap",
+      "used_for": "latest published version and licence of the vendored motion library, compared with the pinned version"
+    },
+    {
+      "id": "npm-d3",
+      "url": "https://registry.npmjs.org/d3/latest",
+      "kind": "package-release",
+      "format": "json",
+      "max_age_days": 30,
+      "package": "d3",
+      "vendored_lib": "d3",
+      "used_for": "latest published version and licence of the vendored data-graph library, compared with the pinned version"
+    },
+    {
+      "id": "npm-roughjs",
+      "url": "https://registry.npmjs.org/roughjs/latest",
+      "kind": "package-release",
+      "format": "json",
+      "max_age_days": 30,
+      "package": "roughjs",
+      "vendored_lib": "rough",
+      "used_for": "latest published version and licence of the vendored hand-drawn style library, compared with the pinned version"
+    },
+    {
+      "id": "npm-animejs",
+      "url": "https://registry.npmjs.org/animejs/latest",
+      "kind": "package-release",
+      "format": "json",
+      "max_age_days": 30,
+      "package": "animejs",
+      "vendored_lib": "anime",
+      "used_for": "latest published version and licence of the vendored keyframe library, compared with the pinned version"
+    },
+    {
+      "id": "npm-dagre",
+      "url": "https://registry.npmjs.org/@dagrejs/dagre/latest",
+      "kind": "package-release",
+      "format": "json",
+      "max_age_days": 30,
+      "package": "@dagrejs/dagre",
+      "vendored_lib": "dagre",
+      "used_for": "latest published version and licence of the vendored layout library, compared with the pinned version"
+    }
+  ]
+}

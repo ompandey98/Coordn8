@@ -1,0 +1,363 @@
+{
+ "schema": 1,
+ "id": "poster-grid",
+ "name": "Poster Grid",
+ "base": "light",
+ "palette_family": "midnight-gold",
+ "mood": [
+  "bold",
+  "direct",
+  "energetic",
+  "confident",
+  "graphic"
+ ],
+ "use_when": [
+  "a product or feature announcement",
+  "a strong argument with a few big claims",
+  "comparisons that should land hard"
+ ],
+ "avoid_when": [
+  "gentle or sensitive subjects",
+  "long careful procedures",
+  "very dense diagrams"
+ ],
+ "signals": {
+  "for": [
+   "launch",
+   "product",
+   "feature",
+   "announcement",
+   "release",
+   "startup",
+   "marketing",
+   "pitch",
+   "comparison",
+   "versus",
+   "benchmark",
+   "argument",
+   "manifesto",
+   "brand",
+   "campaign"
+  ],
+  "against": [
+   "patient",
+   "patients",
+   "grief",
+   "therapy",
+   "sensitive",
+   "children"
+  ]
+ },
+ "palette": {
+  "family": "poster-grid",
+  "roles": {
+   "paper": "#fdfdfc",
+   "ink": "#121314",
+   "muted": "#545454",
+   "accent": "#d7140b",
+   "link": "#0b56b8",
+   "positive": "#14743c",
+   "negative": "#7d1a12",
+   "warning": "#8c5a00",
+   "deterministic": "#0b56b8",
+   "model-judgement": "#6431a3",
+   "data-field": "#14743c",
+   "vision": "#8c5a00"
+  },
+  "dark": {
+   "paper": "#121314",
+   "ink": "#f5f5f5",
+   "muted": "#b5b5b5",
+   "accent": "#ff5a4a",
+   "link": "#82b4ff",
+   "positive": "#6fd28f",
+   "negative": "#ffb0a6",
+   "warning": "#f3c04b",
+   "deterministic": "#82b4ff",
+   "model-judgement": "#c9a3ff",
+   "data-field": "#6fd28f",
+   "vision": "#f3c04b"
+  },
+  "note": "the kit's own built-in skin (light in roles, dark in dark); when the Palette Director has chosen a palette for the build, that palette replaces this one"
+ },
+ "theme": {
+  "family": {
+   "display": "'Helvetica Neue', Helvetica, Arial, 'Nimbus Sans', sans-serif",
+   "body": "'Helvetica Neue', Helvetica, Arial, 'Nimbus Sans', sans-serif",
+   "mono": "Menlo, Consolas, monospace"
+  },
+  "weights": {
+   "display": 800,
+   "body": 400,
+   "strong": 700
+  },
+  "scale": {
+   "title": 120,
+   "h1": 64,
+   "h2": 40,
+   "body": 32,
+   "caption": 32,
+   "label": 28
+  },
+  "page_scale": {
+   "title": 64,
+   "h1": 38,
+   "h2": 24,
+   "body": 18,
+   "caption": 15,
+   "small": 13
+  },
+  "line_height": 1.15,
+  "tracking_em": -0.02,
+  "numerals": "lining",
+  "vendorable": [
+   {
+    "name": "Inter",
+    "licence": "OFL-1.1",
+    "shipped": false,
+    "note": "optional neutral grotesque where Helvetica Neue is missing"
+   }
+  ]
+ },
+ "stage": {
+  "background": {
+   "treatment": "flat",
+   "base_role": "paper",
+   "texture": {
+    "kind": "none"
+   },
+   "vignette": 0.0,
+   "colour_block": {
+    "role": "accent",
+    "max_area_pct": 30
+   }
+  },
+  "grid": {
+   "columns": 12,
+   "gutter_px": 24,
+   "margin_px": 96,
+   "baseline_px": 8,
+   "strict": true
+  },
+  "safe_area": {
+   "x_pct": 5,
+   "y_pct": 5
+  },
+  "radius": {
+   "card": 0,
+   "chip": 0,
+   "node": 0
+  },
+  "stroke": {
+   "hairline": 2,
+   "connector": 4,
+   "emphasis": 8
+  },
+  "depth": {
+   "shadow": "none"
+  }
+ },
+ "props": {
+  "card": {
+   "fill": {
+    "role": "ink",
+    "alpha": 0.04
+   },
+   "border": {
+    "role": "ink"
+   },
+   "border_width": 0,
+   "radius": 0,
+   "pad_px": 28,
+   "shadow": "none",
+   "top_rule": 8
+  },
+  "chip": {
+   "fill": {
+    "role": "ink"
+   },
+   "text": {
+    "role": "paper"
+   },
+   "shape": "block",
+   "radius": 0,
+   "weight": 700
+  },
+  "node": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "ink"
+   },
+   "border_width": 4,
+   "radius": 0,
+   "text_px": 30
+  },
+  "connector": {
+   "stroke": {
+    "role": "ink"
+   },
+   "width": 4,
+   "dash": [],
+   "arrow": "block",
+   "routing": "orthogonal",
+   "draw_on": false
+  },
+  "callout": {
+   "style": "colour-block",
+   "stroke": {
+    "role": "accent"
+   },
+   "width": 8,
+   "label": {
+    "role": "ink"
+   },
+   "leader": "none"
+  }
+ },
+ "charts": {
+  "series": {
+   "role": "ink",
+   "steps": [
+    1.0,
+    0.55,
+    0.3
+   ]
+  },
+  "highlight": {
+   "role": "accent",
+   "max": 1
+  },
+  "gridline": {
+   "stroke": {
+    "role": "ink",
+    "alpha": 0.1
+   },
+   "width": 1,
+   "dash": []
+  },
+  "axis": {
+   "stroke": {
+    "role": "ink"
+   },
+   "width": 3
+  },
+  "label": {
+   "role": "ink",
+   "size_px": 28,
+   "weight": 700
+  },
+  "increase_decrease": {
+   "increase": "solid block",
+   "decrease": "outline block"
+  },
+  "draw_on": false
+ },
+ "motion": {
+  "ease": "cubic-bezier(.7,0,.3,1)",
+  "enter_ms": 300,
+  "exit_ms": 200,
+  "stagger_ms": 35,
+  "lead_ms": 60,
+  "hold_min_ms": 800,
+  "entrance": {
+   "kind": "slam-slide",
+   "opacity_from": 1,
+   "translate_x_px": 80,
+   "clip": "left-to-right",
+   "blur_px": 0
+  },
+  "exit": {
+   "kind": "push-out",
+   "opacity_to": 1,
+   "translate_x_px": -80
+  }
+ },
+ "transitions": [
+  {
+   "id": "cut-on-beat",
+   "use": "within-section",
+   "ms": 0,
+   "on_beat": true
+  },
+  {
+   "id": "push-left",
+   "use": "section",
+   "ms": 280,
+   "move": {
+    "x": -1,
+    "y": 0
+   }
+  },
+  {
+   "id": "wipe-down",
+   "use": "emphasis",
+   "ms": 260,
+   "mask": "wipe-down",
+   "via_role": "accent"
+  },
+  {
+   "id": "morph",
+   "use": "within-section",
+   "ms": 320,
+   "morph": true
+  }
+ ],
+ "continuity": {
+  "prefer": "cut-on-beat",
+  "first_second_anchor": "the claim is set in huge type, full width, at frame 0"
+ },
+ "caption_style": {
+  "font_px": 32,
+  "weight": 600,
+  "max_lines": 2,
+  "max_marks": 2,
+  "overflow": "truncate",
+  "position": "lower-left",
+  "width_pct": 60,
+  "text": {
+   "role": "ink"
+  },
+  "scrim": {
+   "role": "paper",
+   "alpha": 0.96,
+   "radius_px": 0,
+   "pad_px": 18
+  },
+  "reveal": "phrase",
+  "dim_previous": true,
+  "marks": {
+   "good": {
+    "role": "positive",
+    "styles": [
+     "underline"
+    ]
+   },
+   "bad": {
+    "role": "negative",
+    "styles": [
+     "strike-through"
+    ]
+   },
+   "key": {
+    "role": "accent",
+    "styles": [
+     "weight-800",
+     "caps"
+    ]
+   }
+  },
+  "markup": "⟦good:…⟧ ⟦bad:…⟧ ⟦key:…⟧ — spoken form strips the marks"
+ },
+ "do": [
+  "one claim per frame, set big, aligned hard to the grid",
+  "use the accent as a solid block behind the single most important word",
+  "cut on the beat; let the type do the moving"
+ ],
+ "dont": [
+  "no gradients, no shadows, no rounded corners",
+  "no more than one accent block per frame",
+  "never centre a paragraph — align left"
+ ]
+}

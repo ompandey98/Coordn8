@@ -1,0 +1,370 @@
+{
+ "schema": 1,
+ "id": "deep-field",
+ "name": "Deep Field",
+ "base": "dark",
+ "palette_family": "observatory-indigo",
+ "mood": [
+  "awe",
+  "vast",
+  "wonder",
+  "curious",
+  "serene"
+ ],
+ "use_when": [
+  "physics, astronomy and scale",
+  "science explained with a sense of wonder",
+  "anything that zooms across orders of magnitude"
+ ],
+ "avoid_when": [
+  "finance figures that must be read exactly",
+  "legal detail",
+  "playful kids content"
+ ],
+ "signals": {
+  "for": [
+   "space",
+   "astronomy",
+   "physics",
+   "universe",
+   "cosmos",
+   "planet",
+   "star",
+   "galaxy",
+   "quantum",
+   "particle",
+   "gravity",
+   "scale",
+   "climate",
+   "earth",
+   "ocean",
+   "biology",
+   "evolution",
+   "science",
+   "wonder"
+  ],
+  "against": [
+   "invoice",
+   "compliance",
+   "legal",
+   "toddler",
+   "spreadsheet"
+  ]
+ },
+ "palette": {
+  "family": "deep-field",
+  "roles": {
+   "paper": "#f4f6ff",
+   "ink": "#151b3c",
+   "muted": "#4f577e",
+   "accent": "#006a85",
+   "link": "#3446b0",
+   "positive": "#1f7246",
+   "negative": "#ab2846",
+   "warning": "#865a00",
+   "deterministic": "#3446b0",
+   "model-judgement": "#7036b0",
+   "data-field": "#1f7246",
+   "vision": "#865a00"
+  },
+  "dark": {
+   "paper": "#0b0f24",
+   "ink": "#e8ecff",
+   "muted": "#a3abd1",
+   "accent": "#6fe3ff",
+   "link": "#a9b8ff",
+   "positive": "#87dfa5",
+   "negative": "#ff91a5",
+   "warning": "#ffd47d",
+   "deterministic": "#a9b8ff",
+   "model-judgement": "#d6a8ff",
+   "data-field": "#87dfa5",
+   "vision": "#ffd47d"
+  },
+  "note": "the kit's own built-in skin (light in roles, dark in dark); when the Palette Director has chosen a palette for the build, that palette replaces this one"
+ },
+ "theme": {
+  "family": {
+   "display": "Futura, 'Century Gothic', 'Avenir Next', 'URW Gothic', sans-serif",
+   "body": "'Avenir Next', Avenir, 'Segoe UI', Roboto, sans-serif",
+   "mono": "Menlo, Consolas, monospace"
+  },
+  "weights": {
+   "display": 500,
+   "body": 400,
+   "strong": 600
+  },
+  "scale": {
+   "title": 76,
+   "h1": 50,
+   "h2": 38,
+   "body": 32,
+   "caption": 30,
+   "label": 28
+  },
+  "page_scale": {
+   "title": 48,
+   "h1": 32,
+   "h2": 23,
+   "body": 18,
+   "caption": 15,
+   "small": 14
+  },
+  "line_height": 1.4,
+  "tracking_em": 0.04,
+  "numerals": "lining",
+  "vendorable": [
+   {
+    "name": "Jost",
+    "licence": "OFL-1.1",
+    "shipped": false,
+    "note": "optional geometric face where Futura is missing"
+   }
+  ]
+ },
+ "stage": {
+  "background": {
+   "treatment": "starfield-gradient",
+   "base_role": "paper",
+   "texture": {
+    "kind": "seeded-points",
+    "alpha": 0.35,
+    "density": 0.0006
+   },
+   "vignette": 0.2,
+   "gradient": {
+    "from_role": "paper",
+    "to_role": "link",
+    "alpha": 0.08
+   }
+  },
+  "grid": {
+   "columns": 12,
+   "gutter_px": 32,
+   "margin_px": 120,
+   "baseline_px": 8
+  },
+  "safe_area": {
+   "x_pct": 6,
+   "y_pct": 6
+  },
+  "radius": {
+   "card": 16,
+   "chip": 999,
+   "node": 999
+  },
+  "stroke": {
+   "hairline": 1,
+   "connector": 2,
+   "emphasis": 3.5
+  },
+  "depth": {
+   "shadow": "none",
+   "glow": 0.25
+  }
+ },
+ "props": {
+  "card": {
+   "fill": {
+    "role": "ink",
+    "alpha": 0.06
+   },
+   "border": {
+    "role": "link",
+    "alpha": 0.35
+   },
+   "border_width": 1,
+   "radius": 16,
+   "pad_px": 28,
+   "shadow": "none",
+   "backdrop": "frosted"
+  },
+  "chip": {
+   "fill": {
+    "role": "link",
+    "alpha": 0.16
+   },
+   "text": {
+    "role": "ink"
+   },
+   "shape": "pill",
+   "radius": 999,
+   "weight": 500
+  },
+  "node": {
+   "fill": {
+    "role": "ink",
+    "alpha": 0.08
+   },
+   "border": {
+    "role": "ink",
+    "alpha": 0.7
+   },
+   "border_width": 1.5,
+   "radius": 999,
+   "text_px": 28
+  },
+  "connector": {
+   "stroke": {
+    "role": "link",
+    "alpha": 0.75
+   },
+   "width": 2,
+   "dash": [],
+   "arrow": "dot",
+   "routing": "curved",
+   "draw_on": true,
+   "flow": "travelling-pulse"
+  },
+  "callout": {
+   "style": "orbit-ring",
+   "stroke": {
+    "role": "accent"
+   },
+   "width": 2,
+   "label": {
+    "role": "ink"
+   },
+   "leader": "straight"
+  }
+ },
+ "charts": {
+  "series": {
+   "role": "ink",
+   "steps": [
+    1.0,
+    0.64,
+    0.4
+   ]
+  },
+  "highlight": {
+   "role": "accent",
+   "max": 1
+  },
+  "gridline": {
+   "stroke": {
+    "role": "muted",
+    "alpha": 0.14
+   },
+   "width": 1,
+   "dash": [
+    2,
+    8
+   ]
+  },
+  "axis": {
+   "stroke": {
+    "role": "muted"
+   },
+   "width": 1
+  },
+  "label": {
+   "role": "muted",
+   "size_px": 28
+  },
+  "increase_decrease": {
+   "increase": "filled marker",
+   "decrease": "ring marker"
+  },
+  "draw_on": true,
+  "log_scale_ok": true
+ },
+ "motion": {
+  "ease": "cubic-bezier(.22,.61,.36,1)",
+  "enter_ms": 600,
+  "exit_ms": 450,
+  "stagger_ms": 130,
+  "lead_ms": 140,
+  "hold_min_ms": 1200,
+  "entrance": {
+   "kind": "drift-in",
+   "opacity_from": 0,
+   "scale_from": 0.92,
+   "blur_px": 4
+  },
+  "exit": {
+   "kind": "recede",
+   "opacity_to": 0,
+   "scale_to": 0.96
+  }
+ },
+ "transitions": [
+  {
+   "id": "zoom-through",
+   "use": "section",
+   "ms": 900,
+   "scale_from": 1.0,
+   "scale_to": 6.0,
+   "blend": "crossfade",
+   "note": "move across scale into the next section's subject"
+  },
+  {
+   "id": "dissolve",
+   "use": "within-section",
+   "ms": 560,
+   "blend": "crossfade"
+  },
+  {
+   "id": "morph",
+   "use": "within-section",
+   "ms": 640,
+   "morph": true
+  }
+ ],
+ "continuity": {
+  "prefer": "morph",
+  "first_second_anchor": "the subject is already in frame at its true scale at frame 0"
+ },
+ "caption_style": {
+  "font_px": 30,
+  "weight": 500,
+  "max_lines": 2,
+  "max_marks": 2,
+  "overflow": "truncate",
+  "position": "bottom-center",
+  "width_pct": 72,
+  "text": {
+   "role": "ink"
+  },
+  "scrim": {
+   "role": "paper",
+   "alpha": 0.8,
+   "radius_px": 12,
+   "pad_px": 18
+  },
+  "reveal": "phrase",
+  "dim_previous": true,
+  "marks": {
+   "good": {
+    "role": "positive",
+    "styles": [
+     "underline"
+    ]
+   },
+   "bad": {
+    "role": "negative",
+    "styles": [
+     "dashed-underline"
+    ]
+   },
+   "key": {
+    "role": "accent",
+    "styles": [
+     "weight-700",
+     "tracked-caps"
+    ]
+   }
+  },
+  "markup": "⟦good:…⟧ ⟦bad:…⟧ ⟦key:…⟧ — spoken form strips the marks"
+ },
+ "do": [
+  "show scale with a familiar reference object in the same frame",
+  "move the camera across scale instead of cutting",
+  "keep the star field seeded so every render is identical"
+ ],
+ "dont": [
+  "no lens flares or heavy glow",
+  "never let the background compete with the label",
+  "no exact figures on screen without units and a comparison"
+ ]
+}

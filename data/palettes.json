@@ -1,0 +1,1213 @@
+{
+ "schema": 1,
+ "about": "Starting points, never fences: a build may blend, bend or ignore these, or invent a palette (scripts/design/palette.py derives one in OKLCH). Roles are computed from each family's derivation (python3 scripts/design/palette.py --rederive-catalog); none is hand-picked.",
+ "families": [
+  {
+   "id": "ledger-evergreen",
+   "mood": [
+    "growth",
+    "precise",
+    "trustworthy"
+   ],
+   "use_when": [
+    "fintech",
+    "finance",
+    "banking",
+    "payment",
+    "accounting",
+    "investment",
+    "budget",
+    "revenue",
+    "ledger",
+    "settlement"
+   ],
+   "avoid_when": [
+    "kids",
+    "children",
+    "playful",
+    "horror",
+    "nightlife"
+   ],
+   "notes": "Money-green accent on a cream ledger paper; sober navy ink. Accent on <= 2 elements per frame; gains and losses carried by fill weight and signed labels, never by green-vs-red alone.",
+   "derivation": {
+    "anchor_hue": 158,
+    "paper_hue": 92,
+    "paper_chroma": 0.014,
+    "ink_hue": 255,
+    "ink_chroma": 0.03,
+    "accent_chroma": 0.13,
+    "accent_L": 0.5
+   },
+   "roles": {
+    "paper": "#faf7ec",
+    "ink": "#182230",
+    "muted": "#525f6f",
+    "accent": "#00814f",
+    "link": "#2863ab",
+    "positive": "#626a00",
+    "negative": "#a03f3c",
+    "warning": "#865900",
+    "deterministic": "#0068a5",
+    "model-judgement": "#754d9e",
+    "data-field": "#007176",
+    "vision": "#7e5e00"
+   },
+   "dark": {
+    "paper": "#1b170b",
+    "ink": "#e3ecf7",
+    "muted": "#a8b6c8",
+    "accent": "#68c894",
+    "link": "#77b1fb",
+    "positive": "#acb755",
+    "negative": "#f28e86",
+    "warning": "#dba24b",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#c099ed",
+    "data-field": "#1dc5cd",
+    "vision": "#d2a747"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 4.6,
+     "contrast": {
+      "ink": 14.94,
+      "muted": 6.07,
+      "accent": 4.6,
+      "link": 5.65,
+      "positive": 5.47,
+      "negative": 5.99,
+      "warning": 5.69,
+      "deterministic": 5.56,
+      "model-judgement": 5.91,
+      "data-field": 5.4,
+      "vision": 5.61
+     },
+     "min_separation": 18.48,
+     "closest_pair": "positive~warning"
+    },
+    "dark": {
+     "min_text_contrast": 7.66,
+     "contrast": {
+      "ink": 15.0,
+      "muted": 8.68,
+      "accent": 8.75,
+      "link": 8.06,
+      "positive": 8.23,
+      "negative": 7.66,
+      "warning": 7.91,
+      "deterministic": 8.1,
+      "model-judgement": 7.68,
+      "data-field": 8.45,
+      "vision": 7.97
+     },
+     "min_separation": 13.44,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "clinic-tide",
+   "mood": [
+    "clinical",
+    "calm",
+    "precise",
+    "trustworthy"
+   ],
+   "use_when": [
+    "medical",
+    "healthcare",
+    "clinical",
+    "patient",
+    "hospital",
+    "diagnosis",
+    "pharma",
+    "triage",
+    "wellness"
+   ],
+   "avoid_when": [
+    "gaming",
+    "nightlife",
+    "aggressive",
+    "party"
+   ],
+   "notes": "Cool cyan-blue accent on near-white clinical paper. Calm, low-chroma ink; warning and negative stay clearly apart for alarms.",
+   "derivation": {
+    "anchor_hue": 222,
+    "paper_hue": 215,
+    "paper_chroma": 0.008,
+    "ink_hue": 235,
+    "ink_chroma": 0.025,
+    "accent_chroma": 0.14,
+    "accent_L": 0.52
+   },
+   "roles": {
+    "paper": "#f1f8fa",
+    "ink": "#16242c",
+    "muted": "#4d616c",
+    "accent": "#007996",
+    "link": "#475cad",
+    "positive": "#137738",
+    "negative": "#a03f3c",
+    "warning": "#865900",
+    "deterministic": "#3461ac",
+    "model-judgement": "#754d9e",
+    "data-field": "#00755a",
+    "vision": "#7e5e00"
+   },
+   "dark": {
+    "paper": "#0b1a1d",
+    "ink": "#e2edf4",
+    "muted": "#a3b8c5",
+    "accent": "#33c3eb",
+    "link": "#90a9fc",
+    "positive": "#70c484",
+    "negative": "#f28e86",
+    "warning": "#dba24b",
+    "deterministic": "#7faefc",
+    "model-judgement": "#c099ed",
+    "data-field": "#4ac7a2",
+    "vision": "#d2a747"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 4.68,
+     "contrast": {
+      "ink": 14.78,
+      "muted": 6.03,
+      "accent": 4.68,
+      "link": 5.75,
+      "positive": 5.25,
+      "negative": 5.98,
+      "warning": 5.68,
+      "deterministic": 5.66,
+      "model-judgement": 5.9,
+      "data-field": 5.29,
+      "vision": 5.6
+     },
+     "min_separation": 13.08,
+     "closest_pair": "muted~accent"
+    },
+    "dark": {
+     "min_text_contrast": 7.62,
+     "contrast": {
+      "ink": 14.96,
+      "muted": 8.66,
+      "accent": 8.6,
+      "link": 7.85,
+      "positive": 8.41,
+      "negative": 7.62,
+      "warning": 7.87,
+      "deterministic": 7.94,
+      "model-judgement": 7.65,
+      "data-field": 8.46,
+      "vision": 7.93
+     },
+     "min_separation": 13.62,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "gambit-crimson",
+   "mood": [
+    "strategic",
+    "tense",
+    "competitive",
+    "intellectual"
+   ],
+   "use_when": [
+    "game theory",
+    "strategy",
+    "negotiation",
+    "auction",
+    "competition",
+    "debate",
+    "chess",
+    "incentive",
+    "decision making"
+   ],
+   "avoid_when": [
+    "medical",
+    "children",
+    "wellness",
+    "calm"
+   ],
+   "notes": "Crimson accent on parchment with a warm near-black ink: tension and stakes. Negative is pushed toward raspberry so it never reads as the accent.",
+   "derivation": {
+    "anchor_hue": 20,
+    "paper_hue": 80,
+    "paper_chroma": 0.02,
+    "ink_hue": 40,
+    "ink_chroma": 0.02,
+    "accent_chroma": 0.17,
+    "accent_L": 0.5
+   },
+   "roles": {
+    "paper": "#fef6e8",
+    "ink": "#2a1e1a",
+    "muted": "#6d5851",
+    "accent": "#af2938",
+    "link": "#2863ab",
+    "positive": "#137738",
+    "negative": "#92417a",
+    "warning": "#865900",
+    "deterministic": "#0068a5",
+    "model-judgement": "#754d9e",
+    "data-field": "#00755a",
+    "vision": "#7e5e00"
+   },
+   "dark": {
+    "paper": "#1c160b",
+    "ink": "#f3e9e5",
+    "muted": "#c6aea6",
+    "accent": "#ff898b",
+    "link": "#77b1fb",
+    "positive": "#70c484",
+    "negative": "#e28ec6",
+    "warning": "#dba24b",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#c099ed",
+    "data-field": "#4ac7a2",
+    "vision": "#d2a747"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 5.25,
+     "contrast": {
+      "ink": 15.06,
+      "muted": 6.18,
+      "accent": 6.12,
+      "link": 5.65,
+      "positive": 5.25,
+      "negative": 6.0,
+      "warning": 5.68,
+      "deterministic": 5.55,
+      "model-judgement": 5.91,
+      "data-field": 5.3,
+      "vision": 5.61
+     },
+     "min_separation": 19.9,
+     "closest_pair": "ink~muted"
+    },
+    "dark": {
+     "min_text_contrast": 7.63,
+     "contrast": {
+      "ink": 15.05,
+      "muted": 8.56,
+      "accent": 7.87,
+      "link": 8.1,
+      "positive": 8.48,
+      "negative": 7.63,
+      "warning": 7.94,
+      "deterministic": 8.13,
+      "model-judgement": 7.72,
+      "data-field": 8.54,
+      "vision": 8.01
+     },
+     "min_separation": 14.66,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "foundry-signal",
+   "mood": [
+    "industrial",
+    "robust",
+    "technical"
+   ],
+   "use_when": [
+    "infrastructure",
+    "infra",
+    "devops",
+    "cloud",
+    "kubernetes",
+    "networking",
+    "datacenter",
+    "sre",
+    "incident",
+    "deployment",
+    "cluster"
+   ],
+   "avoid_when": [
+    "children",
+    "luxury",
+    "wellness",
+    "fashion"
+   ],
+   "notes": "Safety-signal amber accent on a concrete grey paper with slate ink: machinery, alarms, operations. Warning is moved off the accent's hue so an alert never looks like emphasis.",
+   "derivation": {
+    "anchor_hue": 62,
+    "paper_hue": 250,
+    "paper_chroma": 0.006,
+    "ink_hue": 250,
+    "ink_chroma": 0.025,
+    "accent_chroma": 0.15,
+    "accent_L": 0.52
+   },
+   "roles": {
+    "paper": "#f4f7fb",
+    "ink": "#18232d",
+    "muted": "#515f6e",
+    "accent": "#a05b01",
+    "link": "#2863ab",
+    "positive": "#137738",
+    "negative": "#a03f3c",
+    "warning": "#716400",
+    "deterministic": "#0068a5",
+    "model-judgement": "#754d9e",
+    "data-field": "#00755a",
+    "vision": "#716400"
+   },
+   "dark": {
+    "paper": "#0f1821",
+    "ink": "#e4ecf5",
+    "muted": "#a6b6c7",
+    "accent": "#ef9b4b",
+    "link": "#77b1fb",
+    "positive": "#70c484",
+    "negative": "#f28e86",
+    "warning": "#c0af49",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#c099ed",
+    "data-field": "#4ac7a2",
+    "vision": "#c0af49"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 4.9,
+     "contrast": {
+      "ink": 14.84,
+      "muted": 6.08,
+      "accent": 4.9,
+      "link": 5.64,
+      "positive": 5.25,
+      "negative": 5.97,
+      "warning": 5.54,
+      "deterministic": 5.55,
+      "model-judgement": 5.9,
+      "data-field": 5.29,
+      "vision": 5.54
+     },
+     "min_separation": 18.4,
+     "closest_pair": "accent~warning"
+    },
+    "dark": {
+     "min_text_contrast": 7.66,
+     "contrast": {
+      "ink": 15.02,
+      "muted": 8.64,
+      "accent": 8.07,
+      "link": 8.07,
+      "positive": 8.46,
+      "negative": 7.66,
+      "warning": 8.07,
+      "deterministic": 8.1,
+      "model-judgement": 7.69,
+      "data-field": 8.51,
+      "vision": 8.07
+     },
+     "min_separation": 13.77,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "playground-berry",
+   "mood": [
+    "playful",
+    "friendly",
+    "warm",
+    "energetic"
+   ],
+   "use_when": [
+    "kids",
+    "children",
+    "classroom",
+    "school",
+    "young learner",
+    "beginner",
+    "game"
+   ],
+   "avoid_when": [
+    "legal",
+    "medical",
+    "finance",
+    "compliance",
+    "executive"
+   ],
+   "notes": "Berry accent on a sunny warm paper with a deep plum ink: friendly and bright while every label still clears 4.5:1.",
+   "derivation": {
+    "anchor_hue": 355,
+    "paper_hue": 90,
+    "paper_chroma": 0.03,
+    "ink_hue": 300,
+    "ink_chroma": 0.04,
+    "accent_chroma": 0.18,
+    "accent_L": 0.52
+   },
+   "roles": {
+    "paper": "#fff6e1",
+    "ink": "#251d32",
+    "muted": "#605a6c",
+    "accent": "#b12b6e",
+    "link": "#2863ab",
+    "positive": "#137738",
+    "negative": "#9e4421",
+    "warning": "#865900",
+    "deterministic": "#0068a5",
+    "model-judgement": "#754d9e",
+    "data-field": "#00755a",
+    "vision": "#7e5e00"
+   },
+   "dark": {
+    "paper": "#1b170b",
+    "ink": "#ede8f9",
+    "muted": "#b7b0c5",
+    "accent": "#ff81b6",
+    "link": "#77b1fb",
+    "positive": "#70c484",
+    "negative": "#f09271",
+    "warning": "#dba24b",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#c099ed",
+    "data-field": "#4ac7a2",
+    "vision": "#d2a747"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 5.24,
+     "contrast": {
+      "ink": 15.01,
+      "muted": 6.15,
+      "accent": 5.67,
+      "link": 5.64,
+      "positive": 5.24,
+      "negative": 5.91,
+      "warning": 5.67,
+      "deterministic": 5.54,
+      "model-judgement": 5.89,
+      "data-field": 5.29,
+      "vision": 5.6
+     },
+     "min_separation": 17.59,
+     "closest_pair": "negative~warning"
+    },
+    "dark": {
+     "min_text_contrast": 7.68,
+     "contrast": {
+      "ink": 14.92,
+      "muted": 8.54,
+      "accent": 7.72,
+      "link": 8.06,
+      "positive": 8.45,
+      "negative": 7.71,
+      "warning": 7.91,
+      "deterministic": 8.1,
+      "model-judgement": 7.68,
+      "data-field": 8.5,
+      "vision": 7.97
+     },
+     "min_separation": 13.5,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "observatory-indigo",
+   "mood": [
+    "deep",
+    "futuristic",
+    "intellectual"
+   ],
+   "primary_skin": "dark",
+   "use_when": [
+    "astronomy",
+    "space",
+    "physics",
+    "quantum",
+    "machine learning",
+    "ai",
+    "research",
+    "theory",
+    "neural network"
+   ],
+   "avoid_when": [
+    "children",
+    "food",
+    "retail"
+   ],
+   "notes": "Indigo-violet accent; dark-first (night-sky paper) with a lavender-grey light skin.",
+   "derivation": {
+    "anchor_hue": 295,
+    "paper_hue": 285,
+    "paper_chroma": 0.01,
+    "ink_hue": 280,
+    "ink_chroma": 0.03,
+    "accent_chroma": 0.16,
+    "accent_L": 0.5,
+    "dark_paper_L": 0.19,
+    "dark_paper_chroma": 0.035
+   },
+   "roles": {
+    "paper": "#f6f6fd",
+    "ink": "#1f2030",
+    "muted": "#5a5c6f",
+    "accent": "#6c4ab3",
+    "link": "#2863ab",
+    "positive": "#137738",
+    "negative": "#a03f3c",
+    "warning": "#865900",
+    "deterministic": "#0068a5",
+    "model-judgement": "#8f4280",
+    "data-field": "#00755a",
+    "vision": "#7e5e00"
+   },
+   "dark": {
+    "paper": "#121123",
+    "ink": "#e8eaf7",
+    "muted": "#b0b3c8",
+    "accent": "#b89eff",
+    "link": "#77b1fb",
+    "positive": "#70c484",
+    "negative": "#f28e86",
+    "warning": "#dba24b",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#de8fcd",
+    "data-field": "#4ac7a2",
+    "vision": "#d2a747"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 5.24,
+     "contrast": {
+      "ink": 14.93,
+      "muted": 6.11,
+      "accent": 5.97,
+      "link": 5.64,
+      "positive": 5.24,
+      "negative": 5.97,
+      "warning": 5.67,
+      "deterministic": 5.54,
+      "model-judgement": 5.99,
+      "data-field": 5.29,
+      "vision": 5.6
+     },
+     "min_separation": 14.84,
+     "closest_pair": "accent~model-judgement"
+    },
+    "dark": {
+     "min_text_contrast": 7.89,
+     "contrast": {
+      "ink": 15.52,
+      "muted": 8.96,
+      "accent": 8.29,
+      "link": 8.38,
+      "positive": 8.78,
+      "negative": 7.95,
+      "warning": 8.21,
+      "deterministic": 8.41,
+      "model-judgement": 7.89,
+      "data-field": 8.83,
+      "vision": 8.28
+     },
+     "min_separation": 13.57,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "terracotta-press",
+   "mood": [
+    "editorial",
+    "warm"
+   ],
+   "use_when": [
+    "history",
+    "humanities",
+    "culture",
+    "essay",
+    "journalism",
+    "storytelling",
+    "heritage"
+   ],
+   "avoid_when": [
+    "clinical",
+    "cyber",
+    "kubernetes"
+   ],
+   "notes": "Terracotta accent on warm bone paper, brown-black ink: long-form, human, editorial.",
+   "derivation": {
+    "anchor_hue": 42,
+    "paper_hue": 70,
+    "paper_chroma": 0.022,
+    "ink_hue": 50,
+    "ink_chroma": 0.025,
+    "accent_chroma": 0.14,
+    "accent_L": 0.52
+   },
+   "roles": {
+    "paper": "#fff5ea",
+    "ink": "#2c1e17",
+    "muted": "#6c594f",
+    "accent": "#a8471b",
+    "link": "#2863ab",
+    "positive": "#137738",
+    "negative": "#9a3e67",
+    "warning": "#7b5f00",
+    "deterministic": "#0068a5",
+    "model-judgement": "#754d9e",
+    "data-field": "#00755a",
+    "vision": "#7e5e00"
+   },
+   "dark": {
+    "paper": "#1e150c",
+    "ink": "#f4e9e2",
+    "muted": "#c5afa4",
+    "accent": "#f5946e",
+    "link": "#77b1fb",
+    "positive": "#70c484",
+    "negative": "#eb8cb2",
+    "warning": "#cea947",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#c099ed",
+    "data-field": "#4ac7a2",
+    "vision": "#d2a747"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 5.24,
+     "contrast": {
+      "ink": 14.94,
+      "muted": 6.13,
+      "accent": 5.44,
+      "link": 5.63,
+      "positive": 5.24,
+      "negative": 5.98,
+      "warning": 5.61,
+      "deterministic": 5.53,
+      "model-judgement": 5.89,
+      "data-field": 5.28,
+      "vision": 5.59
+     },
+     "min_separation": 18.98,
+     "closest_pair": "muted~accent"
+    },
+    "dark": {
+     "min_text_contrast": 7.64,
+     "contrast": {
+      "ink": 15.07,
+      "muted": 8.6,
+      "accent": 8.0,
+      "link": 8.11,
+      "positive": 8.49,
+      "negative": 7.64,
+      "warning": 8.04,
+      "deterministic": 8.14,
+      "model-judgement": 7.72,
+      "data-field": 8.55,
+      "vision": 8.01
+     },
+     "min_separation": 14.2,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "orchard-olive",
+   "mood": [
+    "natural",
+    "calm",
+    "warm"
+   ],
+   "use_when": [
+    "agriculture",
+    "food",
+    "ecology",
+    "climate",
+    "sustainability",
+    "environment",
+    "farming",
+    "biology"
+   ],
+   "avoid_when": [
+    "luxury",
+    "nightlife",
+    "cyber"
+   ],
+   "notes": "Olive accent on oat paper with a dark moss ink: grounded and organic.",
+   "derivation": {
+    "anchor_hue": 118,
+    "paper_hue": 100,
+    "paper_chroma": 0.022,
+    "ink_hue": 130,
+    "ink_chroma": 0.03,
+    "accent_chroma": 0.13,
+    "accent_L": 0.5
+   },
+   "roles": {
+    "paper": "#faf7e7",
+    "ink": "#1d2515",
+    "muted": "#586150",
+    "accent": "#677602",
+    "link": "#2863ab",
+    "positive": "#007654",
+    "negative": "#a03f3c",
+    "warning": "#865900",
+    "deterministic": "#0068a5",
+    "model-judgement": "#754d9e",
+    "data-field": "#00755a",
+    "vision": "#8a5600"
+   },
+   "dark": {
+    "paper": "#19170c",
+    "ink": "#e7eee1",
+    "muted": "#aeb8a5",
+    "accent": "#aabb5f",
+    "link": "#77b1fb",
+    "positive": "#54c69a",
+    "negative": "#f28e86",
+    "warning": "#dba24b",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#c099ed",
+    "data-field": "#4ac7a2",
+    "vision": "#e09f4e"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 4.68,
+     "contrast": {
+      "ink": 14.7,
+      "muted": 6.02,
+      "accent": 4.68,
+      "link": 5.64,
+      "positive": 5.25,
+      "negative": 5.97,
+      "warning": 5.67,
+      "deterministic": 5.54,
+      "model-judgement": 5.9,
+      "data-field": 5.29,
+      "vision": 5.72
+     },
+     "min_separation": 19.5,
+     "closest_pair": "muted~accent"
+    },
+    "dark": {
+     "min_text_contrast": 7.69,
+     "contrast": {
+      "ink": 15.15,
+      "muted": 8.72,
+      "accent": 8.54,
+      "link": 8.1,
+      "positive": 8.49,
+      "negative": 7.69,
+      "warning": 7.94,
+      "deterministic": 8.13,
+      "model-judgement": 7.72,
+      "data-field": 8.54,
+      "vision": 7.9
+     },
+     "min_separation": 13.53,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "reef-teal",
+   "mood": [
+    "fresh",
+    "calm",
+    "technical"
+   ],
+   "use_when": [
+    "data pipeline",
+    "streaming",
+    "analytics",
+    "logistics",
+    "ocean",
+    "water",
+    "etl",
+    "pipeline"
+   ],
+   "avoid_when": [
+    "horror",
+    "vintage",
+    "history"
+   ],
+   "notes": "Teal accent on aqua-white paper with a deep blue ink: flow, clarity, movement of data.",
+   "derivation": {
+    "anchor_hue": 190,
+    "paper_hue": 200,
+    "paper_chroma": 0.01,
+    "ink_hue": 225,
+    "ink_chroma": 0.03,
+    "accent_chroma": 0.13,
+    "accent_L": 0.51
+   },
+   "roles": {
+    "paper": "#f0f9f9",
+    "ink": "#10252c",
+    "muted": "#4c626b",
+    "accent": "#007e79",
+    "link": "#2863ab",
+    "positive": "#137738",
+    "negative": "#a03f3c",
+    "warning": "#865900",
+    "deterministic": "#0068a5",
+    "model-judgement": "#754d9e",
+    "data-field": "#007742",
+    "vision": "#7e5e00"
+   },
+   "dark": {
+    "paper": "#0a1a1b",
+    "ink": "#dfeef4",
+    "muted": "#a1b9c3",
+    "accent": "#36c9c2",
+    "link": "#77b1fb",
+    "positive": "#70c484",
+    "negative": "#f28e86",
+    "warning": "#dba24b",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#c099ed",
+    "data-field": "#67c58b",
+    "vision": "#d2a747"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 4.61,
+     "contrast": {
+      "ink": 14.83,
+      "muted": 6.01,
+      "accent": 4.61,
+      "link": 5.67,
+      "positive": 5.27,
+      "negative": 6.0,
+      "warning": 5.7,
+      "deterministic": 5.57,
+      "model-judgement": 5.93,
+      "data-field": 5.28,
+      "vision": 5.63
+     },
+     "min_separation": 16.49,
+     "closest_pair": "accent~data-field"
+    },
+    "dark": {
+     "min_text_contrast": 7.64,
+     "contrast": {
+      "ink": 15.02,
+      "muted": 8.71,
+      "accent": 8.75,
+      "link": 8.05,
+      "positive": 8.43,
+      "negative": 7.64,
+      "warning": 7.89,
+      "deterministic": 8.08,
+      "model-judgement": 7.67,
+      "data-field": 8.45,
+      "vision": 7.95
+     },
+     "min_separation": 13.42,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "cobalt-blueprint",
+   "mood": [
+    "technical",
+    "authoritative",
+    "trustworthy",
+    "serious"
+   ],
+   "use_when": [
+    "software architecture",
+    "api",
+    "documentation",
+    "enterprise",
+    "engineering",
+    "system design",
+    "backend",
+    "codebase"
+   ],
+   "avoid_when": [
+    "children",
+    "playful",
+    "organic"
+   ],
+   "notes": "Cobalt accent on a neutral cool paper: systematic and authoritative. Link moves off the accent's hue so links never read as emphasis.",
+   "derivation": {
+    "anchor_hue": 255,
+    "paper_hue": 260,
+    "paper_chroma": 0.006,
+    "ink_hue": 265,
+    "ink_chroma": 0.03,
+    "accent_chroma": 0.17,
+    "accent_L": 0.5
+   },
+   "roles": {
+    "paper": "#f4f7fb",
+    "ink": "#1b2130",
+    "muted": "#555e6f",
+    "accent": "#0061be",
+    "link": "#006e8c",
+    "positive": "#137738",
+    "negative": "#a03f3c",
+    "warning": "#865900",
+    "deterministic": "#006f83",
+    "model-judgement": "#754d9e",
+    "data-field": "#00755a",
+    "vision": "#7e5e00"
+   },
+   "dark": {
+    "paper": "#111721",
+    "ink": "#e5ebf8",
+    "muted": "#abb4c8",
+    "accent": "#79b4ff",
+    "link": "#3fbee8",
+    "positive": "#70c484",
+    "negative": "#f28e86",
+    "warning": "#dba24b",
+    "deterministic": "#2dc1de",
+    "model-judgement": "#c099ed",
+    "data-field": "#4ac7a2",
+    "vision": "#d2a747"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 5.25,
+     "contrast": {
+      "ink": 14.96,
+      "muted": 6.08,
+      "accent": 5.66,
+      "link": 5.42,
+      "positive": 5.25,
+      "negative": 5.97,
+      "warning": 5.68,
+      "deterministic": 5.43,
+      "model-judgement": 5.9,
+      "data-field": 5.29,
+      "vision": 5.6
+     },
+     "min_separation": 14.19,
+     "closest_pair": "accent~link"
+    },
+    "dark": {
+     "min_text_contrast": 7.69,
+     "contrast": {
+      "ink": 15.04,
+      "muted": 8.64,
+      "accent": 8.38,
+      "link": 8.34,
+      "positive": 8.49,
+      "negative": 7.69,
+      "warning": 7.94,
+      "deterministic": 8.38,
+      "model-judgement": 7.72,
+      "data-field": 8.54,
+      "vision": 8.01
+     },
+     "min_separation": 13.44,
+     "closest_pair": "accent~link"
+    }
+   }
+  },
+  {
+   "id": "plum-atelier",
+   "mood": [
+    "creative",
+    "elegant"
+   ],
+   "use_when": [
+    "design",
+    "art",
+    "music",
+    "fashion",
+    "branding",
+    "ux",
+    "typography",
+    "illustration"
+   ],
+   "avoid_when": [
+    "infrastructure",
+    "finance",
+    "compliance"
+   ],
+   "notes": "Plum-magenta accent on a blush paper with a deep aubergine ink: expressive but restrained.",
+   "derivation": {
+    "anchor_hue": 325,
+    "paper_hue": 350,
+    "paper_chroma": 0.012,
+    "ink_hue": 320,
+    "ink_chroma": 0.035,
+    "accent_chroma": 0.15,
+    "accent_L": 0.46
+   },
+   "roles": {
+    "paper": "#fef4f8",
+    "ink": "#291c2c",
+    "muted": "#655868",
+    "accent": "#803385",
+    "link": "#2863ab",
+    "positive": "#137738",
+    "negative": "#a03f3c",
+    "warning": "#865900",
+    "deterministic": "#0068a5",
+    "model-judgement": "#6453a7",
+    "data-field": "#00755a",
+    "vision": "#7e5e00"
+   },
+   "dark": {
+    "paper": "#1f1319",
+    "ink": "#f2e7f4",
+    "muted": "#bdaec0",
+    "accent": "#dd91e1",
+    "link": "#77b1fb",
+    "positive": "#70c484",
+    "negative": "#f28e86",
+    "warning": "#dba24b",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#ada0f7",
+    "data-field": "#4ac7a2",
+    "vision": "#d2a747"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 5.24,
+     "contrast": {
+      "ink": 15.05,
+      "muted": 6.2,
+      "accent": 7.15,
+      "link": 5.63,
+      "positive": 5.24,
+      "negative": 5.96,
+      "warning": 5.67,
+      "deterministic": 5.54,
+      "model-judgement": 5.85,
+      "data-field": 5.28,
+      "vision": 5.59
+     },
+     "min_separation": 13.42,
+     "closest_pair": "accent~model-judgement"
+    },
+    "dark": {
+     "min_text_contrast": 7.71,
+     "contrast": {
+      "ink": 15.03,
+      "muted": 8.56,
+      "accent": 7.9,
+      "link": 8.12,
+      "positive": 8.51,
+      "negative": 7.71,
+      "warning": 7.96,
+      "deterministic": 8.16,
+      "model-judgement": 7.85,
+      "data-field": 8.57,
+      "vision": 8.03
+     },
+     "min_separation": 13.75,
+     "closest_pair": "ink~muted"
+    }
+   }
+  },
+  {
+   "id": "midnight-gold",
+   "mood": [
+    "dramatic",
+    "elegant",
+    "serious"
+   ],
+   "primary_skin": "dark",
+   "use_when": [
+    "keynote",
+    "executive summary",
+    "investor update",
+    "launch",
+    "award",
+    "premium"
+   ],
+   "avoid_when": [
+    "children",
+    "clinical",
+    "casual"
+   ],
+   "notes": "Gold accent; dark-first (charcoal-navy paper). In the light skin the gold deepens to bronze so it still clears 4.5:1.",
+   "derivation": {
+    "anchor_hue": 88,
+    "paper_hue": 85,
+    "paper_chroma": 0.012,
+    "ink_hue": 260,
+    "ink_chroma": 0.025,
+    "accent_chroma": 0.13,
+    "accent_L": 0.52,
+    "dark_paper_L": 0.2,
+    "dark_paper_chroma": 0.03
+   },
+   "roles": {
+    "paper": "#faf6ee",
+    "ink": "#1b222e",
+    "muted": "#545e6f",
+    "accent": "#8b6b00",
+    "link": "#2863ab",
+    "positive": "#137738",
+    "negative": "#a03f3c",
+    "warning": "#915100",
+    "deterministic": "#0068a5",
+    "model-judgement": "#754d9e",
+    "data-field": "#00755a",
+    "vision": "#925000"
+   },
+   "dark": {
+    "paper": "#1c1505",
+    "ink": "#e5ecf6",
+    "muted": "#a9b5c8",
+    "accent": "#d1ac4f",
+    "link": "#77b1fb",
+    "positive": "#70c484",
+    "negative": "#f28e86",
+    "warning": "#e59b56",
+    "deterministic": "#65b5f7",
+    "model-judgement": "#c099ed",
+    "data-field": "#4ac7a2",
+    "vision": "#e79a58"
+   },
+   "measured": {
+    "light": {
+     "min_text_contrast": 4.64,
+     "contrast": {
+      "ink": 14.82,
+      "muted": 6.07,
+      "accent": 4.64,
+      "link": 5.63,
+      "positive": 5.23,
+      "negative": 5.96,
+      "warning": 5.76,
+      "deterministic": 5.53,
+      "model-judgement": 5.88,
+      "data-field": 5.28,
+      "vision": 5.78
+     },
+     "min_separation": 13.55,
+     "closest_pair": "accent~warning"
+    },
+    "dark": {
+     "min_text_contrast": 7.76,
+     "contrast": {
+      "ink": 15.24,
+      "muted": 8.74,
+      "accent": 8.39,
+      "link": 8.17,
+      "positive": 8.56,
+      "negative": 7.76,
+      "warning": 7.9,
+      "deterministic": 8.2,
+      "model-judgement": 7.78,
+      "data-field": 8.61,
+      "vision": 7.91
+     },
+     "min_separation": 13.0,
+     "closest_pair": "accent~warning"
+    }
+   }
+  }
+ ]
+}

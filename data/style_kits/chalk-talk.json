@@ -1,0 +1,363 @@
+{
+ "schema": 1,
+ "id": "chalk-talk",
+ "name": "Chalk Talk",
+ "base": "dark",
+ "palette_family": "reef-teal",
+ "mood": [
+  "lecture",
+  "intuitive",
+  "patient",
+  "derivation",
+  "thoughtful"
+ ],
+ "use_when": [
+  "mathematics, proofs and derivations",
+  "algorithms built up line by line",
+  "a teacher-at-the-board feel"
+ ],
+ "avoid_when": [
+  "brand launches",
+  "medical risk communication",
+  "dashboards of live numbers"
+ ],
+ "signals": {
+  "for": [
+   "math",
+   "mathematics",
+   "proof",
+   "equation",
+   "derivation",
+   "algebra",
+   "geometry",
+   "calculus",
+   "probability",
+   "algorithm",
+   "complexity",
+   "graph",
+   "lecture",
+   "course",
+   "theorem",
+   "intuition",
+   "game",
+   "theory",
+   "logic",
+   "computer",
+   "science"
+  ],
+  "against": [
+   "launch",
+   "brand",
+   "patient",
+   "patients",
+   "marketing",
+   "invoice"
+  ]
+ },
+ "palette": {
+  "family": "chalk-talk",
+  "roles": {
+   "paper": "#f3f1e7",
+   "ink": "#1d2a23",
+   "muted": "#55625a",
+   "accent": "#7a5f00",
+   "link": "#245a9c",
+   "positive": "#2a7436",
+   "negative": "#a92f2f",
+   "warning": "#9b4a07",
+   "deterministic": "#245a9c",
+   "model-judgement": "#6d3ea6",
+   "data-field": "#2a7436",
+   "vision": "#9b4a07"
+  },
+  "dark": {
+   "paper": "#17261f",
+   "ink": "#f2f1e8",
+   "muted": "#b6c2b8",
+   "accent": "#f4d35e",
+   "link": "#9fd0ff",
+   "positive": "#a3e3a8",
+   "negative": "#ff9e9e",
+   "warning": "#f5a25d",
+   "deterministic": "#9fd0ff",
+   "model-judgement": "#d9b8ff",
+   "data-field": "#a3e3a8",
+   "vision": "#f5a25d"
+  },
+  "note": "the kit's own built-in skin (light in roles, dark in dark); when the Palette Director has chosen a palette for the build, that palette replaces this one"
+ },
+ "theme": {
+  "family": {
+   "display": "'Chalkboard SE', 'Comic Neue', 'Segoe Print', 'Trebuchet MS', sans-serif",
+   "body": "Palatino, 'Palatino Linotype', 'Book Antiqua', 'URW Palladio L', serif",
+   "mono": "Menlo, Consolas, monospace",
+   "math": "'STIX Two Math', 'Cambria Math', 'Latin Modern Math', serif"
+  },
+  "weights": {
+   "display": 400,
+   "body": 400,
+   "strong": 700
+  },
+  "scale": {
+   "title": 68,
+   "h1": 48,
+   "h2": 36,
+   "body": 34,
+   "caption": 32,
+   "label": 30
+  },
+  "page_scale": {
+   "title": 44,
+   "h1": 30,
+   "h2": 23,
+   "body": 18,
+   "caption": 15,
+   "small": 14
+  },
+  "line_height": 1.45,
+  "tracking_em": 0.0,
+  "numerals": "lining",
+  "vendorable": [
+   {
+    "name": "STIX Two",
+    "licence": "OFL-1.1",
+    "shipped": false,
+    "note": "optional maths face for equations"
+   }
+  ]
+ },
+ "stage": {
+  "background": {
+   "treatment": "slate",
+   "base_role": "paper",
+   "texture": {
+    "kind": "smudge",
+    "alpha": 0.05
+   },
+   "vignette": 0.12
+  },
+  "grid": {
+   "columns": 10,
+   "gutter_px": 36,
+   "margin_px": 112,
+   "baseline_px": 10
+  },
+  "safe_area": {
+   "x_pct": 6,
+   "y_pct": 6
+  },
+  "radius": {
+   "card": 6,
+   "chip": 6,
+   "node": 999
+  },
+  "stroke": {
+   "hairline": 2,
+   "connector": 3.5,
+   "emphasis": 5,
+   "jitter_px": 0.6
+  },
+  "depth": {
+   "shadow": "none"
+  }
+ },
+ "props": {
+  "card": {
+   "fill": {
+    "role": "ink",
+    "alpha": 0.03
+   },
+   "border": {
+    "role": "ink",
+    "alpha": 0.55
+   },
+   "border_width": 2,
+   "radius": 6,
+   "pad_px": 26,
+   "shadow": "none",
+   "stroke_style": "chalk"
+  },
+  "chip": {
+   "fill": {
+    "role": "accent",
+    "alpha": 0.14
+   },
+   "text": {
+    "role": "accent"
+   },
+   "shape": "boxed-term",
+   "radius": 6,
+   "weight": 400
+  },
+  "node": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "ink"
+   },
+   "border_width": 2.5,
+   "radius": 999,
+   "text_px": 32
+  },
+  "connector": {
+   "stroke": {
+    "role": "ink",
+    "alpha": 0.85
+   },
+   "width": 3.5,
+   "dash": [],
+   "arrow": "hand-drawn",
+   "routing": "curved",
+   "draw_on": true
+  },
+  "callout": {
+   "style": "chalk-circle",
+   "stroke": {
+    "role": "accent"
+   },
+   "width": 3.5,
+   "label": {
+    "role": "accent"
+   },
+   "leader": "curved"
+  }
+ },
+ "charts": {
+  "series": {
+   "role": "ink",
+   "steps": [
+    1.0,
+    0.7,
+    0.45
+   ]
+  },
+  "highlight": {
+   "role": "accent",
+   "max": 1
+  },
+  "gridline": {
+   "stroke": {
+    "role": "muted",
+    "alpha": 0.18
+   },
+   "width": 1.5,
+   "dash": [
+    3,
+    7
+   ]
+  },
+  "axis": {
+   "stroke": {
+    "role": "ink"
+   },
+   "width": 2.5
+  },
+  "label": {
+   "role": "muted",
+   "size_px": 30
+  },
+  "increase_decrease": {
+   "increase": "filled",
+   "decrease": "hatched"
+  },
+  "draw_on": true
+ },
+ "motion": {
+  "ease": "cubic-bezier(.5,0,.25,1)",
+  "enter_ms": 520,
+  "exit_ms": 360,
+  "stagger_ms": 100,
+  "lead_ms": 120,
+  "hold_min_ms": 1100,
+  "entrance": {
+   "kind": "write-on",
+   "opacity_from": 0,
+   "clip": "left-to-right",
+   "stroke_draw": true,
+   "blur_px": 0
+  },
+  "exit": {
+   "kind": "erase",
+   "opacity_to": 0,
+   "clip": "right-to-left"
+  }
+ },
+ "transitions": [
+  {
+   "id": "erase-wipe",
+   "use": "section",
+   "ms": 520,
+   "mask": "wipe-left",
+   "via_role": "paper"
+  },
+  {
+   "id": "morph",
+   "use": "within-section",
+   "ms": 560,
+   "morph": true,
+   "note": "a term moves from one line of the derivation into the next"
+  },
+  {
+   "id": "dissolve",
+   "use": "within-section",
+   "ms": 380,
+   "blend": "crossfade"
+  }
+ ],
+ "continuity": {
+  "prefer": "morph",
+  "first_second_anchor": "the question is already written on the board at frame 0"
+ },
+ "caption_style": {
+  "font_px": 32,
+  "weight": 500,
+  "max_lines": 2,
+  "max_marks": 2,
+  "overflow": "truncate",
+  "position": "bottom-center",
+  "width_pct": 72,
+  "text": {
+   "role": "ink"
+  },
+  "scrim": {
+   "role": "paper",
+   "alpha": 0.9,
+   "radius_px": 6,
+   "pad_px": 18
+  },
+  "reveal": "phrase",
+  "dim_previous": true,
+  "marks": {
+   "good": {
+    "role": "positive",
+    "styles": [
+     "underline"
+    ]
+   },
+   "bad": {
+    "role": "negative",
+    "styles": [
+     "strike-through"
+    ]
+   },
+   "key": {
+    "role": "accent",
+    "styles": [
+     "box"
+    ]
+   }
+  },
+  "markup": "⟦good:…⟧ ⟦bad:…⟧ ⟦key:…⟧ — spoken form strips the marks"
+ },
+ "do": [
+  "write each line of a derivation as it is said, and keep earlier lines visible",
+  "circle the term that changes before you change it",
+  "carry a term between lines with a morph so the eye can follow it"
+ ],
+ "dont": [
+  "no clip-art or icons — it is a board, not a slide",
+  "never erase a line the next step still depends on",
+  "no more than one boxed result per frame"
+ ]
+}

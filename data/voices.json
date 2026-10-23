@@ -1,0 +1,2496 @@
+{
+ "schema": 1,
+ "about": "Local voice catalog. A menu of starting points, never a fence: any installed voice not listed here may still be cast (as an invented choice with a reason).",
+ "engines": {
+  "kokoro": {
+   "label": "Kokoro-82M (neural)",
+   "quality_prior": 3,
+   "tier": "neural",
+   "licence": "weights Apache-2.0; runtime kokoro-onnx MIT; phonemizer GPL-3.0 and espeak-ng GPL-3.0 are installed separately into the user venv, never shipped in the package",
+   "source": "model files: GitHub release assets of the kokoro-onnx project (tag model-files-v1.1); runtime: PyPI",
+   "default_voice": "af_heart",
+   "python": ">=3.10,<3.14",
+   "pip": [
+    "kokoro-onnx==0.6.1",
+    "soundfile==0.14.0"
+   ],
+   "import_check": [
+    "kokoro_onnx",
+    "soundfile"
+   ],
+   "files": [
+    {
+     "role": "model",
+     "name": "kokoro-v1.0.fp16.onnx",
+     "size": 163527961,
+     "sha256": "f3a290d384fbb27966d462905c71a46cef9e5fd00516b40df32a0b4afe77ac96",
+     "url": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.fp16.onnx",
+     "licence": "Apache-2.0"
+    },
+    {
+     "role": "voices",
+     "name": "voices-v1.0.bin",
+     "size": 28214398,
+     "sha256": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d",
+     "url": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/voices-v1.0.bin",
+     "licence": "Apache-2.0"
+    }
+   ],
+   "native_sample_rate": 24000,
+   "supports": {
+    "ssml": false,
+    "speed": true,
+    "pitch": false,
+    "emphasis": "forced primary stress on the word's phonemes",
+    "pause": "inserted silence between segments",
+    "word_timings": "yes — per-phoneme durations from the model's duration output, grouped into words"
+   }
+  },
+  "piper": {
+   "label": "Piper (fast neural)",
+   "quality_prior": 2,
+   "tier": "fast-neural",
+   "licence": "piper-tts 1.8.0 is GPL-3.0-or-later; installed separately into its own user venv and run through its own command line (never vendored, never imported by package code). Each voice carries its own model-card licence (see voices).",
+   "licence_note": "The last MIT-licensed release (piper-tts 1.2.0) needs piper-phonemize 1.1.0, which publishes no macOS arm64 wheel, so it cannot install on this class of machine.",
+   "source": "runtime: PyPI piper-tts; voices: the piper-voices model repository, pinned to revision 5041a7a49ae5b3a0f30e6837769eb03fdbb231bd",
+   "default_voice": "en_US-ljspeech-medium",
+   "python": ">=3.9",
+   "pip": [
+    "piper-tts==1.8.0"
+   ],
+   "import_check": [
+    "piper"
+   ],
+   "files": [
+    {
+     "name": "en_US-ljspeech-medium.onnx",
+     "subdir": "voices",
+     "size": 63531379,
+     "sha256": "6f52a751e2349abe7a76735eb09dc1875298c77ea2342ffd2fef79ff81b87f22",
+     "url": "https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/ljspeech/medium/en_US-ljspeech-medium.onnx",
+     "licence": "dataset public domain (LJ Speech); voice trained from scratch"
+    },
+    {
+     "name": "en_US-ljspeech-medium.onnx.json",
+     "subdir": "voices",
+     "size": 4972,
+     "sha256": "141d612cc0a95ed7efc1ca936b845c2364967f2e9217c5dbfcf69fc4d6c65860",
+     "url": "https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/ljspeech/medium/en_US-ljspeech-medium.onnx.json",
+     "licence": "as above"
+    },
+    {
+     "name": "en_US-ljspeech-medium.MODEL_CARD",
+     "subdir": "voices",
+     "size": 517,
+     "sha256": "fbee1529c89d36b3fe76d7e9f3f832dce17f44900a52d76a9bda735654766b4d",
+     "url": "https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/ljspeech/medium/MODEL_CARD",
+     "licence": "as above"
+    },
+    {
+     "name": "en_GB-cori-medium.onnx",
+     "subdir": "voices",
+     "size": 63531379,
+     "sha256": "1899f98e5fb8310154f3c2973f4b8a929ba7245e722b3d3a85680b833d95f10d",
+     "url": "https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/cori/medium/en_GB-cori-medium.onnx",
+     "licence": "dataset public domain (LibriVox recordings); voice trained from scratch"
+    },
+    {
+     "name": "en_GB-cori-medium.onnx.json",
+     "subdir": "voices",
+     "size": 4966,
+     "sha256": "e262c16d7f192f69d4edd6b4ef8a5915379e67495fcc402f1ab15eeb33da3d36",
+     "url": "https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/cori/medium/en_GB-cori-medium.onnx.json",
+     "licence": "as above"
+    },
+    {
+     "name": "en_GB-cori-medium.MODEL_CARD",
+     "subdir": "voices",
+     "size": 474,
+     "sha256": "38d76dfde845837b184668f8bab1c6426ad740b1af0fcebc349037822739e536",
+     "url": "https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/cori/medium/MODEL_CARD",
+     "licence": "as above"
+    },
+    {
+     "name": "en_US-norman-medium.onnx",
+     "subdir": "voices",
+     "size": 63531379,
+     "sha256": "b9739443232a80a59c7d18810dd856899bf16a7964725f5ab81ea49b1351cb71",
+     "url": "https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/norman/medium/en_US-norman-medium.onnx",
+     "licence": "dataset public domain (LibriVox recordings); voice trained from scratch"
+    },
+    {
+     "name": "en_US-norman-medium.onnx.json",
+     "subdir": "voices",
+     "size": 4968,
+     "sha256": "6c2db7f558a4a8deb9fe822583c1c5105f6c4e834dd0f9de8ad17a888ee9fe1d",
+     "url": "https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/norman/medium/en_US-norman-medium.onnx.json",
+     "licence": "as above"
+    },
+    {
+     "name": "en_US-norman-medium.MODEL_CARD",
+     "subdir": "voices",
+     "size": 528,
+     "sha256": "60eaf4d10009d1bd4a1aa555d337dae00f60421d72fee415b9139a021e7cb5d0",
+     "url": "https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/norman/medium/MODEL_CARD",
+     "licence": "as above"
+    }
+   ],
+   "voice_selection_rule": "only voices trained from scratch on public-domain recordings were chosen; voices whose dataset or base checkpoint carries a non-commercial or research-only licence were skipped (hfc_female, hfc_male, ryan: CC BY-NC(-SA); semaine: CC BY-NC-SA; lessac: research-licence dataset, and most other voices are fine-tuned from it)",
+   "native_sample_rate": 22050,
+   "supports": {
+    "ssml": false,
+    "speed": true,
+    "pitch": false,
+    "emphasis": false,
+    "pause": "inserted silence between segments",
+    "word_timings": "no — the command line gives none (the library can, with an extra package, but the package keeps piper at arm's length); use the E2 fallback aligner"
+   }
+  },
+  "say": {
+   "label": "macOS system voice",
+   "quality_prior": 1,
+   "tier": "os",
+   "licence": "part of macOS (Apple licence); not redistributed",
+   "source": "operating system",
+   "default_voice": "Samantha",
+   "base_wpm": 180,
+   "files": [],
+   "native_sample_rate": 24000,
+   "supports": {
+    "ssml": false,
+    "speed": true,
+    "pitch": false,
+    "emphasis": "embedded [[emph +]] command",
+    "pause": "inserted silence between segments",
+    "word_timings": "no — `say` writes audio only; use the E2 fallback aligner"
+   }
+  },
+  "espeak-ng": {
+   "label": "eSpeak NG (formant, optional)",
+   "quality_prior": 0.5,
+   "tier": "os",
+   "licence": "GPL-3.0; used only when the user already has it on PATH",
+   "source": "system package manager",
+   "default_voice": "en-us",
+   "files": [],
+   "native_sample_rate": 22050,
+   "supports": {
+    "ssml": true,
+    "speed": true,
+    "pitch": true,
+    "emphasis": "SSML <emphasis>",
+    "pause": "inserted silence between segments",
+    "word_timings": "not used here"
+   }
+  }
+ },
+ "voices": [
+  {
+   "id": "kokoro:af_alloy",
+   "engine": "kokoro",
+   "engine_voice": "af_alloy",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, mid register, lively, varied delivery; clear enough. About 200 words per minute at normal speed.",
+   "warmth": 0.96,
+   "energy": 0.68,
+   "clarity": 0.64,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "kids",
+    "tutorial"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C",
+   "clarity_source": "published training-data grade C",
+   "measured": {
+    "seconds": 8.11,
+    "wpm": 199.8,
+    "f0_median_hz": 146.3,
+    "f0_spread_st": 4.47,
+    "centroid_hz": 443.0,
+    "loudness_var_db": 5.34,
+    "voiced_frames": 486
+   }
+  },
+  {
+   "id": "kokoro:af_aoede",
+   "engine": "kokoro",
+   "engine_voice": "af_aoede",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, high register, lively, varied delivery; clean. About 188 words per minute at normal speed.",
+   "warmth": 0.83,
+   "energy": 0.72,
+   "clarity": 0.7,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "kids",
+    "tutorial"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C+",
+   "clarity_source": "published training-data grade C+",
+   "measured": {
+    "seconds": 8.64,
+    "wpm": 187.6,
+    "f0_median_hz": 187.5,
+    "f0_spread_st": 5.21,
+    "centroid_hz": 610.0,
+    "loudness_var_db": 5.8,
+    "voiced_frames": 607
+   }
+  },
+  {
+   "id": "kokoro:af_bella",
+   "engine": "kokoro",
+   "engine_voice": "af_bella",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, high register, steady delivery; very clean. About 178 words per minute at normal speed.",
+   "warmth": 0.74,
+   "energy": 0.45,
+   "clarity": 0.9,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "documentary",
+    "tutorial",
+    "technical deep-dive"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "A-",
+   "clarity_source": "published training-data grade A-",
+   "measured": {
+    "seconds": 9.11,
+    "wpm": 177.9,
+    "f0_median_hz": 203.4,
+    "f0_spread_st": 3.43,
+    "centroid_hz": 676.0,
+    "loudness_var_db": 5.08,
+    "voiced_frames": 534
+   }
+  },
+  {
+   "id": "kokoro:af_heart",
+   "engine": "kokoro",
+   "engine_voice": "af_heart",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "balanced timbre, high register, steady delivery; very clean. About 185 words per minute at normal speed.",
+   "warmth": 0.6,
+   "energy": 0.63,
+   "clarity": 0.95,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "kids",
+    "tutorial",
+    "technical deep-dive"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "A",
+   "clarity_source": "published training-data grade A",
+   "measured": {
+    "seconds": 8.76,
+    "wpm": 185.0,
+    "f0_median_hz": 200.0,
+    "f0_spread_st": 4.61,
+    "centroid_hz": 785.0,
+    "loudness_var_db": 5.48,
+    "voiced_frames": 533
+   }
+  },
+  {
+   "id": "kokoro:af_jessica",
+   "engine": "kokoro",
+   "engine_voice": "af_jessica",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "bright timbre, high register, lively, varied delivery; audibly synthetic. About 214 words per minute at normal speed.",
+   "warmth": 0.08,
+   "energy": 0.67,
+   "clarity": 0.45,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D",
+   "clarity_source": "published training-data grade D",
+   "measured": {
+    "seconds": 7.55,
+    "wpm": 214.5,
+    "f0_median_hz": 212.4,
+    "f0_spread_st": 5.07,
+    "centroid_hz": 1098.0,
+    "loudness_var_db": 4.89,
+    "voiced_frames": 530
+   }
+  },
+  {
+   "id": "kokoro:af_kore",
+   "engine": "kokoro",
+   "engine_voice": "af_kore",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, mid register, lively, varied delivery; clean. About 171 words per minute at normal speed.",
+   "warmth": 0.75,
+   "energy": 0.65,
+   "clarity": 0.7,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "kids",
+    "tutorial",
+    "technical deep-dive"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C+",
+   "clarity_source": "published training-data grade C+",
+   "measured": {
+    "seconds": 9.46,
+    "wpm": 171.2,
+    "f0_median_hz": 151.9,
+    "f0_spread_st": 7.16,
+    "centroid_hz": 643.0,
+    "loudness_var_db": 5.78,
+    "voiced_frames": 614
+   }
+  },
+  {
+   "id": "kokoro:af_nicole",
+   "engine": "kokoro",
+   "engine_voice": "af_nicole",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "balanced timbre, mid register, steady delivery; clean. About 119 words per minute at normal speed. Soft, close, headphone-style delivery; slow.",
+   "warmth": 0.47,
+   "energy": 0.6,
+   "clarity": 0.78,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "executive brief",
+    "kids",
+    "documentary",
+    "tutorial",
+    "technical deep-dive"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "B-",
+   "clarity_source": "published training-data grade B-",
+   "measured": {
+    "seconds": 13.6,
+    "wpm": 119.1,
+    "f0_median_hz": 177.8,
+    "f0_spread_st": 6.25,
+    "centroid_hz": 820.0,
+    "loudness_var_db": 6.49,
+    "voiced_frames": 531
+   }
+  },
+  {
+   "id": "kokoro:af_nova",
+   "engine": "kokoro",
+   "engine_voice": "af_nova",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, mid register, lively, varied delivery; clear enough. About 197 words per minute at normal speed.",
+   "warmth": 0.89,
+   "energy": 0.79,
+   "clarity": 0.64,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "kids"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C",
+   "clarity_source": "published training-data grade C",
+   "measured": {
+    "seconds": 8.22,
+    "wpm": 197.1,
+    "f0_median_hz": 163.3,
+    "f0_spread_st": 5.87,
+    "centroid_hz": 560.0,
+    "loudness_var_db": 5.79,
+    "voiced_frames": 520
+   }
+  },
+  {
+   "id": "kokoro:af_river",
+   "engine": "kokoro",
+   "engine_voice": "af_river",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "bright timbre, mid register, lively, varied delivery; audibly synthetic. About 217 words per minute at normal speed.",
+   "warmth": 0.17,
+   "energy": 0.72,
+   "clarity": 0.45,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D",
+   "clarity_source": "published training-data grade D",
+   "measured": {
+    "seconds": 7.45,
+    "wpm": 217.4,
+    "f0_median_hz": 177.8,
+    "f0_spread_st": 4.22,
+    "centroid_hz": 1002.0,
+    "loudness_var_db": 5.29,
+    "voiced_frames": 520
+   }
+  },
+  {
+   "id": "kokoro:af_sarah",
+   "engine": "kokoro",
+   "engine_voice": "af_sarah",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "bright timbre, high register, lively, varied delivery; clean. About 193 words per minute at normal speed.",
+   "warmth": 0.21,
+   "energy": 0.68,
+   "clarity": 0.7,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "tutorial"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C+",
+   "clarity_source": "published training-data grade C+",
+   "measured": {
+    "seconds": 8.4,
+    "wpm": 192.8,
+    "f0_median_hz": 195.1,
+    "f0_spread_st": 5.85,
+    "centroid_hz": 994.0,
+    "loudness_var_db": 5.24,
+    "voiced_frames": 517
+   }
+  },
+  {
+   "id": "kokoro:af_sky",
+   "engine": "kokoro",
+   "engine_voice": "af_sky",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, mid register, lively, varied delivery; clear enough. About 197 words per minute at normal speed.",
+   "warmth": 0.79,
+   "energy": 0.75,
+   "clarity": 0.58,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C-",
+   "clarity_source": "published training-data grade C-",
+   "measured": {
+    "seconds": 8.21,
+    "wpm": 197.2,
+    "f0_median_hz": 164.4,
+    "f0_spread_st": 5.56,
+    "centroid_hz": 631.0,
+    "loudness_var_db": 5.56,
+    "voiced_frames": 510
+   }
+  },
+  {
+   "id": "kokoro:am_adam",
+   "engine": "kokoro",
+   "engine_voice": "am_adam",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "balanced timbre, low register, lively, varied delivery; audibly synthetic. About 203 words per minute at normal speed.",
+   "warmth": 0.49,
+   "energy": 0.76,
+   "clarity": 0.3,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "F+",
+   "clarity_source": "published training-data grade F+",
+   "measured": {
+    "seconds": 7.97,
+    "wpm": 203.2,
+    "f0_median_hz": 126.3,
+    "f0_spread_st": 4.64,
+    "centroid_hz": 814.0,
+    "loudness_var_db": 5.79,
+    "voiced_frames": 495
+   }
+  },
+  {
+   "id": "kokoro:am_echo",
+   "engine": "kokoro",
+   "engine_voice": "am_echo",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, low register, lively, varied delivery; audibly synthetic. About 205 words per minute at normal speed.",
+   "warmth": 0.98,
+   "energy": 0.87,
+   "clarity": 0.45,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D",
+   "clarity_source": "published training-data grade D",
+   "measured": {
+    "seconds": 7.9,
+    "wpm": 205.0,
+    "f0_median_hz": 120.6,
+    "f0_spread_st": 7.71,
+    "centroid_hz": 431.0,
+    "loudness_var_db": 5.72,
+    "voiced_frames": 487
+   }
+  },
+  {
+   "id": "kokoro:am_eric",
+   "engine": "kokoro",
+   "engine_voice": "am_eric",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, mid register, lively, varied delivery; audibly synthetic. About 225 words per minute at normal speed.",
+   "warmth": 0.7,
+   "energy": 0.76,
+   "clarity": 0.45,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D",
+   "clarity_source": "published training-data grade D",
+   "measured": {
+    "seconds": 7.21,
+    "wpm": 224.6,
+    "f0_median_hz": 157.4,
+    "f0_spread_st": 5.28,
+    "centroid_hz": 706.0,
+    "loudness_var_db": 5.23,
+    "voiced_frames": 530
+   }
+  },
+  {
+   "id": "kokoro:am_fenrir",
+   "engine": "kokoro",
+   "engine_voice": "am_fenrir",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "bright timbre, mid register, lively, varied delivery; clean. About 182 words per minute at normal speed.",
+   "warmth": 0.26,
+   "energy": 0.79,
+   "clarity": 0.7,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C+",
+   "clarity_source": "published training-data grade C+",
+   "measured": {
+    "seconds": 8.89,
+    "wpm": 182.2,
+    "f0_median_hz": 137.1,
+    "f0_spread_st": 7.89,
+    "centroid_hz": 963.0,
+    "loudness_var_db": 5.88,
+    "voiced_frames": 572
+   }
+  },
+  {
+   "id": "kokoro:am_liam",
+   "engine": "kokoro",
+   "engine_voice": "am_liam",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "bright timbre, low register, lively, varied delivery; audibly synthetic. About 215 words per minute at normal speed.",
+   "warmth": 0.3,
+   "energy": 0.94,
+   "clarity": 0.45,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D",
+   "clarity_source": "published training-data grade D",
+   "measured": {
+    "seconds": 7.52,
+    "wpm": 215.3,
+    "f0_median_hz": 134.8,
+    "f0_spread_st": 9.24,
+    "centroid_hz": 947.0,
+    "loudness_var_db": 5.83,
+    "voiced_frames": 547
+   }
+  },
+  {
+   "id": "kokoro:am_michael",
+   "engine": "kokoro",
+   "engine_voice": "am_michael",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "balanced timbre, low register, steady delivery; clean. About 175 words per minute at normal speed.",
+   "warmth": 0.43,
+   "energy": 0.59,
+   "clarity": 0.7,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "executive brief",
+    "kids",
+    "tutorial",
+    "technical deep-dive"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C+",
+   "clarity_source": "published training-data grade C+",
+   "measured": {
+    "seconds": 9.26,
+    "wpm": 175.0,
+    "f0_median_hz": 120.9,
+    "f0_spread_st": 6.47,
+    "centroid_hz": 843.0,
+    "loudness_var_db": 5.13,
+    "voiced_frames": 580
+   }
+  },
+  {
+   "id": "kokoro:am_onyx",
+   "engine": "kokoro",
+   "engine_voice": "am_onyx",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, low register, lively, varied delivery; audibly synthetic. About 189 words per minute at normal speed.",
+   "warmth": 1.0,
+   "energy": 0.81,
+   "clarity": 0.45,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D",
+   "clarity_source": "published training-data grade D",
+   "measured": {
+    "seconds": 8.58,
+    "wpm": 188.9,
+    "f0_median_hz": 110.1,
+    "f0_spread_st": 26.04,
+    "centroid_hz": 367.0,
+    "loudness_var_db": 5.63,
+    "voiced_frames": 514
+   }
+  },
+  {
+   "id": "kokoro:am_puck",
+   "engine": "kokoro",
+   "engine_voice": "am_puck",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "balanced timbre, low register, steady delivery; clean. About 179 words per minute at normal speed.",
+   "warmth": 0.62,
+   "energy": 0.62,
+   "clarity": 0.7,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "kids",
+    "tutorial",
+    "technical deep-dive"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C+",
+   "clarity_source": "published training-data grade C+",
+   "measured": {
+    "seconds": 9.05,
+    "wpm": 178.9,
+    "f0_median_hz": 117.1,
+    "f0_spread_st": 11.15,
+    "centroid_hz": 771.0,
+    "loudness_var_db": 4.94,
+    "voiced_frames": 554
+   }
+  },
+  {
+   "id": "kokoro:am_santa",
+   "engine": "kokoro",
+   "engine_voice": "am_santa",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. balanced timbre, mid register, lively, varied delivery; audibly synthetic. About 175 words per minute at normal speed.",
+   "warmth": 0.45,
+   "energy": 0.7,
+   "clarity": 0.35,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D-",
+   "clarity_source": "published training-data grade D-",
+   "measured": {
+    "seconds": 9.26,
+    "wpm": 174.9,
+    "f0_median_hz": 172.7,
+    "f0_spread_st": 9.93,
+    "centroid_hz": 832.0,
+    "loudness_var_db": 5.46,
+    "voiced_frames": 579
+   },
+   "novelty": true
+  },
+  {
+   "id": "kokoro:bf_alice",
+   "engine": "kokoro",
+   "engine_voice": "bf_alice",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "bright timbre, high register, lively, varied delivery; audibly synthetic. About 187 words per minute at normal speed.",
+   "warmth": 0.23,
+   "energy": 0.67,
+   "clarity": 0.45,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D",
+   "clarity_source": "published training-data grade D",
+   "measured": {
+    "seconds": 8.65,
+    "wpm": 187.2,
+    "f0_median_hz": 214.3,
+    "f0_spread_st": 5.69,
+    "centroid_hz": 975.0,
+    "loudness_var_db": 5.35,
+    "voiced_frames": 552
+   }
+  },
+  {
+   "id": "kokoro:bf_emma",
+   "engine": "kokoro",
+   "engine_voice": "bf_emma",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "bright timbre, mid register, steady delivery; clean. About 201 words per minute at normal speed.",
+   "warmth": 0.06,
+   "energy": 0.59,
+   "clarity": 0.78,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "executive brief",
+    "tutorial",
+    "technical deep-dive"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "B-",
+   "clarity_source": "published training-data grade B-",
+   "measured": {
+    "seconds": 8.06,
+    "wpm": 201.1,
+    "f0_median_hz": 181.8,
+    "f0_spread_st": 3.74,
+    "centroid_hz": 1120.0,
+    "loudness_var_db": 5.12,
+    "voiced_frames": 483
+   }
+  },
+  {
+   "id": "kokoro:bf_isabella",
+   "engine": "kokoro",
+   "engine_voice": "bf_isabella",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "balanced timbre, high register, steady delivery; clear enough. About 204 words per minute at normal speed.",
+   "warmth": 0.45,
+   "energy": 0.59,
+   "clarity": 0.64,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "kids",
+    "documentary",
+    "tutorial"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C",
+   "clarity_source": "published training-data grade C",
+   "measured": {
+    "seconds": 7.96,
+    "wpm": 203.6,
+    "f0_median_hz": 201.7,
+    "f0_spread_st": 3.56,
+    "centroid_hz": 836.0,
+    "loudness_var_db": 5.07,
+    "voiced_frames": 469
+   }
+  },
+  {
+   "id": "kokoro:bf_lily",
+   "engine": "kokoro",
+   "engine_voice": "bf_lily",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "balanced timbre, high register, lively, varied delivery; audibly synthetic. About 192 words per minute at normal speed.",
+   "warmth": 0.36,
+   "energy": 0.74,
+   "clarity": 0.45,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D",
+   "clarity_source": "published training-data grade D",
+   "measured": {
+    "seconds": 8.43,
+    "wpm": 192.2,
+    "f0_median_hz": 196.7,
+    "f0_spread_st": 6.91,
+    "centroid_hz": 911.0,
+    "loudness_var_db": 5.33,
+    "voiced_frames": 560
+   }
+  },
+  {
+   "id": "kokoro:bm_daniel",
+   "engine": "kokoro",
+   "engine_voice": "bm_daniel",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "balanced timbre, low register, lively, varied delivery; audibly synthetic. About 209 words per minute at normal speed.",
+   "warmth": 0.51,
+   "energy": 0.72,
+   "clarity": 0.45,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D",
+   "clarity_source": "published training-data grade D",
+   "measured": {
+    "seconds": 7.74,
+    "wpm": 209.4,
+    "f0_median_hz": 127.7,
+    "f0_spread_st": 3.86,
+    "centroid_hz": 812.0,
+    "loudness_var_db": 5.43,
+    "voiced_frames": 533
+   }
+  },
+  {
+   "id": "kokoro:bm_fable",
+   "engine": "kokoro",
+   "engine_voice": "bm_fable",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "warm timbre, mid register, lively, varied delivery; clear enough. About 181 words per minute at normal speed.",
+   "warmth": 0.91,
+   "energy": 0.81,
+   "clarity": 0.64,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "kids"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C",
+   "clarity_source": "published training-data grade C",
+   "measured": {
+    "seconds": 8.94,
+    "wpm": 181.3,
+    "f0_median_hz": 139.9,
+    "f0_spread_st": 19.77,
+    "centroid_hz": 505.0,
+    "loudness_var_db": 6.96,
+    "voiced_frames": 536
+   }
+  },
+  {
+   "id": "kokoro:bm_george",
+   "engine": "kokoro",
+   "engine_voice": "bm_george",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "balanced timbre, mid register, calm, even delivery; clear enough. About 170 words per minute at normal speed.",
+   "warmth": 0.55,
+   "energy": 0.35,
+   "clarity": 0.64,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "executive brief",
+    "documentary",
+    "tutorial"
+   ],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "C",
+   "clarity_source": "published training-data grade C",
+   "measured": {
+    "seconds": 9.52,
+    "wpm": 170.1,
+    "f0_median_hz": 143.7,
+    "f0_spread_st": 3.94,
+    "centroid_hz": 810.0,
+    "loudness_var_db": 4.97,
+    "voiced_frames": 651
+   }
+  },
+  {
+   "id": "kokoro:bm_lewis",
+   "engine": "kokoro",
+   "engine_voice": "bm_lewis",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "balanced timbre, mid register, steady delivery; clear enough. About 172 words per minute at normal speed.",
+   "warmth": 0.64,
+   "energy": 0.62,
+   "clarity": 0.5,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [],
+   "licence": "Apache-2.0 (Kokoro-82M voice pack)",
+   "quality_grade": "D+",
+   "clarity_source": "published training-data grade D+",
+   "measured": {
+    "seconds": 9.43,
+    "wpm": 171.8,
+    "f0_median_hz": 136.4,
+    "f0_spread_st": 6.49,
+    "centroid_hz": 763.0,
+    "loudness_var_db": 5.55,
+    "voiced_frames": 462
+   }
+  },
+  {
+   "id": "piper:en_GB-cori-medium",
+   "engine": "piper",
+   "engine_voice": "en_GB-cori-medium",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "bright timbre, high register, steady delivery; clear enough. About 188 words per minute at normal speed.",
+   "warmth": 0.02,
+   "energy": 0.45,
+   "clarity": 0.66,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "tutorial",
+    "technical deep-dive"
+   ],
+   "licence": "model card: dataset public domain; voice trained from scratch",
+   "quality_grade": null,
+   "clarity_source": "medium-quality model trained from scratch",
+   "measured": {
+    "seconds": 8.64,
+    "wpm": 187.5,
+    "f0_median_hz": 203.4,
+    "f0_spread_st": 3.77,
+    "centroid_hz": 1164.0,
+    "loudness_var_db": 4.5,
+    "voiced_frames": 452
+   }
+  },
+  {
+   "id": "piper:en_US-ljspeech-medium",
+   "engine": "piper",
+   "engine_voice": "en_US-ljspeech-medium",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "bright timbre, high register, lively, varied delivery; clear enough. About 189 words per minute at normal speed.",
+   "warmth": 0.0,
+   "energy": 0.69,
+   "clarity": 0.66,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "tutorial"
+   ],
+   "licence": "model card: dataset public domain; voice trained from scratch",
+   "quality_grade": null,
+   "clarity_source": "medium-quality model trained from scratch",
+   "measured": {
+    "seconds": 8.58,
+    "wpm": 188.8,
+    "f0_median_hz": 205.1,
+    "f0_spread_st": 5.97,
+    "centroid_hz": 1322.0,
+    "loudness_var_db": 5.31,
+    "voiced_frames": 480
+   }
+  },
+  {
+   "id": "piper:en_US-norman-medium",
+   "engine": "piper",
+   "engine_voice": "en_US-norman-medium",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "bright timbre, low register, steady delivery; clear enough. About 206 words per minute at normal speed.",
+   "warmth": 0.21,
+   "energy": 0.59,
+   "clarity": 0.66,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.2
+   ],
+   "best_for": [
+    "explainer",
+    "executive brief",
+    "tutorial",
+    "technical deep-dive"
+   ],
+   "licence": "model card: dataset public domain; voice trained from scratch",
+   "quality_grade": null,
+   "clarity_source": "medium-quality model trained from scratch",
+   "measured": {
+    "seconds": 7.86,
+    "wpm": 206.1,
+    "f0_median_hz": 107.6,
+    "f0_spread_st": 5.49,
+    "centroid_hz": 994.0,
+    "loudness_var_db": 4.26,
+    "voiced_frames": 292
+   }
+  },
+  {
+   "id": "say:Albert",
+   "engine": "say",
+   "engine_voice": "Albert",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, steady delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.08,
+   "energy": 0.61,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 242.4,
+    "f0_spread_st": 6.47,
+    "centroid_hz": 1080.0,
+    "loudness_var_db": 6.06,
+    "voiced_frames": 366
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Aman (English (India))",
+   "engine": "say",
+   "engine_voice": "Aman (English (India))",
+   "lang": "en-in",
+   "accent": "Indian English",
+   "description": "bright timbre, low register, steady delivery; clear enough. About 221 words per minute at normal speed.",
+   "warmth": 0.13,
+   "energy": 0.57,
+   "clarity": 0.5,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS concatenative voice",
+   "measured": {
+    "seconds": 7.34,
+    "wpm": 220.8,
+    "f0_median_hz": 132.6,
+    "f0_spread_st": 3.47,
+    "centroid_hz": 1006.0,
+    "loudness_var_db": 4.5,
+    "voiced_frames": 463
+   },
+   "aliases": [
+    "Aman US"
+   ]
+  },
+  {
+   "id": "say:Bad News",
+   "engine": "say",
+   "engine_voice": "Bad News",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. warm timbre, low register, calm, even delivery; audibly synthetic. About 79 words per minute at normal speed.",
+   "warmth": 0.79,
+   "energy": 0.0,
+   "clarity": 0.1,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 20.57,
+    "wpm": 78.8,
+    "f0_median_hz": 76.4,
+    "f0_spread_st": 0.28,
+    "centroid_hz": 626.0,
+    "loudness_var_db": 1.86,
+    "voiced_frames": 595
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Bahh",
+   "engine": "say",
+   "engine_voice": "Bahh",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, steady delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.0,
+   "energy": 0.59,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 269.7,
+    "f0_spread_st": 12.23,
+    "centroid_hz": 1184.0,
+    "loudness_var_db": 5.49,
+    "voiced_frames": 248
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Bells",
+   "engine": "say",
+   "engine_voice": "Bells",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. balanced timbre, high register, steady delivery; audibly synthetic. About 59 words per minute at normal speed.",
+   "warmth": 0.58,
+   "energy": 0.36,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 27.45,
+    "wpm": 59.0,
+    "f0_median_hz": 255.3,
+    "f0_spread_st": 14.93,
+    "centroid_hz": 793.0,
+    "loudness_var_db": 3.76,
+    "voiced_frames": 1694
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Boing",
+   "engine": "say",
+   "engine_voice": "Boing",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, steady delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.0,
+   "energy": 0.42,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 358.2,
+    "f0_spread_st": 2.31,
+    "centroid_hz": 1258.0,
+    "loudness_var_db": 6.03,
+    "voiced_frames": 319
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Bubbles",
+   "engine": "say",
+   "engine_voice": "Bubbles",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. balanced timbre, high register, steady delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.4,
+   "energy": 0.5,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 324.3,
+    "f0_spread_st": 5.05,
+    "centroid_hz": 862.0,
+    "loudness_var_db": 5.61,
+    "voiced_frames": 298
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Cellos",
+   "engine": "say",
+   "engine_voice": "Cellos",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. warm timbre, low register, calm, even delivery; audibly synthetic. About 98 words per minute at normal speed.",
+   "warmth": 0.81,
+   "energy": 0.23,
+   "clarity": 0.1,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 16.6,
+    "wpm": 97.6,
+    "f0_median_hz": 108.6,
+    "f0_spread_st": 4.08,
+    "centroid_hz": 615.0,
+    "loudness_var_db": 4.06,
+    "voiced_frames": 1121
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Daniel",
+   "engine": "say",
+   "engine_voice": "Daniel",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "bright timbre, low register, steady delivery; clear enough. About 193 words per minute at normal speed.",
+   "warmth": 0.04,
+   "energy": 0.55,
+   "clarity": 0.5,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS concatenative voice",
+   "measured": {
+    "seconds": 8.38,
+    "wpm": 193.4,
+    "f0_median_hz": 114.8,
+    "f0_spread_st": 4.36,
+    "centroid_hz": 1145.0,
+    "loudness_var_db": 4.7,
+    "voiced_frames": 463
+   }
+  },
+  {
+   "id": "say:Eddy (English (UK))",
+   "engine": "say",
+   "engine_voice": "Eddy (English (UK))",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "bright timbre, low register, calm, even delivery; audibly synthetic. About 170 words per minute at normal speed.",
+   "warmth": 0.17,
+   "energy": 0.18,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.5,
+    "wpm": 170.5,
+    "f0_median_hz": 122.1,
+    "f0_spread_st": 2.07,
+    "centroid_hz": 1002.0,
+    "loudness_var_db": 4.3,
+    "voiced_frames": 500
+   },
+   "aliases": [
+    "Eddy UK"
+   ]
+  },
+  {
+   "id": "say:Eddy (English (US))",
+   "engine": "say",
+   "engine_voice": "Eddy (English (US))",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "bright timbre, low register, calm, even delivery; audibly synthetic. About 172 words per minute at normal speed.",
+   "warmth": 0.32,
+   "energy": 0.16,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.41,
+    "wpm": 172.2,
+    "f0_median_hz": 122.4,
+    "f0_spread_st": 1.96,
+    "centroid_hz": 928.0,
+    "loudness_var_db": 3.88,
+    "voiced_frames": 497
+   },
+   "aliases": [
+    "Eddy US"
+   ]
+  },
+  {
+   "id": "say:Flo (English (UK))",
+   "engine": "say",
+   "engine_voice": "Flo (English (UK))",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "balanced timbre, high register, calm, even delivery; audibly synthetic. About 170 words per minute at normal speed.",
+   "warmth": 0.42,
+   "energy": 0.18,
+   "clarity": 0.42,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.5,
+    "wpm": 170.5,
+    "f0_median_hz": 247.4,
+    "f0_spread_st": 1.98,
+    "centroid_hz": 855.0,
+    "loudness_var_db": 4.51,
+    "voiced_frames": 545
+   },
+   "aliases": [
+    "Flo UK"
+   ]
+  },
+  {
+   "id": "say:Flo (English (US))",
+   "engine": "say",
+   "engine_voice": "Flo (English (US))",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "balanced timbre, high register, calm, even delivery; audibly synthetic. About 172 words per minute at normal speed.",
+   "warmth": 0.58,
+   "energy": 0.19,
+   "clarity": 0.42,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.41,
+    "wpm": 172.2,
+    "f0_median_hz": 247.4,
+    "f0_spread_st": 1.98,
+    "centroid_hz": 794.0,
+    "loudness_var_db": 4.25,
+    "voiced_frames": 546
+   },
+   "aliases": [
+    "Flo US"
+   ]
+  },
+  {
+   "id": "say:Fred",
+   "engine": "say",
+   "engine_voice": "Fred",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. warm timbre, low register, calm, even delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.74,
+   "energy": 0.16,
+   "clarity": 0.1,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 103.0,
+    "f0_spread_st": 3.47,
+    "centroid_hz": 652.0,
+    "loudness_var_db": 3.68,
+    "voiced_frames": 544
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Good News",
+   "engine": "say",
+   "engine_voice": "Good News",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, calm, even delivery; audibly synthetic. About 55 words per minute at normal speed.",
+   "warmth": 0.0,
+   "energy": 0.21,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 29.26,
+    "wpm": 55.4,
+    "f0_median_hz": 206.9,
+    "f0_spread_st": 4.89,
+    "centroid_hz": 1272.0,
+    "loudness_var_db": 2.65,
+    "voiced_frames": 2460
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Grandma (English (UK))",
+   "engine": "say",
+   "engine_voice": "Grandma (English (UK))",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "balanced timbre, low register, calm, even delivery; audibly synthetic. About 170 words per minute at normal speed.",
+   "warmth": 0.57,
+   "energy": 0.07,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.5,
+    "wpm": 170.5,
+    "f0_median_hz": 118.8,
+    "f0_spread_st": 1.81,
+    "centroid_hz": 798.0,
+    "loudness_var_db": 3.71,
+    "voiced_frames": 499
+   },
+   "aliases": [
+    "Grandma UK"
+   ]
+  },
+  {
+   "id": "say:Grandma (English (US))",
+   "engine": "say",
+   "engine_voice": "Grandma (English (US))",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, low register, calm, even delivery; audibly synthetic. About 172 words per minute at normal speed.",
+   "warmth": 0.68,
+   "energy": 0.13,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.41,
+    "wpm": 172.2,
+    "f0_median_hz": 119.4,
+    "f0_spread_st": 1.64,
+    "centroid_hz": 711.0,
+    "loudness_var_db": 4.08,
+    "voiced_frames": 514
+   },
+   "aliases": [
+    "Grandma US"
+   ]
+  },
+  {
+   "id": "say:Grandpa (English (UK))",
+   "engine": "say",
+   "engine_voice": "Grandpa (English (UK))",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "warm timbre, low register, calm, even delivery; audibly synthetic. About 170 words per minute at normal speed.",
+   "warmth": 0.81,
+   "energy": 0.15,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.5,
+    "wpm": 170.5,
+    "f0_median_hz": 94.5,
+    "f0_spread_st": 2.55,
+    "centroid_hz": 617.0,
+    "loudness_var_db": 3.73,
+    "voiced_frames": 358
+   },
+   "aliases": [
+    "Grandpa UK"
+   ]
+  },
+  {
+   "id": "say:Grandpa (English (US))",
+   "engine": "say",
+   "engine_voice": "Grandpa (English (US))",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, low register, calm, even delivery; audibly synthetic. About 172 words per minute at normal speed.",
+   "warmth": 0.85,
+   "energy": 0.19,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.41,
+    "wpm": 172.2,
+    "f0_median_hz": 94.5,
+    "f0_spread_st": 2.53,
+    "centroid_hz": 575.0,
+    "loudness_var_db": 3.7,
+    "voiced_frames": 362
+   },
+   "aliases": [
+    "Grandpa US"
+   ]
+  },
+  {
+   "id": "say:Jester",
+   "engine": "say",
+   "engine_voice": "Jester",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, steady delivery; audibly synthetic. About 62 words per minute at normal speed.",
+   "warmth": 0.0,
+   "energy": 0.47,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 26.08,
+    "wpm": 62.1,
+    "f0_median_hz": 324.3,
+    "f0_spread_st": 3.03,
+    "centroid_hz": 1243.0,
+    "loudness_var_db": 6.48,
+    "voiced_frames": 1445
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Junior",
+   "engine": "say",
+   "engine_voice": "Junior",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, calm, even delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.13,
+   "energy": 0.22,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 208.7,
+    "f0_spread_st": 2.79,
+    "centroid_hz": 1003.0,
+    "loudness_var_db": 4.3,
+    "voiced_frames": 609
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Karen",
+   "engine": "say",
+   "engine_voice": "Karen",
+   "lang": "en-au",
+   "accent": "Australian English",
+   "description": "bright timbre, high register, steady delivery; clear enough. About 204 words per minute at normal speed.",
+   "warmth": 0.11,
+   "energy": 0.54,
+   "clarity": 0.5,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS concatenative voice",
+   "measured": {
+    "seconds": 7.93,
+    "wpm": 204.2,
+    "f0_median_hz": 189.0,
+    "f0_spread_st": 1.91,
+    "centroid_hz": 1013.0,
+    "loudness_var_db": 5.3,
+    "voiced_frames": 558
+   }
+  },
+  {
+   "id": "say:Kathy",
+   "engine": "say",
+   "engine_voice": "Kathy",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. balanced timbre, high register, calm, even delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.6,
+   "energy": 0.18,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 208.7,
+    "f0_spread_st": 2.79,
+    "centroid_hz": 783.0,
+    "loudness_var_db": 3.91,
+    "voiced_frames": 600
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Moira",
+   "engine": "say",
+   "engine_voice": "Moira",
+   "lang": "en-ie",
+   "accent": "Irish English",
+   "description": "bright timbre, high register, steady delivery; clear enough. About 186 words per minute at normal speed.",
+   "warmth": 0.28,
+   "energy": 0.42,
+   "clarity": 0.5,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS concatenative voice",
+   "measured": {
+    "seconds": 8.7,
+    "wpm": 186.1,
+    "f0_median_hz": 187.5,
+    "f0_spread_st": 2.67,
+    "centroid_hz": 953.0,
+    "loudness_var_db": 4.58,
+    "voiced_frames": 573
+   }
+  },
+  {
+   "id": "say:Organ",
+   "engine": "say",
+   "engine_voice": "Organ",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. balanced timbre, high register, steady delivery; audibly synthetic. About 87 words per minute at normal speed.",
+   "warmth": 0.6,
+   "energy": 0.42,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 18.54,
+    "wpm": 87.4,
+    "f0_median_hz": 259.5,
+    "f0_spread_st": 22.98,
+    "centroid_hz": 776.0,
+    "loudness_var_db": 4.42,
+    "voiced_frames": 932
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Ralph",
+   "engine": "say",
+   "engine_voice": "Ralph",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. warm timbre, low register, calm, even delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.83,
+   "energy": 0.13,
+   "clarity": 0.1,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 84.1,
+    "f0_spread_st": 2.0,
+    "centroid_hz": 593.0,
+    "loudness_var_db": 4.04,
+    "voiced_frames": 154
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Reed (English (UK))",
+   "engine": "say",
+   "engine_voice": "Reed (English (UK))",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "bright timbre, low register, calm, even delivery; audibly synthetic. About 170 words per minute at normal speed.",
+   "warmth": 0.25,
+   "energy": 0.08,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.5,
+    "wpm": 170.5,
+    "f0_median_hz": 108.6,
+    "f0_spread_st": 1.74,
+    "centroid_hz": 970.0,
+    "loudness_var_db": 4.02,
+    "voiced_frames": 476
+   },
+   "aliases": [
+    "Reed UK"
+   ]
+  },
+  {
+   "id": "say:Reed (English (US))",
+   "engine": "say",
+   "engine_voice": "Reed (English (US))",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "balanced timbre, low register, calm, even delivery; audibly synthetic. About 172 words per minute at normal speed.",
+   "warmth": 0.38,
+   "energy": 0.11,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.41,
+    "wpm": 172.2,
+    "f0_median_hz": 109.1,
+    "f0_spread_st": 1.66,
+    "centroid_hz": 903.0,
+    "loudness_var_db": 3.75,
+    "voiced_frames": 481
+   },
+   "aliases": [
+    "Reed US"
+   ]
+  },
+  {
+   "id": "say:Rishi",
+   "engine": "say",
+   "engine_voice": "Rishi",
+   "lang": "en-in",
+   "accent": "Indian English",
+   "description": "balanced timbre, low register, calm, even delivery; clear enough. About 182 words per minute at normal speed.",
+   "warmth": 0.4,
+   "energy": 0.26,
+   "clarity": 0.5,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS concatenative voice",
+   "measured": {
+    "seconds": 8.92,
+    "wpm": 181.6,
+    "f0_median_hz": 111.6,
+    "f0_spread_st": 1.76,
+    "centroid_hz": 885.0,
+    "loudness_var_db": 4.26,
+    "voiced_frames": 650
+   }
+  },
+  {
+   "id": "say:Rocko (English (UK))",
+   "engine": "say",
+   "engine_voice": "Rocko (English (UK))",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "warm timbre, low register, calm, even delivery; audibly synthetic. About 170 words per minute at normal speed.",
+   "warmth": 0.77,
+   "energy": 0.11,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.5,
+    "wpm": 170.5,
+    "f0_median_hz": 83.0,
+    "f0_spread_st": 2.31,
+    "centroid_hz": 635.0,
+    "loudness_var_db": 3.69,
+    "voiced_frames": 298
+   },
+   "aliases": [
+    "Rocko UK"
+   ]
+  },
+  {
+   "id": "say:Rocko (English (US))",
+   "engine": "say",
+   "engine_voice": "Rocko (English (US))",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, low register, calm, even delivery; audibly synthetic. About 172 words per minute at normal speed.",
+   "warmth": 0.87,
+   "energy": 0.17,
+   "clarity": 0.42,
+   "pitch": "low",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.41,
+    "wpm": 172.2,
+    "f0_median_hz": 82.5,
+    "f0_spread_st": 2.43,
+    "centroid_hz": 568.0,
+    "loudness_var_db": 3.56,
+    "voiced_frames": 309
+   },
+   "aliases": [
+    "Rocko US"
+   ]
+  },
+  {
+   "id": "say:Samantha",
+   "engine": "say",
+   "engine_voice": "Samantha",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "bright timbre, mid register, steady delivery; clear enough. About 203 words per minute at normal speed.",
+   "warmth": 0.34,
+   "energy": 0.51,
+   "clarity": 0.5,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS concatenative voice",
+   "measured": {
+    "seconds": 7.97,
+    "wpm": 203.2,
+    "f0_median_hz": 173.9,
+    "f0_spread_st": 2.86,
+    "centroid_hz": 925.0,
+    "loudness_var_db": 4.67,
+    "voiced_frames": 551
+   }
+  },
+  {
+   "id": "say:Sandy (English (UK))",
+   "engine": "say",
+   "engine_voice": "Sandy (English (UK))",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "warm timbre, high register, calm, even delivery; audibly synthetic. About 170 words per minute at normal speed.",
+   "warmth": 0.92,
+   "energy": 0.23,
+   "clarity": 0.42,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.5,
+    "wpm": 170.5,
+    "f0_median_hz": 292.7,
+    "f0_spread_st": 2.29,
+    "centroid_hz": 497.0,
+    "loudness_var_db": 4.71,
+    "voiced_frames": 558
+   },
+   "aliases": [
+    "Sandy UK"
+   ]
+  },
+  {
+   "id": "say:Sandy (English (US))",
+   "engine": "say",
+   "engine_voice": "Sandy (English (US))",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, high register, calm, even delivery; audibly synthetic. About 172 words per minute at normal speed.",
+   "warmth": 0.94,
+   "energy": 0.29,
+   "clarity": 0.42,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.41,
+    "wpm": 172.2,
+    "f0_median_hz": 292.7,
+    "f0_spread_st": 1.99,
+    "centroid_hz": 482.0,
+    "loudness_var_db": 4.88,
+    "voiced_frames": 568
+   },
+   "aliases": [
+    "Sandy US"
+   ]
+  },
+  {
+   "id": "say:Shelley (English (UK))",
+   "engine": "say",
+   "engine_voice": "Shelley (English (UK))",
+   "lang": "en-gb",
+   "accent": "British English",
+   "description": "warm timbre, high register, calm, even delivery; audibly synthetic. About 170 words per minute at normal speed.",
+   "warmth": 0.66,
+   "energy": 0.11,
+   "clarity": 0.42,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.5,
+    "wpm": 170.5,
+    "f0_median_hz": 186.0,
+    "f0_spread_st": 1.75,
+    "centroid_hz": 741.0,
+    "loudness_var_db": 4.26,
+    "voiced_frames": 535
+   },
+   "aliases": [
+    "Shelley UK"
+   ]
+  },
+  {
+   "id": "say:Shelley (English (US))",
+   "engine": "say",
+   "engine_voice": "Shelley (English (US))",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "warm timbre, high register, calm, even delivery; audibly synthetic. About 172 words per minute at normal speed.",
+   "warmth": 0.72,
+   "energy": 0.14,
+   "clarity": 0.42,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 9.41,
+    "wpm": 172.2,
+    "f0_median_hz": 186.0,
+    "f0_spread_st": 1.7,
+    "centroid_hz": 679.0,
+    "loudness_var_db": 4.14,
+    "voiced_frames": 539
+   },
+   "aliases": [
+    "Shelley US"
+   ]
+  },
+  {
+   "id": "say:Superstar",
+   "engine": "say",
+   "engine_voice": "Superstar",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, calm, even delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.0,
+   "energy": 0.23,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 240.0,
+    "f0_spread_st": 2.67,
+    "centroid_hz": 1217.0,
+    "loudness_var_db": 4.37,
+    "voiced_frames": 607
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Tara (English (India))",
+   "engine": "say",
+   "engine_voice": "Tara (English (India))",
+   "lang": "en-in",
+   "accent": "Indian English",
+   "description": "bright timbre, mid register, steady delivery; audibly synthetic. About 208 words per minute at normal speed.",
+   "warmth": 0.09,
+   "energy": 0.52,
+   "clarity": 0.42,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS formant-style voice",
+   "measured": {
+    "seconds": 7.8,
+    "wpm": 207.8,
+    "f0_median_hz": 181.8,
+    "f0_spread_st": 2.89,
+    "centroid_hz": 1067.0,
+    "loudness_var_db": 4.34,
+    "voiced_frames": 495
+   },
+   "aliases": [
+    "Tara US"
+   ]
+  },
+  {
+   "id": "say:Tessa",
+   "engine": "say",
+   "engine_voice": "Tessa",
+   "lang": "en-za",
+   "accent": "South African English",
+   "description": "balanced timbre, mid register, steady delivery; clear enough. About 177 words per minute at normal speed.",
+   "warmth": 0.55,
+   "energy": 0.43,
+   "clarity": 0.5,
+   "pitch": "mid",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "OS concatenative voice",
+   "measured": {
+    "seconds": 9.16,
+    "wpm": 176.9,
+    "f0_median_hz": 183.2,
+    "f0_spread_st": 2.49,
+    "centroid_hz": 810.0,
+    "loudness_var_db": 5.17,
+    "voiced_frames": 632
+   }
+  },
+  {
+   "id": "say:Trinoids",
+   "engine": "say",
+   "engine_voice": "Trinoids",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, calm, even delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": -0.02,
+   "energy": 0.11,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 216.2,
+    "f0_spread_st": 0.92,
+    "centroid_hz": 1381.0,
+    "loudness_var_db": 4.46,
+    "voiced_frames": 580
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Whisper",
+   "engine": "say",
+   "engine_voice": "Whisper",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, calm, even delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": -0.02,
+   "energy": 0.28,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 342.9,
+    "f0_spread_st": 3.81,
+    "centroid_hz": 2183.0,
+    "loudness_var_db": 4.41,
+    "voiced_frames": 97
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Wobble",
+   "engine": "say",
+   "engine_voice": "Wobble",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, calm, even delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.0,
+   "energy": 0.3,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 255.3,
+    "f0_spread_st": 1.63,
+    "centroid_hz": 1173.0,
+    "loudness_var_db": 5.73,
+    "voiced_frames": 427
+   },
+   "novelty": true
+  },
+  {
+   "id": "say:Zarvox",
+   "engine": "say",
+   "engine_voice": "Zarvox",
+   "lang": "en-us",
+   "accent": "American English",
+   "description": "character / novelty voice; not for narration unless asked for by name. bright timbre, high register, steady delivery; audibly synthetic. About 167 words per minute at normal speed.",
+   "warmth": 0.34,
+   "energy": 0.47,
+   "clarity": 0.1,
+   "pitch": "high",
+   "pace_range": [
+    0.8,
+    1.3
+   ],
+   "best_for": [],
+   "licence": "macOS system voice (part of the OS, not redistributed)",
+   "quality_grade": null,
+   "clarity_source": "novelty / character voice",
+   "measured": {
+    "seconds": 9.68,
+    "wpm": 167.4,
+    "f0_median_hz": 202.5,
+    "f0_spread_st": 16.22,
+    "centroid_hz": 913.0,
+    "loudness_var_db": 4.72,
+    "voiced_frames": 520
+   },
+   "novelty": true
+  }
+ ],
+ "voice_attributes_method": "warmth, energy and pitch come from MEASURING each voice on one fixed 27-word passage (voices.py profile), not from listening: warmth = 1 - percentile of spectral centroid; energy = mean percentile of pitch spread (clipped at 10 semitones), loudness variation and speaking rate; pitch register from median f0 (<135 Hz low, <=185 mid, else high). clarity = the engine's published training-data grade (Kokoro) or a quality tier (Piper medium, OS voices). best_for follows fixed thresholds on those numbers. Percentiles are relative to the non-novelty voices measured on 2026-10-22.",
+ "registers": [
+  "explainer",
+  "executive brief",
+  "kids",
+  "documentary",
+  "tutorial",
+  "technical deep-dive"
+ ]
+}

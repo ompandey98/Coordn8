@@ -1,0 +1,78 @@
+{
+ "schema": 1,
+ "about": "Fixed cause taxonomy for the failure-analysis loop (requirement F4). Every failure record in <repo>/Coordn8/_research/failure_log.jsonl names one of these ids as cause_class. The list is a menu, not a fence: a cause that fits none of them is recorded as 'invented:<slug>' together with an invented_reason. scripts/reflect.py classifies gate output into these ids deterministically; scripts/memory/project.py validates against this file.",
+ "classes": [
+  {
+   "id": "input-missing",
+   "description": "A file, field, asset or plan the step needs was absent, empty or unreadable, so the step could not judge or build what it was asked to.",
+   "typical_evidence": ["gate SKIPPED: no design system at _build/design_system.json", "required item MISSING from the manifest", "a declared asset never draws (C2)", "scene source has no // SRC: provenance comment (C5)"],
+   "default_prevention": "Produce and check every input the step reads before running it; the plan stage lists its inputs and a missing one is fixed on paper, not discovered at render."
+  },
+  {
+   "id": "wrong-assumption",
+   "description": "The build relied on a belief about the code, the data or the environment that was not checked and turned out to be false. Also the fallback class when no rule matches (recorded with low confidence and flagged for review).",
+   "typical_evidence": ["a claim's file:line does not support the claim", "OVERCLAIM: an end-user claim not backed by a passing item", "a fact traced to a document the code contradicts"],
+   "default_prevention": "Trace the belief to the source (file:line, measured output) before building on it; tag every claim verified-live, code-traced or untested."
+  },
+  {
+   "id": "stale-artefact",
+   "description": "A step judged or reused an artefact older than the source it was meant to reflect: a frame, trace, index entry, caption file or render made before the latest edit.",
+   "typical_evidence": ["artefact mtime older than a source edit", "index entry flagged stale (hash changed)", "sidecar caption still carries retracted figures"],
+   "default_prevention": "Assert freshness first: compare artefact hash or mtime against every source edit and re-render or re-index before review."
+  },
+  {
+   "id": "budget",
+   "description": "A step exceeded or was refused a resource budget: time, disk, memory, worker count, token or render budget.",
+   "typical_evidence": ["gate TIMEOUT", "disk gate: free space under the floor", "perf gate: render over its time budget", "budget refused by the supervisor"],
+   "default_prevention": "Check the budget before starting (disk, time, workers) and size the work to it; split long renders into scenes that can resume."
+  },
+  {
+   "id": "tool-absent",
+   "description": "A tool the step needs is not installed or not runnable here (ffmpeg, a headless browser, a voice engine, a gate script).",
+   "typical_evidence": ["ffmpeg not found", "no headless Chrome/Chromium", "gate script not found", "command not found"],
+   "default_prevention": "Run environment setup and re-probe before choosing the tier; a step that needs a tool checks for it first and degrades honestly."
+  },
+  {
+   "id": "wrong-choice:palette",
+   "description": "The chosen colours fail an outcome check: contrast, role separation, accent budget, off-palette colour, or meaning carried by colour alone.",
+   "typical_evidence": ["text-contrast: caption 3.1:1 on #2a2f3a", "role-separation below the CIEDE2000 floor", "accent-budget exceeded in a frame", "off-palette colour"],
+   "default_prevention": "Pick ink and accents from the palette's role table and re-run the palette gate on the design system before any scene uses it; never hand-tune a colour in a scene."
+  },
+  {
+   "id": "wrong-choice:diagram",
+   "description": "The chosen diagram form or its layout does not carry the idea: a linear chain where the logic branches, over the element budget, connectors pointing the wrong way, or labels on lines.",
+   "typical_evidence": ["tree_shape: too few forks for the outcomes", "diagram_budget: node count over budget", "S6: arrowhead contradicts the declared from->to", "connectors: edge crosses a node"],
+   "default_prevention": "Choose the diagram form from the shape of the logic (branches, cycles, hierarchy) and run the diagram plan and budget gates before drawing."
+  },
+  {
+   "id": "wrong-choice:scene",
+   "description": "The chosen scene or visual does not show what is being said: text-only or static scene, wrong asset for the subject, a section that lost its visual, dead frame space under narration.",
+   "typical_evidence": ["visual_density: primary visual is text", "S5: asset subjectId differs from the beat", "S7: a declared section renders nothing", "Stage V verdict: contradicts"],
+   "default_prevention": "Storyboard every scene with a non-text primary visual, a moving element and a subjectId per asset, and pass the plan-stage density gate before rendering."
+  },
+  {
+   "id": "writing-rule",
+   "description": "Narration or page text breaks a writing rule: repetition, banned content, jargon without definition, requester-personal framing, raw literals read aloud, approved string drift, reading level.",
+   "typical_evidence": ["content_integrity: repeated 5-gram across lines", "content_ban: requester-personal framing", "language: sentence over the length limit", "approved string not byte-exact"],
+   "default_prevention": "Run the language, content and ban gates on the script as text and lock it before any visual work; keep approved strings byte-exact."
+  },
+  {
+   "id": "timing",
+   "description": "Picture, voice and captions drift apart or a beat is mistimed: a visual ahead of its sentence, stale beat index, caption cue too fast or too long, void under speech.",
+   "typical_evidence": ["beat_sync: visual enters before its sentence", "beat_index: stale index after a narration edit", "subtitle_check: cue over 20 characters per second", "C6: sustained void while a line is spoken"],
+   "default_prevention": "Bind beats by name, take every timestamp from the speech marks of the rendered audio, and re-run sync on the final file."
+  },
+  {
+   "id": "layout",
+   "description": "Geometry is wrong: overflow past the safe area, overlap or collision, text escaping its container, type under the size floor, unreadable panels.",
+   "typical_evidence": ["layout_probe: element crosses the 5% safe area", "C1: two panels partially overlap", "S3: text escapes its container", "C7: panel below 0.42x of source width"],
+   "default_prevention": "Lay out with the layout engine inside the safe area with bounded text by default, and measure real geometry from the render before review."
+  },
+  {
+   "id": "misread-brief",
+   "description": "The build did not do what was asked: an in-scope requirement left uncovered, the wrong deliverable built, or a live-brief instruction overridden by memory or a default.",
+   "typical_evidence": ["content_coverage: in-scope must row OPEN", "a live-brief row not covered", "page built when only the video was in scope"],
+   "default_prevention": "Capture every live-brief instruction as a must row in requirements.md before building, and check the ledger against the plan before rendering."
+  }
+ ]
+}

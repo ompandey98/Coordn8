@@ -1,0 +1,503 @@
+{
+ "schema": 1,
+ "about": "Idea techniques and seeded stimulus pools for the divergence step (H2/H3). A MENU of starting points, never a fence: an option may use any technique listed here, combine two, or use an invented technique named 'invented:<name>' with a one-sentence description. No gate checks membership in this file. scripts/design/seed.py draws from it with a recorded seed; scripts/design/divergence.py validates the result without reading it.",
+ "problem_types": {
+  "design": "the look of the whole piece: palette, type, kit, motion character",
+  "narrative-spine": "the order and shape of the story the piece tells",
+  "explanation": "how one hard idea is made understandable to the audience",
+  "visual-metaphor": "the picture that stands for an abstract mechanism",
+  "structure": "how a system, page or figure is divided and connected",
+  "naming": "titles, section names, labels for invented concepts",
+  "opening": "the first seconds or the first screen: the hook",
+  "strategy": "what to include, cut, or risk in the piece",
+  "technical": "how a mechanism actually works, stripped of habit",
+  "stuck": "every option so far feels like the same idea",
+  "critique": "reframing an existing draft that is not working"
+ },
+ "rules": [
+  "Divergence runs for PIVOTAL decisions only: the look, the narrative spine, each hero figure, each pivotal scene (opening, payoff). It is not injected into every answer.",
+  "Each pivotal decision gets at least three options, each from a DIFFERENT technique. An invented technique with a description counts as a technique.",
+  "The generator and the critic are different agents. The critic judges every option against the three rejection tests and writes which test failed and why.",
+  "Never lower the bar to reach a count. If no option survives the critic, run a new generation round with techniques not yet used; never re-admit an option the critic rejected.",
+  "Randomness is real: techniques and stimuli are drawn by seed.py from random.Random(seed), every draw is recorded, and the same seed replays the same draws. The model does not pick its own 'random' word."
+ ],
+ "critic_tests": [
+  {"id": "user-could-think-of-it",
+   "question": "Could the user have come up with this alone, in about a minute, without help?",
+   "reject_when": "the option is the first or second thing a competent person in the user's seat would say"},
+  {"id": "known-default",
+   "question": "Is this a known default, or the usual answer with a new coat of paint?",
+   "reject_when": "removing the decorative wording leaves the standard template (title card, left-to-right boxes, dark slide with a glowing accent, timeline of releases)"},
+  {"id": "surprising-not-useful",
+   "question": "Is it surprising but fails to make the subject clearer or the decision better?",
+   "reject_when": "the novelty cannot be tied to one concrete thing the audience will understand, remember or do because of it"}
+ ],
+ "techniques": [
+  {
+   "id": "provocation",
+   "name": "Provocation, then extract the movement",
+   "family": "provocative",
+   "stimulus": null,
+   "how_to": [
+    "Name an assumption the subject rests on so firmly that nobody states it.",
+    "Write a deliberately unreasonable statement that breaks it, marked as a provocation.",
+    "Do not judge the statement. Ask what would have to be true for it to work, and what it would make easy.",
+    "Keep the direction the statement pushed you in (the movement), drop the statement itself, and land on something buildable."
+   ],
+   "good_for": ["opening", "narrative-spine", "stuck", "strategy", "design"],
+   "example": {
+    "problem": "Opening scene for a video about a job queue that retries failed work.",
+    "move": "Provocation: the queue never fails anything. Movement: failure is a place work visits, not an ending.",
+    "result": "Open on a single job leaving, going round a loop marked 'later', and coming back; the retry policy is introduced as the shape of that loop."
+   },
+   "failure_modes": [
+    "Shipping the provocation literally instead of the movement it pointed to.",
+    "A provocation so mild it is just the normal answer phrased as a question.",
+    "Stopping at the first movement; the second one is usually the useful one."
+   ]
+  },
+  {
+   "id": "constraint-then-relax",
+   "name": "Constraint, then relax",
+   "family": "constraining",
+   "stimulus": "constraint",
+   "how_to": [
+    "Draw or pick one severe, even absurd, constraint and apply it to the whole piece.",
+    "Solve the problem seriously inside the constraint until something works.",
+    "Write down what the constraint forced you to discover: the one element that had to survive.",
+    "Loosen the constraint to a sensible level while keeping that discovery intact."
+   ],
+   "good_for": ["design", "structure", "explanation", "opening", "stuck"],
+   "example": {
+    "problem": "Look of a page explaining a permissions model with eleven roles.",
+    "move": "Constraint: two colours and no tables. Discovery: roles only differ by what they may NOT touch, so one map of 'forbidden zones' explains all eleven.",
+    "result": "Relaxed: full palette allowed, but the hero figure stays a single map with forbidden zones shaded per role."
+   },
+   "failure_modes": [
+    "Choosing a constraint that changes nothing (a constraint must remove a habit).",
+    "Relaxing so far that the discovery is lost and the default returns.",
+    "Treating the constraint as the deliverable instead of as a probe."
+   ]
+  },
+  {
+   "id": "inversion",
+   "name": "Inversion",
+   "family": "inversion",
+   "stimulus": null,
+   "how_to": [
+    "State the goal of the piece in one sentence.",
+    "Ask what would guarantee the goal fails: list the surest ways to confuse, bore or mislead this audience.",
+    "Turn each failure into its precise opposite.",
+    "Build the option from the most specific opposite, not the most general one."
+   ],
+   "good_for": ["strategy", "narrative-spine", "explanation", "critique", "structure"],
+   "example": {
+    "problem": "Spine for a walkthrough of a payment reconciliation service.",
+    "move": "Surest failure: explain every component before the viewer knows what can go wrong. Opposite: the viewer sees money go missing first.",
+    "result": "Spine runs from one missing amount, backwards through the components that each could have lost it, ending on the one that did."
+   },
+   "failure_modes": [
+    "Listing generic failures ('too long', 'unclear') whose opposites are platitudes.",
+    "Producing a checklist of things to avoid instead of an option to build."
+   ]
+  },
+  {
+   "id": "assumption-reversal",
+   "name": "Assumption reversal",
+   "family": "inversion",
+   "stimulus": null,
+   "how_to": [
+    "List every assumption the obvious answer depends on, including the boring ones.",
+    "Reverse them one at a time: what if this were false?",
+    "For each reversal, ask what the piece would look like and what it would reveal.",
+    "Keep the reversal that explains the most with the least extra machinery."
+   ],
+   "good_for": ["technical", "structure", "explanation", "critique", "stuck"],
+   "example": {
+    "problem": "Hero figure for a caching layer.",
+    "move": "Assumption: the cache sits between the caller and the database. Reversed: the database sits behind the cache's back, as its slow memory.",
+    "result": "Figure drawn from the cache's point of view: a fast desk in front, a far archive behind, and staleness shown as the distance between them."
+   },
+   "failure_modes": [
+    "Reversing an assumption that is false only in rare edge cases nobody needs.",
+    "Keeping the reversal as a gimmick without checking it is still accurate to the code."
+   ]
+  },
+  {
+   "id": "analogy-by-structure",
+   "name": "Analogy by structure, not surface",
+   "family": "analogical",
+   "stimulus": "field",
+   "how_to": [
+    "Write down the mechanism as relations only: what waits for what, what limits what, what flows where.",
+    "Take a distant field (drawn or chosen) and find something in it with the SAME relations.",
+    "Check the mapping part by part; every important part must have a counterpart and no counterpart may imply a false behaviour.",
+    "Use the analogy only for the parts it maps, and say where it stops."
+   ],
+   "good_for": ["visual-metaphor", "explanation", "naming", "design", "opening"],
+   "example": {
+    "problem": "Visual metaphor for back-pressure in a streaming pipeline.",
+    "move": "Relations: a slow consumer must be able to make the producer wait. Field: canal locks. A lock fills only when the next chamber is ready.",
+    "result": "Pipeline drawn as a flight of locks; a stalled lower chamber visibly holds boats in the upper ones. Fence: locks do not drop boats; queues with limits do."
+   },
+   "failure_modes": [
+    "Surface analogy: picked because it looks similar, not because it behaves the same.",
+    "No fence: the analogy is stretched to parts where it teaches something false.",
+    "A field so familiar to the audience's domain that it is not distant at all."
+   ]
+  },
+  {
+   "id": "role-swap",
+   "name": "Role swap with a distant field",
+   "family": "analogical",
+   "stimulus": "field",
+   "how_to": [
+    "Pick a practitioner from a distant field (drawn or chosen), not a competitor or a near neighbour.",
+    "Describe how they actually work: their tools, their checks, what they fear, what they never skip.",
+    "Ask how that person would solve this exact problem with their habits.",
+    "Bring back the structure of their solution, not the costume."
+   ],
+   "good_for": ["design", "narrative-spine", "structure", "explanation", "stuck"],
+   "example": {
+    "problem": "Narrative spine for onboarding engineers to a large monorepo.",
+    "move": "Role: a museum curator. Curators build a route with three anchor objects and let visitors skip everything else.",
+    "result": "Spine is a guided route through three anchor files, each opening a 'room'; every other directory is a labelled door the viewer may leave closed."
+   },
+   "failure_modes": [
+    "Role-play on the surface (a chef 'cooking up' code) with no borrowed method.",
+    "Choosing a role whose method is just the standard engineering method renamed."
+   ]
+  },
+  {
+   "id": "time-shift",
+   "name": "Time shift",
+   "family": "deconstructive",
+   "stimulus": null,
+   "how_to": [
+    "Solve the problem as it would have been solved long ago, with only the tools of that time.",
+    "Solve it as it might be solved far in the future, when today's limits are gone.",
+    "Compare the two answers and name what both kept: that is the durable core.",
+    "Build the option around the durable core using today's means."
+   ],
+   "good_for": ["narrative-spine", "explanation", "strategy", "technical", "critique"],
+   "example": {
+    "problem": "Explaining why a service uses idempotency keys.",
+    "move": "Long ago: a clerk stamps each paper order with a number and refuses a second order with the same stamp. Far future: every request carries its own proof of uniqueness.",
+    "result": "Both keep 'the request names itself'. The explanation opens on the clerk's stamp and dissolves into the key header."
+   },
+   "failure_modes": [
+    "Nostalgia or futurism as decoration, with no shared core extracted.",
+    "A historical picture that misstates how the real mechanism behaves."
+   ]
+  },
+  {
+   "id": "negative-space",
+   "name": "Negative space",
+   "family": "inversion",
+   "stimulus": null,
+   "how_to": [
+    "Map what is already present: what the code does, what the docs say, what every explainer of this subject shows.",
+    "Look at the gaps: what nobody shows, says, or draws.",
+    "Ask why each gap exists; 'nobody thought of it' and 'it is hard to draw' are the valuable answers.",
+    "Build the option out of the gap."
+   ],
+   "good_for": ["critique", "strategy", "structure", "design", "explanation"],
+   "example": {
+    "problem": "Hero figure for an authentication flow.",
+    "move": "Every diagram of this flow shows the success path. Nobody draws the time between steps, where tokens expire.",
+    "result": "Hero figure is a timeline of waiting: each step is a short block, and the long gaps between them carry the expiry rules."
+   },
+   "failure_modes": [
+    "Filling a gap that exists because the content does not matter to this audience.",
+    "Calling the obvious missing piece 'negative space' when everyone already notices it."
+   ]
+  },
+  {
+   "id": "synthesis",
+   "name": "Synthesis that is neither A nor B",
+   "family": "analogical",
+   "stimulus": null,
+   "how_to": [
+    "State the two competing options plainly, with what each optimises and what each gives up.",
+    "Find the goal they share and the assumption they both make.",
+    "Drop the shared assumption and design a third option that reaches the shared goal without either trade-off.",
+    "Reject any result that is an average or a split (half of each)."
+   ],
+   "good_for": ["design", "structure", "strategy", "narrative-spine", "critique"],
+   "example": {
+    "problem": "Choosing between a dense reference page and a short narrated video.",
+    "move": "Shared goal: the reader can act on the system. Shared assumption: one artefact serves every reader.",
+    "result": "A page whose every section opens with a ten-second clip of the moment it explains; the clip is the hook, the text is the reference."
+   },
+   "failure_modes": [
+    "A compromise (do a bit of both) presented as a synthesis.",
+    "Dropping an assumption that is actually a hard requirement."
+   ]
+  },
+  {
+   "id": "first-principles",
+   "name": "First principles",
+   "family": "deconstructive",
+   "stimulus": null,
+   "how_to": [
+    "Describe what the subject does at the lowest level that is still true: inputs, outputs, the one rule in between.",
+    "Discard every inherited layer (the framework, the usual diagram, the usual vocabulary).",
+    "Rebuild the explanation from that rule, adding back only what is logically needed.",
+    "Check each re-added piece against the code, not against habit."
+   ],
+   "good_for": ["technical", "explanation", "structure", "critique"],
+   "example": {
+    "problem": "Explaining a rate limiter to non-engineers.",
+    "move": "Lowest true level: a bucket refills at a fixed speed; each request takes one token; empty means wait.",
+    "result": "The whole explanation is one bucket with a dripping tap, then the code's two numbers labelled on it; nothing about middleware."
+   },
+   "failure_modes": [
+    "Stopping at a level that is still framework vocabulary.",
+    "Oversimplifying past the point where the explanation is still true."
+   ]
+  },
+  {
+   "id": "forced-combination",
+   "name": "Forced combination",
+   "family": "constraining",
+   "stimulus": "field",
+   "how_to": [
+    "Take the subject and one unrelated form or field (drawn or chosen).",
+    "Ask what their offspring would be: a piece that is fully both.",
+    "List what the combined form makes possible that neither had alone.",
+    "Keep only the combinations that serve the audience's understanding."
+   ],
+   "good_for": ["design", "opening", "naming", "visual-metaphor"],
+   "example": {
+    "problem": "Look for a video about a deploy pipeline.",
+    "move": "Combine with a railway departure board.",
+    "result": "Each stage is a row that flips like a departure board: on time, delayed, cancelled; the board becomes the recurring motif and the colour roles map to its states."
+   },
+   "failure_modes": [
+    "Combining with something trendy rather than something whose structure helps.",
+    "Keeping the combined look while the content stays a standard slide."
+   ]
+  },
+  {
+   "id": "counterfactual",
+   "name": "Counterfactual (what if it were otherwise)",
+   "family": "deconstructive",
+   "stimulus": null,
+   "how_to": [
+    "State how the system is now.",
+    "Pose one large change: the main dependency vanishes, load is a thousand times higher, the user is a machine.",
+    "Follow the consequences two or three steps out.",
+    "Use the consequence that best reveals why the system is built the way it is."
+   ],
+   "good_for": ["strategy", "explanation", "narrative-spine", "technical"],
+   "example": {
+    "problem": "Spine for explaining why a service has a write-ahead log.",
+    "move": "What if the power failed mid-write, every time?",
+    "result": "Spine replays one write three times with the power cut at three points; the log is introduced only when the viewer has seen the corruption it prevents."
+   },
+   "failure_modes": [
+    "A dramatic what-if whose consequences do not touch the real design.",
+    "Exploring consequences without returning to the actual system."
+   ]
+  },
+  {
+   "id": "random-entry",
+   "name": "Random entry (a drawn word or object)",
+   "family": "provocative",
+   "stimulus": "word",
+   "how_to": [
+    "Take the drawn word or object exactly as drawn; do not redraw because it seems unhelpful.",
+    "Describe its properties and behaviours in detail.",
+    "Force at least three connections to the problem; the first is usually surface-level, push past it.",
+    "Keep the connection that carries a structural principle, and apply that principle."
+   ],
+   "good_for": ["stuck", "opening", "visual-metaphor", "naming", "design"],
+   "example": {
+    "problem": "Visual metaphor for feature flags.",
+    "move": "Drawn word: dimmer switch. Properties: continuous, reversible, reachable without rewiring.",
+    "result": "Flags drawn as dimmers on a wall plate, one per feature, with rollout percentage as the dimmer position; a kill switch is a dimmer turned to zero."
+   },
+   "failure_modes": [
+    "Redrawing until a 'convenient' word appears, which defeats the draw.",
+    "A cute connection with no principle behind it."
+   ]
+  },
+  {
+   "id": "oblique-card",
+   "name": "Oblique card",
+   "family": "provocative",
+   "stimulus": "oblique",
+   "how_to": [
+    "Draw one oblique instruction from the pool.",
+    "Apply it literally to the current draft or problem, however odd it seems.",
+    "Note what changed in how you see the problem.",
+    "Turn that change into a concrete option."
+   ],
+   "good_for": ["stuck", "critique", "design", "opening"],
+   "example": {
+    "problem": "Hero figure for a build cache that keeps coming out as a row of boxes.",
+    "move": "Card drawn: 'Show the waiting, not the doing.'",
+    "result": "The figure becomes a queue of builds waiting on a cold cache, with the cache hit drawn as a thin bypass lane that skips the whole queue."
+   },
+   "failure_modes": [
+    "Interpreting the card so loosely that it changes nothing.",
+    "Drawing again because the first card was uncomfortable."
+   ]
+  },
+  {
+   "id": "side-door",
+   "name": "Side door (abandon the obvious path)",
+   "family": "constraining",
+   "stimulus": "word",
+   "how_to": [
+    "Write down the obvious approach and forbid it.",
+    "Enter the problem from an unrelated starting point (a drawn word works).",
+    "Ask how that starting point would deal with the problem.",
+    "Extract the principle and translate it back into the subject's own terms."
+   ],
+   "good_for": ["stuck", "narrative-spine", "explanation", "strategy"],
+   "example": {
+    "problem": "Explaining a scheduler that everyone explains with a clock.",
+    "move": "Clock forbidden. Entry: a restaurant ticket rail, where tickets are ordered by when they can be cooked, not when they arrived.",
+    "result": "The scheduler is shown as a ticket rail; priority and readiness become ticket position and colour."
+   },
+   "failure_modes": [
+    "Forbidding the obvious path in words but returning to it in the result.",
+    "An entry point so far away that the translation back fails."
+   ]
+  },
+  {
+   "id": "scale-shift",
+   "name": "Scale shift",
+   "family": "deconstructive",
+   "stimulus": null,
+   "how_to": [
+    "Show the subject at a scale far larger or far smaller than the usual one: one byte, or a whole year of traffic.",
+    "Ask what becomes visible at that scale that is invisible at the normal one.",
+    "Choose the scale where the key behaviour is most obvious.",
+    "Build the figure or scene at that scale, then zoom once to the normal view."
+   ],
+   "good_for": ["visual-metaphor", "opening", "explanation", "structure"],
+   "example": {
+    "problem": "Hero figure for a log compaction job.",
+    "move": "Usual scale: one compaction run. Shifted: a month of runs on one strip.",
+    "result": "The figure is a month-long strip where storage grows like a sawtooth; each tooth is one compaction, and the single-run view is an inset."
+   },
+   "failure_modes": [
+    "Choosing a scale for spectacle where the key behaviour is not visible.",
+    "Forgetting to return to the scale the audience works at."
+   ]
+  },
+  {
+   "id": "subtraction",
+   "name": "Subtraction (remove the element everyone keeps)",
+   "family": "constraining",
+   "stimulus": null,
+   "how_to": [
+    "List the elements every version of this piece has (the title card, the architecture box diagram, the summary slide).",
+    "Remove the one that seems most essential.",
+    "Ask what must now carry its job, and whether that carrier does the job better.",
+    "Keep the subtraction if the piece got clearer; otherwise try the next most essential element."
+   ],
+   "good_for": ["design", "structure", "critique", "strategy", "opening"],
+   "example": {
+    "problem": "Look for a system overview page.",
+    "move": "Removed: the big box-and-arrow architecture diagram at the top.",
+    "result": "The page opens on one request travelling through the system; the architecture is assembled piece by piece as the request reaches each part."
+   },
+   "failure_modes": [
+    "Removing something the audience actually needs to orient themselves.",
+    "Subtracting a minor element and calling it bold."
+   ]
+  }
+ ],
+ "pools": {
+  "constraints": [
+   "only two colours on screen, plus paper",
+   "no words on screen for the first ten seconds",
+   "every element enters from the same edge",
+   "the whole idea must fit in one frame",
+   "no arrows anywhere",
+   "only one thing moves in each scene",
+   "every shape is a circle",
+   "the subject is not named until the last scene",
+   "it must work with the sound off",
+   "one continuous camera move from start to end",
+   "every figure has at most five parts",
+   "no diagrams, only physical objects",
+   "everything is shown at life size",
+   "monochrome plus a single accent used once per scene",
+   "the story is told in reverse order",
+   "one sentence per scene, at most twelve words",
+   "the viewer must make a prediction before each answer",
+   "no icons",
+   "the page has no headings",
+   "start with the failure, not the feature",
+   "every label is a verb",
+   "titles use only words the user has said",
+   "it must be drawable with a pen in thirty seconds",
+   "nothing moves except the data",
+   "the hero element appears in every frame",
+   "the layout is a single grid of nine cells",
+   "explain it with exactly three numbers",
+   "no metaphors allowed",
+   "one type size for everything",
+   "the whole piece is one zoom from far to near",
+   "show it only as a timeline",
+   "every scene ends on a question",
+   "the empty state is the hero",
+   "use only things found on a kitchen table",
+   "the narrator speaks as the system itself",
+   "no element may be bigger than a quarter of the frame",
+   "it has to be understood by someone standing three metres away",
+   "the explanation fits on the back of a ticket"
+  ],
+  "fields": [
+   "beekeeping", "air-traffic control", "theatre lighting", "cartography", "sourdough baking",
+   "tidal navigation", "orchestral conducting", "emergency triage", "letterpress typesetting", "railway signalling",
+   "mycology", "glassblowing", "paper folding", "cave diving", "choreography",
+   "watchmaking", "falconry", "film editing", "archival conservation", "lock-keeping on canals",
+   "mountain rescue", "perfumery", "bridge engineering", "puppetry", "weather forecasting",
+   "tailoring", "glacier surveying", "restaurant kitchen brigades", "stage magic", "orienteering",
+   "sheepdog herding", "stained-glass making", "postal sorting", "sailing regattas", "wine blending",
+   "tea ceremony", "harbour piloting", "radio broadcasting", "bonsai cultivation", "court stenography",
+   "library cataloguing", "fireworks design", "dam operation", "hospital pharmacy", "air-sea rescue",
+   "lighthouse keeping", "museum curation", "sports refereeing", "tapestry weaving", "volcano monitoring"
+  ],
+  "words": [
+   "lighthouse", "sieve", "hinge", "compass", "kite", "ladder", "lantern", "zipper", "anchor", "prism",
+   "metronome", "sundial", "abacus", "funnel", "loom", "mirror", "kettle", "ribbon", "magnet", "keyhole",
+   "hourglass", "footbridge", "umbrella", "accordion", "telescope", "envelope", "bell", "thread", "staircase", "padlock",
+   "fishing net", "seed pod", "mask", "raft", "scaffold", "sponge", "pulley", "tripwire", "trellis", "honeycomb",
+   "fuse", "valve", "carousel", "domino", "kaleidoscope", "paper crane", "map pin", "tuning fork", "chessboard", "beacon",
+   "sluice gate", "weathervane", "stencil", "cocoon", "conveyor belt", "puppet strings", "jigsaw piece", "spirit level", "relay baton", "snow globe",
+   "thermostat", "fishing float", "ice cube", "candle wick", "sandcastle", "rubber stamp", "tide pool", "paper boat", "dimmer switch", "ticket rail"
+  ],
+  "oblique": [
+   "Show the part you were going to cut.",
+   "Begin where the story ends.",
+   "Make the background the subject.",
+   "What would the quietest version look like?",
+   "Replace the obvious picture with its shadow.",
+   "Leave one thing visibly unfinished and say why.",
+   "Use the most common mistake as the opening.",
+   "What is the one-word version?",
+   "Remove the arrow everyone draws.",
+   "Give the data a body.",
+   "Turn the label into the picture.",
+   "Slow the important moment down ten times.",
+   "Show the waiting, not the doing.",
+   "Let the viewer find it before you say it.",
+   "Swap the foreground and the background.",
+   "Draw it from inside the machine.",
+   "Say it twice; the second time with half the words.",
+   "What does the thing refuse to do?",
+   "Use one honest number instead of five.",
+   "Find the moment of surprise and build backwards from it.",
+   "Put the cost on screen.",
+   "Make the smallest part the largest thing in the frame.",
+   "What would a newcomer point at first?",
+   "Keep the accident."
+  ]
+ }
+}

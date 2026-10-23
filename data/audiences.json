@@ -1,0 +1,1762 @@
+{
+ "schema": 1,
+ "doctrine": [
+  "A menu of starting points, never a fence: any role or level may be bent, combined or replaced by an invented audience ('invented: <name>' plus a reason).",
+  "The audience tailors the DESIGN (depth, entry point, register, analogy sources, pace). It is never a person the deliverable greets, welcomes or role-plays.",
+  "The audience is inferred from the brief and its context. It is never defaulted to a child or to 'age 5'; when the signals are too weak, the Phase-0 questions ask.",
+  "'Explain like I'm five' (and its four-letter abbreviation) is read as 'keep it simple', not as a five-year-old audience.",
+  "Purpose before mechanism: every audience hears what a thing is for before how it works.",
+  "Business audiences hear the impact and the decision first ('this means we should ...').",
+  "When the audience is expert in the subject's field, keep that field's terms; simplify only what lies outside their specialty.",
+  "Getting the core idea across mostly accurately beats a fully accurate version that loses the reader, but that trade is always flagged and must never teach something false."
+ ],
+ "levels": [
+  {
+   "id": "child",
+   "order": 0,
+   "label": "child (about 6-12)",
+   "register_shift": "short, warm, concrete; one idea per sentence; never baby talk",
+   "sentence_words_max": 12,
+   "jargon": "none; an essential word is defined the moment it appears",
+   "depth": "the one core idea and what it does",
+   "entry_point": "a thing they can see, touch or play with",
+   "analogy_sources": [
+    "games",
+    "animals",
+    "school",
+    "toys",
+    "playground",
+    "cartoons",
+    "sports"
+   ],
+   "video_pace": "slow; one picture per idea"
+  },
+  {
+   "id": "teen",
+   "order": 1,
+   "label": "teenager (about 13-17)",
+   "register_shift": "casual but not cringey; can handle some abstraction",
+   "sentence_words_max": 16,
+   "jargon": "introduce a proper term with its meaning in the same sentence",
+   "depth": "core idea plus one layer of how",
+   "entry_point": "something from their phone, games or school",
+   "analogy_sources": [
+    "phones and apps",
+    "social media",
+    "gaming",
+    "school",
+    "sports",
+    "music"
+   ],
+   "video_pace": "medium-fast; a hook in the first seconds"
+  },
+  {
+   "id": "lay-adult",
+   "order": 2,
+   "label": "adult without a technical background",
+   "register_shift": "patient, warm, conversational; respectful, never condescending",
+   "sentence_words_max": 18,
+   "jargon": "only terms they will meet again, each defined in the same breath",
+   "depth": "what it does for them and why it matters",
+   "entry_point": "an everyday situation they already know",
+   "analogy_sources": [
+    "household routines",
+    "shopping and queues",
+    "post and parcels",
+    "kitchens and recipes",
+    "familiar apps"
+   ],
+   "video_pace": "medium; stakes before machinery"
+  },
+  {
+   "id": "informed-adult",
+   "order": 3,
+   "label": "professional outside this field",
+   "register_shift": "confident and clear; respects their intelligence while bridging the gap",
+   "sentence_words_max": 22,
+   "jargon": "standard terms with a short gloss on first use",
+   "depth": "the mental model plus the parts that change decisions",
+   "entry_point": "the problem and its impact",
+   "analogy_sources": [
+    "work processes",
+    "logistics",
+    "money and budgets",
+    "everyday systems"
+   ],
+   "video_pace": "medium"
+  },
+  {
+   "id": "practitioner",
+   "order": 4,
+   "label": "works in the field day to day",
+   "register_shift": "precise colleague; plain over pompous",
+   "sentence_words_max": 25,
+   "jargon": "field terms kept; this project's own names are defined",
+   "depth": "full, with trade-offs where they bite",
+   "entry_point": "the real call path and its job",
+   "analogy_sources": [
+    "systems and patterns they already know"
+   ],
+   "video_pace": "medium-fast"
+  },
+  {
+   "id": "specialist",
+   "order": 5,
+   "label": "deep expert in the subject's field",
+   "register_shift": "precise, dense, respects their time; keep the field's vocabulary",
+   "sentence_words_max": 28,
+   "jargon": "the field's vocabulary is kept as is; only what lies outside the specialty is simplified",
+   "depth": "exhaustive where it is novel; skip basics",
+   "entry_point": "straight to what is unusual here",
+   "analogy_sources": [
+    "their own field, structurally, or none"
+   ],
+   "video_pace": "fast; assume vocabulary"
+  }
+ ],
+ "roles": [
+  {
+   "id": "engineer",
+   "label": "engineer",
+   "keywords": [
+    "engineers?",
+    "developers?",
+    "programmers?",
+    "software engineers?",
+    "sres?",
+    "backend engineers?",
+    "frontend engineers?",
+    "coders?",
+    "devs"
+   ],
+   "setting_cues": [
+    "code review",
+    "design review",
+    "tech talk",
+    "internal wiki",
+    "runbook"
+   ],
+   "goal_cues": [
+    "debug",
+    "change the code",
+    "extend",
+    "maintain",
+    "fix"
+   ],
+   "default_level": "practitioner",
+   "levels": [
+    "informed-adult",
+    "practitioner",
+    "specialist"
+   ],
+   "business": false,
+   "they_care_about": [
+    "how it works",
+    "architecture",
+    "trade-offs",
+    "failure modes",
+    "where to change it"
+   ],
+   "frame_around": [
+    "technical details",
+    "implementation",
+    "performance",
+    "maintainability",
+    "the real call path with path:line"
+   ],
+   "register": "precise colleague, conversational, plain over pompous",
+   "entry_point": "the job of the piece, then its call path",
+   "depth": "full; trade-offs and edge cases where they bite",
+   "video_pace": "medium-fast",
+   "allowed_analogy_sources": [
+    "other systems, data structures and patterns they already know ('like a hash map, except ...')"
+   ],
+   "avoid": [
+    "lay paraphrase of standard field terms (talking down)",
+    "analogies from outside computing when a technical comparison exists",
+    "generic tech facts that are not tied to this project"
+   ],
+   "business_lead": null,
+   "expert_fields": [
+    "software-engineering"
+   ]
+  },
+  {
+   "id": "senior-sme",
+   "label": "senior engineer / subject-matter expert",
+   "playbook_row": "Senior / SME",
+   "keywords": [
+    "senior engineers?",
+    "staff engineers?",
+    "principal engineers?",
+    "principals?",
+    "smes?",
+    "subject[- ]matter experts?",
+    "domain experts?",
+    "experts?",
+    "specialists?",
+    "architects?",
+    "maintainers?",
+    "tech leads?"
+   ],
+   "setting_cues": [
+    "design review",
+    "architecture review",
+    "deep dive",
+    "postmortem"
+   ],
+   "goal_cues": [
+    "review the design",
+    "find the edge cases",
+    "challenge",
+    "evaluate the trade-offs"
+   ],
+   "default_level": "specialist",
+   "levels": [
+    "practitioner",
+    "specialist"
+   ],
+   "business": false,
+   "they_care_about": [
+    "the full decision surface",
+    "what is novel or unusual here",
+    "edge cases and invariants",
+    "where the design could fail"
+   ],
+   "frame_around": [
+    "the engine and its decisions",
+    "invariants and trade-offs",
+    "exact names and path:line"
+   ],
+   "register": "precise-formal, dense, respects their time",
+   "entry_point": "straight to the engine & decision surface",
+   "depth": "exhaustive; skip basics",
+   "video_pace": "fast; assume vocabulary",
+   "allowed_analogy_sources": [
+    "their own field, structurally, or none"
+   ],
+   "avoid": [
+    "defining terms of their own field",
+    "lay paraphrase of field terms (talking down)",
+    "basics they already know"
+   ],
+   "business_lead": null,
+   "expert_fields": [
+    "software-engineering"
+   ]
+  },
+  {
+   "id": "manager",
+   "label": "manager",
+   "keywords": [
+    "managers?",
+    "engineering managers?",
+    "people managers?",
+    "my boss",
+    "boss",
+    "team managers?",
+    "delivery managers?"
+   ],
+   "setting_cues": [
+    "status update",
+    "planning meeting",
+    "1:1",
+    "staffing",
+    "sprint review"
+   ],
+   "goal_cues": [
+    "plan",
+    "staff",
+    "prioriti[sz]e",
+    "estimate",
+    "unblock"
+   ],
+   "default_level": "informed-adult",
+   "levels": [
+    "lay-adult",
+    "informed-adult",
+    "practitioner"
+   ],
+   "business": true,
+   "they_care_about": [
+    "impact",
+    "timeline",
+    "risk",
+    "cost",
+    "team capacity"
+   ],
+   "frame_around": [
+    "business outcomes",
+    "team implications",
+    "what decisions need to be made"
+   ],
+   "register": "confident, clear, outcome-first; minimal jargon",
+   "entry_point": "the impact and the decision it needs",
+   "depth": "shallow on machinery, enough to judge risk and effort",
+   "video_pace": "short; numbers and stakes up front",
+   "allowed_analogy_sources": [
+    "work processes",
+    "staffing and scheduling",
+    "budgets",
+    "logistics"
+   ],
+   "avoid": [
+    "code blocks and implementation detail unless asked",
+    "unquantified claims when a number exists"
+   ],
+   "business_lead": "This means we should ...",
+   "expert_fields": [
+    "business"
+   ]
+  },
+  {
+   "id": "director",
+   "label": "director",
+   "playbook_row": "Leadership",
+   "keywords": [
+    "directors?",
+    "heads? of [a-z]+",
+    "senior leadership",
+    "leadership",
+    "org leaders?",
+    "leadership team"
+   ],
+   "setting_cues": [
+    "org review",
+    "strategy review",
+    "planning cycle",
+    "roadmap review",
+    "business review"
+   ],
+   "goal_cues": [
+    "allocate",
+    "invest",
+    "approve",
+    "set strategy",
+    "choose between"
+   ],
+   "default_level": "informed-adult",
+   "levels": [
+    "lay-adult",
+    "informed-adult",
+    "practitioner"
+   ],
+   "business": true,
+   "they_care_about": [
+    "strategy",
+    "return on investment",
+    "competitive advantage",
+    "resource allocation"
+   ],
+   "frame_around": [
+    "the big picture",
+    "market position",
+    "resource allocation",
+    "the one decision on the table"
+   ],
+   "register": "confident-formal, outcome-first, minimal jargon",
+   "entry_point": "problem → impact → one-line how",
+   "depth": "shallow on machinery, deep on why",
+   "video_pace": "short; numbers and stakes up front",
+   "allowed_analogy_sources": [
+    "markets",
+    "portfolios",
+    "logistics",
+    "operations"
+   ],
+   "avoid": [
+    "implementation detail",
+    "jargon without a business meaning",
+    "burying the decision"
+   ],
+   "business_lead": "This means we should ...",
+   "expert_fields": [
+    "business"
+   ]
+  },
+  {
+   "id": "executive",
+   "label": "executive (VP, C-level, board, investor)",
+   "playbook_row": "Leadership",
+   "keywords": [
+    "executives?",
+    "execs?",
+    "vps?",
+    "svps?",
+    "vice presidents?",
+    "c-suite",
+    "ceo",
+    "cto",
+    "cfo",
+    "coo",
+    "cio",
+    "board",
+    "board members?",
+    "investors?"
+   ],
+   "setting_cues": [
+    "funding review",
+    "budget review",
+    "board meeting",
+    "quarterly business review",
+    "qbr",
+    "investment decision",
+    "steering committee"
+   ],
+   "goal_cues": [
+    "approve funding",
+    "fund",
+    "approve",
+    "decide whether",
+    "sign off",
+    "green[- ]light"
+   ],
+   "default_level": "informed-adult",
+   "levels": [
+    "lay-adult",
+    "informed-adult"
+   ],
+   "business": true,
+   "they_care_about": [
+    "money and return",
+    "risk to the business",
+    "strategic fit",
+    "the decision they must make",
+    "time to value"
+   ],
+   "frame_around": [
+    "impact first",
+    "the options and their cost",
+    "the recommendation",
+    "one-line how"
+   ],
+   "register": "confident-formal, outcome-first, minimal jargon",
+   "entry_point": "problem → impact → one-line how",
+   "depth": "shallow on machinery, deep on why",
+   "video_pace": "short; numbers and stakes up front",
+   "allowed_analogy_sources": [
+    "markets",
+    "investment",
+    "operations",
+    "logistics"
+   ],
+   "avoid": [
+    "machinery before stakes",
+    "jargon",
+    "more than one example per point",
+    "a recommendation hidden at the end"
+   ],
+   "business_lead": "This means we should ...",
+   "expert_fields": [
+    "business"
+   ]
+  },
+  {
+   "id": "designer",
+   "label": "designer",
+   "keywords": [
+    "designers?",
+    "ux designers?",
+    "ui designers?",
+    "product designers?",
+    "ux researchers?",
+    "ux team",
+    "design team",
+    "interaction designers?"
+   ],
+   "setting_cues": [
+    "design crit",
+    "design critique",
+    "usability review",
+    "design system"
+   ],
+   "goal_cues": [
+    "design the flow",
+    "improve the experience",
+    "prototype"
+   ],
+   "default_level": "informed-adult",
+   "levels": [
+    "lay-adult",
+    "informed-adult",
+    "practitioner"
+   ],
+   "business": false,
+   "they_care_about": [
+    "user experience",
+    "visual impact",
+    "flow",
+    "accessibility",
+    "states the user can see"
+   ],
+   "frame_around": [
+    "how it affects the user",
+    "interaction patterns",
+    "accessibility",
+    "what each state looks like"
+   ],
+   "register": "clear, visual, collaborative",
+   "entry_point": "what the user sees and does",
+   "depth": "the states and transitions that shape the experience",
+   "video_pace": "medium; show, then tell",
+   "allowed_analogy_sources": [
+    "physical products",
+    "wayfinding and signage",
+    "print layout",
+    "everyday interfaces"
+   ],
+   "avoid": [
+    "server internals that never reach the user",
+    "code before the experience"
+   ],
+   "business_lead": null,
+   "expert_fields": [
+    "design-ux"
+   ]
+  },
+  {
+   "id": "product",
+   "label": "product manager",
+   "keywords": [
+    "product managers?",
+    "pms",
+    "product owners?",
+    "product team",
+    "product leads?",
+    "product folks"
+   ],
+   "setting_cues": [
+    "roadmap",
+    "prd",
+    "feature review",
+    "launch review",
+    "scoping"
+   ],
+   "goal_cues": [
+    "scope",
+    "prioriti[sz]e",
+    "decide what to build",
+    "write the spec"
+   ],
+   "default_level": "informed-adult",
+   "levels": [
+    "informed-adult",
+    "practitioner"
+   ],
+   "business": true,
+   "they_care_about": [
+    "user value",
+    "priorities",
+    "scope",
+    "trade-offs that change the roadmap"
+   ],
+   "frame_around": [
+    "feature impact",
+    "user stories",
+    "what to build vs. skip"
+   ],
+   "register": "clear, outcome-first, concrete",
+   "entry_point": "the user problem and the value",
+   "depth": "enough machinery to judge scope and risk",
+   "video_pace": "medium; outcomes first",
+   "allowed_analogy_sources": [
+    "customer journeys",
+    "retail and services",
+    "logistics"
+   ],
+   "avoid": [
+    "implementation detail that does not change scope",
+    "jargon without a user meaning"
+   ],
+   "business_lead": "This means we should ...",
+   "expert_fields": [
+    "product-management"
+   ]
+  },
+  {
+   "id": "newcomer",
+   "label": "new engineer joining the codebase",
+   "playbook_row": "New engineer",
+   "keywords": [
+    "new grads?",
+    "new graduates?",
+    "new hires?",
+    "new engineers?",
+    "newcomers?",
+    "juniors?",
+    "junior engineers?",
+    "junior developers?",
+    "interns?",
+    "onboarding",
+    "new to the team",
+    "new joiners?",
+    "ramp(?:ing)? up"
+   ],
+   "setting_cues": [
+    "onboarding",
+    "first week",
+    "first month",
+    "ramp-up",
+    "orientation",
+    "starter task"
+   ],
+   "goal_cues": [
+    "start contributing",
+    "get productive",
+    "make a first change",
+    "find their way around"
+   ],
+   "default_level": "practitioner",
+   "levels": [
+    "informed-adult",
+    "practitioner"
+   ],
+   "business": false,
+   "they_care_about": [
+    "the mental model of the whole system",
+    "where things live",
+    "which parts are safe to change first",
+    "one worked example"
+   ],
+   "frame_around": [
+    "what and why before how",
+    "one request traced end to end",
+    "where to look in the code"
+   ],
+   "register": "warm-informal, encouraging, \"you'll see this in `foo.py`\"",
+   "entry_point": "\"what & why\" then architecture",
+   "depth": "full, but scaffolded",
+   "video_pace": "medium; one worked example is the payoff",
+   "allowed_analogy_sources": [
+    "software they have used",
+    "systems and patterns from coursework",
+    "everyday systems for the very first picture"
+   ],
+   "avoid": [
+    "greeting or role-playing the reader's situation (the audience shapes design only)",
+    "insider names used as labels without a definition",
+    "forward references to things not yet taught"
+   ],
+   "business_lead": null,
+   "expert_fields": [
+    "software-engineering"
+   ]
+  },
+  {
+   "id": "external-developer",
+   "label": "external / open-source developer",
+   "playbook_row": "External / OSS",
+   "keywords": [
+    "open[- ]source (?:developers?|contributors?|users?|community)",
+    "oss",
+    "external developers?",
+    "third[- ]party developers?",
+    "integrators?",
+    "api (?:users|consumers|clients)",
+    "sdk users?",
+    "outside contributors?",
+    "the community",
+    "contributors?"
+   ],
+   "setting_cues": [
+    "readme",
+    "github",
+    "conference talk",
+    "public docs",
+    "launch post",
+    "docs site"
+   ],
+   "goal_cues": [
+    "evaluate",
+    "adopt",
+    "integrate",
+    "contribute a patch",
+    "decide whether to use"
+   ],
+   "default_level": "practitioner",
+   "levels": [
+    "informed-adult",
+    "practitioner",
+    "specialist"
+   ],
+   "business": false,
+   "they_care_about": [
+    "what it is and whether it fits their problem",
+    "how to reason about it",
+    "how to integrate or contribute",
+    "nothing that needs insider context"
+   ],
+   "frame_around": [
+    "the mental model",
+    "the public surface",
+    "one end-to-end example they can run"
+   ],
+   "register": "friendly-neutral, welcoming, zero assumed context",
+   "entry_point": "what it is, how to reason about it",
+   "depth": "full, self-contained, no insider context",
+   "video_pace": "medium; \"here's the mental model\"",
+   "allowed_analogy_sources": [
+    "widely used open-source tools and patterns",
+    "everyday systems for the first picture"
+   ],
+   "avoid": [
+    "internal team names and insider history",
+    "unexplained acronyms",
+    "links they cannot open"
+   ],
+   "business_lead": null,
+   "expert_fields": [
+    "software-engineering"
+   ]
+  },
+  {
+   "id": "auditor",
+   "label": "auditor / reviewer",
+   "playbook_row": "Auditor / reviewer",
+   "keywords": [
+    "auditors?",
+    "audit team",
+    "compliance (?:team|officers?|reviewers?)",
+    "compliance",
+    "reviewers?",
+    "regulators?",
+    "assessors?",
+    "risk team",
+    "internal audit",
+    "examiners?"
+   ],
+   "setting_cues": [
+    "audit",
+    "compliance review",
+    "control testing",
+    "regulatory review",
+    "security review",
+    "certification"
+   ],
+   "goal_cues": [
+    "verify",
+    "trace every decision",
+    "check every branch",
+    "evidence",
+    "sign off on controls"
+   ],
+   "default_level": "practitioner",
+   "levels": [
+    "informed-adult",
+    "practitioner",
+    "specialist"
+   ],
+   "business": false,
+   "they_care_about": [
+    "completeness of the decision surface",
+    "every branch and terminal",
+    "evidence for each claim",
+    "what is deterministic vs judged"
+   ],
+   "frame_around": [
+    "claim → reference (path:line)",
+    "every branch and its outcome",
+    "where certainty comes from"
+   ],
+   "register": "neutral-formal, traceable, claim→reference",
+   "entry_point": "completeness of the decision surface",
+   "depth": "exhaustive; every branch & terminal",
+   "video_pace": "slow; correctness over flourish",
+   "allowed_analogy_sources": [
+    "none, or controls and checklists from their own practice"
+   ],
+   "avoid": [
+    "unreferenced claims",
+    "simplifications that hide a branch",
+    "persuasive tone"
+   ],
+   "business_lead": null,
+   "expert_fields": [
+    "audit-compliance"
+   ]
+  },
+  {
+   "id": "student",
+   "label": "student",
+   "keywords": [
+    "students?",
+    "college students?",
+    "university students?",
+    "undergrad(?:uate)?s?",
+    "grad(?:uate)? students?",
+    "phd students?",
+    "bootcamp",
+    "learners?",
+    "cs101",
+    "freshmen",
+    "sophomores?"
+   ],
+   "setting_cues": [
+    "lecture",
+    "tutorial",
+    "homework",
+    "study group",
+    "course material",
+    "workshop"
+   ],
+   "goal_cues": [
+    "learn",
+    "understand the concept",
+    "pass the exam",
+    "study"
+   ],
+   "default_level": "informed-adult",
+   "levels": [
+    "teen",
+    "informed-adult",
+    "practitioner",
+    "specialist"
+   ],
+   "business": false,
+   "they_care_about": [
+    "the concept and why it works",
+    "how it connects to what they already learned",
+    "a worked example",
+    "how to check their own understanding"
+   ],
+   "frame_around": [
+    "theory plus practical application",
+    "one worked example",
+    "a self-check"
+   ],
+   "register": "clear, encouraging, academic where useful",
+   "entry_point": "the question the concept answers",
+   "depth": "the model plus the reasoning behind it",
+   "video_pace": "medium",
+   "allowed_analogy_sources": [
+    "coursework",
+    "everyday systems",
+    "games",
+    "school life"
+   ],
+   "avoid": [
+    "skipping the why",
+    "jargon without a definition"
+   ],
+   "business_lead": null,
+   "expert_fields": []
+  },
+  {
+   "id": "non-technical-family",
+   "label": "non-technical family member or friend",
+   "keywords": [
+    "mom",
+    "mum",
+    "mother",
+    "dad",
+    "father",
+    "parents?",
+    "grand(?:ma|pa|mother|father|parents?)",
+    "wife",
+    "husband",
+    "my partner",
+    "spouse",
+    "family",
+    "relatives?",
+    "aunt",
+    "uncle",
+    "in-laws?",
+    "my friend",
+    "friends? and family"
+   ],
+   "setting_cues": [
+    "over dinner",
+    "at home",
+    "family chat",
+    "holiday"
+   ],
+   "goal_cues": [
+    "understand what I do",
+    "know whether to worry",
+    "use it safely"
+   ],
+   "default_level": "lay-adult",
+   "levels": [
+    "lay-adult",
+    "informed-adult"
+   ],
+   "business": false,
+   "they_care_about": [
+    "what it does for them",
+    "whether to worry",
+    "what, if anything, to do"
+   ],
+   "frame_around": [
+    "everyday routines",
+    "familiar technology they use",
+    "one concrete situation"
+   ],
+   "register": "patient, warm, conversational; never condescending",
+   "entry_point": "an everyday situation they already know",
+   "depth": "the idea and why it matters to them",
+   "video_pace": "medium; stakes before machinery",
+   "allowed_analogy_sources": [
+    "household tasks",
+    "shared routines",
+    "familiar apps",
+    "post and parcels"
+   ],
+   "avoid": [
+    "jargon",
+    "condescension",
+    "more detail than the question asked"
+   ],
+   "business_lead": null,
+   "expert_fields": []
+  },
+  {
+   "id": "child",
+   "label": "child",
+   "keywords": [
+    "kids?",
+    "kids'",
+    "children",
+    "child(?! process| node| element| component| class| thread| task)",
+    "elementary(?: school)?",
+    "primary school",
+    "science club",
+    "kindergarten",
+    "schoolchildren",
+    "young learners"
+   ],
+   "setting_cues": [
+    "science club",
+    "classroom",
+    "school assembly",
+    "kids' workshop",
+    "after-school club"
+   ],
+   "goal_cues": [
+    "spark curiosity",
+    "have fun learning"
+   ],
+   "default_level": "child",
+   "levels": [
+    "child"
+   ],
+   "business": false,
+   "they_care_about": [
+    "what it does",
+    "a picture they can hold in their head",
+    "something they can try"
+   ],
+   "frame_around": [
+    "a short story with one character",
+    "things they can see or touch"
+   ],
+   "register": "enthusiastic like a favourite teacher; short sentences; never baby talk",
+   "entry_point": "a thing they can see, touch or play with",
+   "depth": "the one core idea",
+   "video_pace": "slow; one picture per idea",
+   "allowed_analogy_sources": [
+    "games",
+    "animals",
+    "school",
+    "toys",
+    "playground",
+    "cartoons"
+   ],
+   "avoid": [
+    "any unexplained word",
+    "long sentences",
+    "talking down",
+    "scary stakes"
+   ],
+   "business_lead": null,
+   "expert_fields": []
+  },
+  {
+   "id": "colleague",
+   "label": "colleague in another team",
+   "keywords": [
+    "colleagues?",
+    "coworkers?",
+    "co-workers?",
+    "teammates?",
+    "peers?",
+    "partner teams?",
+    "other teams?",
+    "cross-functional"
+   ],
+   "setting_cues": [
+    "handover",
+    "hand-off",
+    "sync",
+    "cross-team review",
+    "brown bag"
+   ],
+   "goal_cues": [
+    "collaborate",
+    "integrate with us",
+    "take over",
+    "work together"
+   ],
+   "default_level": "informed-adult",
+   "levels": [
+    "lay-adult",
+    "informed-adult",
+    "practitioner"
+   ],
+   "business": false,
+   "they_care_about": [
+    "practical context",
+    "how it affects their work",
+    "what they need to know to collaborate"
+   ],
+   "frame_around": [
+    "the shared interface",
+    "what changes for them",
+    "who to ask"
+   ],
+   "register": "friendly, direct, practical",
+   "entry_point": "what it means for their work",
+   "depth": "the parts they touch, then the rest on request",
+   "video_pace": "medium",
+   "allowed_analogy_sources": [
+    "their own team's systems",
+    "work processes"
+   ],
+   "avoid": [
+    "insider shorthand",
+    "history they do not need"
+   ],
+   "business_lead": null,
+   "expert_fields": []
+  },
+  {
+   "id": "general-public",
+   "label": "general public / broad lay audience",
+   "keywords": [
+    "general public",
+    "general audience",
+    "broad audience",
+    "lay audience",
+    "laypeople",
+    "laymen",
+    "non-experts?",
+    "the public",
+    "non-technical (?:people|audience|viewers|readers)"
+   ],
+   "setting_cues": [
+    "public talk",
+    "blog post",
+    "explainer video",
+    "museum",
+    "podcast",
+    "press"
+   ],
+   "goal_cues": [
+    "understand the idea",
+    "get the gist",
+    "keep it simple"
+   ],
+   "default_level": "lay-adult",
+   "levels": [
+    "teen",
+    "lay-adult",
+    "informed-adult"
+   ],
+   "business": false,
+   "they_care_about": [
+    "why it matters",
+    "what it does in plain words",
+    "a picture they can remember"
+   ],
+   "frame_around": [
+    "a concrete everyday case",
+    "one fenced analogy",
+    "the so-what"
+   ],
+   "register": "mild-casual, friendly, plain",
+   "entry_point": "a concrete problem they can feel",
+   "depth": "the core idea, honestly simplified",
+   "video_pace": "medium",
+   "allowed_analogy_sources": [
+    "everyday systems",
+    "household routines",
+    "post and parcels",
+    "kitchens and recipes"
+   ],
+   "avoid": [
+    "jargon",
+    "condescension",
+    "unflagged simplifications that would teach something false"
+   ],
+   "business_lead": null,
+   "expert_fields": []
+  }
+ ],
+ "fields": [
+  {
+   "id": "software-engineering",
+   "label": "software engineering",
+   "subject_cues": [
+    "code",
+    "codebase",
+    "function",
+    "api",
+    "service",
+    "cache",
+    "queue",
+    "retr(?:y|ies)",
+    "endpoint",
+    "repo",
+    "bug",
+    "exception",
+    "stack trace",
+    "thread",
+    "async",
+    "deploy",
+    "pipeline",
+    "module",
+    "worker"
+   ],
+   "audience_cues": [
+    "engineers?",
+    "developers?",
+    "programmers?",
+    "sres?",
+    "devs",
+    "coders?"
+   ],
+   "terms": [
+    {
+     "term": "cache",
+     "paraphrases": [
+      "a box that remembers",
+      "memory box",
+      "a shortcut copy"
+     ]
+    },
+    {
+     "term": "API",
+     "paraphrases": [
+      "a menu of requests",
+      "a doorway into the program"
+     ]
+    },
+    {
+     "term": "queue",
+     "paraphrases": [
+      "a waiting line",
+      "a line of people waiting"
+     ]
+    },
+    {
+     "term": "race condition",
+     "paraphrases": [
+      "two things bumping into each other",
+      "two workers grabbing the same thing at once"
+     ]
+    },
+    {
+     "term": "deadlock",
+     "paraphrases": [
+      "everyone waiting for everyone else",
+      "stuck waiting for each other"
+     ]
+    },
+    {
+     "term": "exponential backoff",
+     "paraphrases": [
+      "waiting a bit longer each time",
+      "waits longer between each try"
+     ]
+    },
+    {
+     "term": "endpoint",
+     "paraphrases": [
+      "an address you knock on",
+      "a door the program listens at"
+     ]
+    }
+   ],
+   "role_hint": "engineer",
+   "level_hint": "practitioner"
+  },
+  {
+   "id": "databases",
+   "label": "databases",
+   "subject_cues": [
+    "database",
+    "sql",
+    "query",
+    "quer(?:y|ies) planner",
+    "index(?:es)?",
+    "table scan",
+    "schema",
+    "transactions?",
+    "postgres(?:ql)?",
+    "mysql",
+    "joins?",
+    "b-tree",
+    "rows?"
+   ],
+   "audience_cues": [
+    "dbas?",
+    "database (?:engineers?|team|administrators?|people|folks|experts?)",
+    "data engineers?",
+    "storage (?:team|engineers?)",
+    "query (?:engine|planner) team"
+   ],
+   "terms": [
+    {
+     "term": "index",
+     "paraphrases": [
+      "lookup shortcut",
+      "a shortcut list",
+      "like a table of contents"
+     ]
+    },
+    {
+     "term": "query plan",
+     "paraphrases": [
+      "the route the database takes",
+      "the database's game plan",
+      "plan of attack"
+     ]
+    },
+    {
+     "term": "transaction",
+     "paraphrases": [
+      "a group of changes that all happen or none",
+      "all-or-nothing bundle"
+     ]
+    },
+    {
+     "term": "join",
+     "paraphrases": [
+      "matching up rows from two lists",
+      "gluing two lists together"
+     ]
+    },
+    {
+     "term": "full table scan",
+     "paraphrases": [
+      "reading every row",
+      "flipping through every page"
+     ]
+    },
+    {
+     "term": "selectivity",
+     "paraphrases": [
+      "how picky the filter is"
+     ]
+    },
+    {
+     "term": "schema",
+     "paraphrases": [
+      "the shape of the data",
+      "the blueprint for the data"
+     ]
+    }
+   ],
+   "role_hint": "engineer",
+   "level_hint": "practitioner"
+  },
+  {
+   "id": "distributed-systems",
+   "label": "distributed systems",
+   "subject_cues": [
+    "consensus",
+    "replicas?",
+    "replication",
+    "network partition",
+    "leader election",
+    "quorum",
+    "eventual consistency",
+    "raft",
+    "paxos",
+    "shards?",
+    "sharding"
+   ],
+   "audience_cues": [
+    "distributed[- ]systems (?:engineers?|researchers?|team|people)",
+    "infrastructure (?:team|engineers?)",
+    "sres?",
+    "platform team"
+   ],
+   "terms": [
+    {
+     "term": "replica",
+     "paraphrases": [
+      "a copy kept in another place",
+      "backup copy on another machine"
+     ]
+    },
+    {
+     "term": "quorum",
+     "paraphrases": [
+      "a majority vote",
+      "enough of them agree"
+     ]
+    },
+    {
+     "term": "network partition",
+     "paraphrases": [
+      "the machines can't hear each other",
+      "a split in the network"
+     ]
+    },
+    {
+     "term": "leader election",
+     "paraphrases": [
+      "picking a boss",
+      "choosing who's in charge"
+     ]
+    },
+    {
+     "term": "idempotent",
+     "paraphrases": [
+      "safe to repeat",
+      "doing it twice is fine"
+     ]
+    }
+   ],
+   "role_hint": "engineer",
+   "level_hint": "practitioner"
+  },
+  {
+   "id": "networking",
+   "label": "networking",
+   "subject_cues": [
+    "dns",
+    "tcp",
+    "packets?",
+    "http",
+    "tls",
+    "load balancer",
+    "routing",
+    "ip address",
+    "latency",
+    "bandwidth"
+   ],
+   "audience_cues": [
+    "network engineers?",
+    "netops",
+    "network team",
+    "networking (?:team|engineers?)"
+   ],
+   "terms": [
+    {
+     "term": "DNS",
+     "paraphrases": [
+      "the internet's phone book",
+      "phone book for the internet"
+     ]
+    },
+    {
+     "term": "packet",
+     "paraphrases": [
+      "a little envelope of data",
+      "envelope of data"
+     ]
+    },
+    {
+     "term": "TLS",
+     "paraphrases": [
+      "a secret handshake",
+      "scrambled connection"
+     ]
+    },
+    {
+     "term": "load balancer",
+     "paraphrases": [
+      "a traffic cop",
+      "a receptionist that hands out work"
+     ]
+    },
+    {
+     "term": "latency",
+     "paraphrases": [
+      "how long the trip takes"
+     ]
+    }
+   ],
+   "role_hint": "engineer",
+   "level_hint": "practitioner"
+  },
+  {
+   "id": "security",
+   "label": "security",
+   "subject_cues": [
+    "authentication",
+    "authori[sz]ation",
+    "encryption",
+    "tokens?",
+    "secrets?",
+    "vulnerabilit(?:y|ies)",
+    "threat model",
+    "credentials?",
+    "hash(?:ing)?",
+    "csrf",
+    "xss"
+   ],
+   "audience_cues": [
+    "security (?:engineers?|team|researchers?|people)",
+    "appsec",
+    "pentesters?",
+    "penetration testers?",
+    "ciso",
+    "red team",
+    "blue team"
+   ],
+   "terms": [
+    {
+     "term": "authentication",
+     "paraphrases": [
+      "proving who you are",
+      "the login check"
+     ]
+    },
+    {
+     "term": "authorization",
+     "paraphrases": [
+      "what you're allowed to do",
+      "permission check"
+     ]
+    },
+    {
+     "term": "encryption",
+     "paraphrases": [
+      "scrambling the message",
+      "secret code"
+     ]
+    },
+    {
+     "term": "hash",
+     "paraphrases": [
+      "a fingerprint of the data"
+     ]
+    },
+    {
+     "term": "token",
+     "paraphrases": [
+      "a wristband",
+      "a ticket that proves you paid"
+     ]
+    }
+   ],
+   "role_hint": "engineer",
+   "level_hint": "practitioner"
+  },
+  {
+   "id": "machine-learning",
+   "label": "machine learning",
+   "subject_cues": [
+    "model training",
+    "training",
+    "inference",
+    "gradient",
+    "overfitting",
+    "embeddings?",
+    "neural",
+    "classifier",
+    "llm",
+    "fine-tun(?:e|ing)",
+    "loss function"
+   ],
+   "audience_cues": [
+    "ml (?:engineers?|researchers?|scientists?|team)",
+    "data scientists?",
+    "machine[- ]learning (?:engineers?|researchers?|team)",
+    "ai researchers?",
+    "applied scientists?"
+   ],
+   "terms": [
+    {
+     "term": "overfitting",
+     "paraphrases": [
+      "memorizing the answers",
+      "cramming for the test"
+     ]
+    },
+    {
+     "term": "gradient descent",
+     "paraphrases": [
+      "walking downhill",
+      "rolling down a hill"
+     ]
+    },
+    {
+     "term": "embedding",
+     "paraphrases": [
+      "a list of numbers that captures meaning",
+      "a position on a map of meanings"
+     ]
+    },
+    {
+     "term": "inference",
+     "paraphrases": [
+      "asking the trained model",
+      "using the trained model"
+     ]
+    },
+    {
+     "term": "loss function",
+     "paraphrases": [
+      "a score of how wrong",
+      "a penalty score"
+     ]
+    }
+   ],
+   "role_hint": "engineer",
+   "level_hint": "practitioner"
+  },
+  {
+   "id": "design-ux",
+   "label": "design and user experience",
+   "subject_cues": [
+    "ux",
+    "user flow",
+    "wireframes?",
+    "accessibility",
+    "interaction design",
+    "usability",
+    "design system",
+    "affordances?"
+   ],
+   "audience_cues": [
+    "designers?",
+    "ux (?:researchers?|team)",
+    "product designers?",
+    "design team"
+   ],
+   "terms": [
+    {
+     "term": "affordance",
+     "paraphrases": [
+      "a hint about what you can do with it"
+     ]
+    },
+    {
+     "term": "information architecture",
+     "paraphrases": [
+      "how things are organised on the screens"
+     ]
+    },
+    {
+     "term": "user flow",
+     "paraphrases": [
+      "the steps a person clicks through"
+     ]
+    }
+   ],
+   "role_hint": "designer",
+   "level_hint": "informed-adult"
+  },
+  {
+   "id": "business",
+   "label": "business and finance",
+   "subject_cues": [
+    "roi",
+    "budget",
+    "revenue",
+    "margin",
+    "funding",
+    "headcount",
+    "runway",
+    "opex",
+    "capex",
+    "business case"
+   ],
+   "audience_cues": [
+    "executives?",
+    "vps?",
+    "finance (?:team|partners?)",
+    "cfo",
+    "directors?",
+    "investors?",
+    "board"
+   ],
+   "terms": [
+    {
+     "term": "ROI",
+     "paraphrases": [
+      "what we get back for what we spend"
+     ]
+    },
+    {
+     "term": "opex",
+     "paraphrases": [
+      "running costs each month"
+     ]
+    },
+    {
+     "term": "capex",
+     "paraphrases": [
+      "up-front spending on equipment"
+     ]
+    },
+    {
+     "term": "runway",
+     "paraphrases": [
+      "how long the money lasts"
+     ]
+    }
+   ],
+   "role_hint": "executive",
+   "level_hint": "informed-adult"
+  },
+  {
+   "id": "product-management",
+   "label": "product management",
+   "subject_cues": [
+    "roadmap",
+    "user stor(?:y|ies)",
+    "mvp",
+    "okrs?",
+    "prioriti[sz]ation",
+    "feature scope",
+    "product requirements"
+   ],
+   "audience_cues": [
+    "product managers?",
+    "pms",
+    "product owners?",
+    "product team"
+   ],
+   "terms": [
+    {
+     "term": "MVP",
+     "paraphrases": [
+      "the smallest version that works"
+     ]
+    },
+    {
+     "term": "user story",
+     "paraphrases": [
+      "a short description of what a user wants"
+     ]
+    },
+    {
+     "term": "scope creep",
+     "paraphrases": [
+      "the project slowly growing bigger"
+     ]
+    }
+   ],
+   "role_hint": "product",
+   "level_hint": "informed-adult"
+  },
+  {
+   "id": "audit-compliance",
+   "label": "audit and compliance",
+   "subject_cues": [
+    "audit",
+    "controls?",
+    "compliance",
+    "audit trail",
+    "sox",
+    "segregation of duties",
+    "evidence",
+    "traceab(?:le|ility)"
+   ],
+   "audience_cues": [
+    "auditors?",
+    "audit team",
+    "compliance (?:team|officers?)",
+    "assessors?",
+    "regulators?",
+    "internal audit"
+   ],
+   "terms": [
+    {
+     "term": "control",
+     "paraphrases": [
+      "a safety check we promise to do"
+     ]
+    },
+    {
+     "term": "audit trail",
+     "paraphrases": [
+      "a record of who did what",
+      "paper trail"
+     ]
+    },
+    {
+     "term": "segregation of duties",
+     "paraphrases": [
+      "no one person does it all"
+     ]
+    },
+    {
+     "term": "material weakness",
+     "paraphrases": [
+      "a big gap in the checks"
+     ]
+    }
+   ],
+   "role_hint": "auditor",
+   "level_hint": "practitioner"
+  },
+  {
+   "id": "medicine",
+   "label": "medicine",
+   "subject_cues": [
+    "patients?",
+    "diagnos(?:is|es|tic)",
+    "clinical",
+    "symptoms?",
+    "dosage",
+    "triage"
+   ],
+   "audience_cues": [
+    "doctors?",
+    "physicians?",
+    "nurses?",
+    "clinicians?",
+    "surgeons?",
+    "pharmacists?"
+   ],
+   "terms": [
+    {
+     "term": "triage",
+     "paraphrases": [
+      "sorting people by how urgent they are"
+     ]
+    },
+    {
+     "term": "differential diagnosis",
+     "paraphrases": [
+      "the list of possible causes"
+     ]
+    },
+    {
+     "term": "contraindication",
+     "paraphrases": [
+      "a reason not to give it"
+     ]
+    }
+   ],
+   "role_hint": "general-public",
+   "level_hint": "informed-adult"
+  }
+ ],
+ "expertise_markers": [
+  "senior",
+  "staff",
+  "principal",
+  "lead",
+  "expert",
+  "experts",
+  "specialist",
+  "specialists",
+  "phd",
+  "researchers?",
+  "maintainers?",
+  "architects?",
+  "veterans?",
+  "years of experience",
+  "owns? the",
+  "who (?:own|built|maintain)",
+  "team that (?:owns|built|maintains)",
+  "deep(?:ly)? (?:familiar|experienced)"
+ ],
+ "phase0_question": "Who will watch or read this, and how much do they already know about the subject?"
+}

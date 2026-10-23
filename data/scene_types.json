@@ -1,0 +1,917 @@
+{
+ "schema": 1,
+ "about": "Content shape → scene component. Each entry is a STARTING POINT, never a fence: combine, bend or ignore any of them, or invent a new form from the runtime primitives. No gate reads this file; gates judge outcomes only (S1–S8, C1–C8, density, determinism).",
+ "how_to_choose": [
+  "Name the content SHAPE first (what the narration is doing: weighing, counting, travelling, failing…), then pick the component.",
+  "Read not_this: if a neighbour fits better, use the neighbour.",
+  "A 3-column table that says the same thing wins over a fancier scene.",
+  "Over budget → split into an overview scene plus a detail scene, or pass overBudget:'<reason>' explicitly."
+ ],
+ "invented_form": {
+  "how": "Draw with the runtime primitives (card, text, chip, node, connector, asset, cursor, mark) and call z.declareForm({invented:'<name>', reason:'<why no catalog entry fits>'}).",
+  "fields": {
+   "invented": "a short name for the new form",
+   "reason": "one sentence: why it teaches this better"
+  },
+  "rule": "An invented form passes or fails on the same outcome gates as a catalog component — never on catalog membership."
+ },
+ "contract": {
+  "file": "scripts/render/scene_components.js",
+  "call": "S.<component>(scene, props) — draws inside a section named props.section or the component id",
+  "timing": "every 'at'/'enter' is a named beat ('the-router') or a spoken word {line, word, occurrence}; numbers are rejected",
+  "kit": "colours, type sizes, radius and motion come from the active kit (window.__C8_KIT__)",
+  "determinism": "no clock, no Math.random; layout jitter (network) uses the seeded C8.random(seed), recorded in the trace",
+  "common_props": {
+   "enter": "beat or word that brings the component in (required)",
+   "title": "optional heading",
+   "section": "section name (default: component id)",
+   "ghost": "false hides the slot outlines of items not yet reached",
+   "overBudget": "a reason string that opts out of the item budget"
+  }
+ },
+ "types": [
+  {
+   "id": "matrix2x2",
+   "shape": "a 2×2 trade-off",
+   "use_when": "Two independent axes (e.g. speed × freshness) and the four combinations they produce; the point is which quadrant a choice lands in.",
+   "not_this": [
+    {
+     "when": "only two options, one axis",
+     "use": "balance"
+    },
+    {
+     "when": "more than two attributes per option",
+     "use": "comparisonTable"
+    }
+   ],
+   "component": "matrix2x2",
+   "required_props": [
+    "cells",
+    "xAxis",
+    "yAxis",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "highlight",
+    "cells[r][c].at",
+    "cells[r][c].note"
+   ],
+   "budget": {
+    "cells": 4,
+    "note_lines_per_cell": 3,
+    "accents": 1
+   },
+   "example": "caching: fresh vs fast, the TTL cache quadrant highlighted"
+  },
+  {
+   "id": "balance",
+   "shape": "two options weighed",
+   "use_when": "Exactly two options judged on one scale, where the narration says which one outweighs the other.",
+   "not_this": [
+    {
+     "when": "the options differ on several attributes",
+     "use": "comparisonTable"
+    },
+    {
+     "when": "a quantity per option against a target",
+     "use": "barCompare"
+    }
+   ],
+   "component": "balance",
+   "required_props": [
+    "left",
+    "right",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "tiltAt",
+    "verdict",
+    "left.note",
+    "right.note"
+   ],
+   "budget": {
+    "options": 2,
+    "accents": 1
+   },
+   "example": "feature flag vs full deploy, tilting to the flag"
+  },
+  {
+   "id": "ledger",
+   "shape": "a running count on beats",
+   "use_when": "A total that grows (or shrinks) as each spoken line adds one entry; the viewer should watch the sum change.",
+   "not_this": [
+    {
+     "when": "one final number matters, not the steps",
+     "use": "bigNumber"
+    },
+    {
+     "when": "the entries are stages that lose volume",
+     "use": "funnel"
+    }
+   ],
+   "component": "ledger",
+   "required_props": [
+    "entries",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "unit",
+    "totalLabel",
+    "start",
+    "format",
+    "entries[i].at"
+   ],
+   "budget": {
+    "entries": 6,
+    "accents": 1
+   },
+   "example": "retry cost counted retry by retry"
+  },
+  {
+   "id": "route",
+   "shape": "A → B (one thing travelling)",
+   "use_when": "One request, packet or item moving from a start to a destination, possibly via waypoints; the travel itself is the idea.",
+   "not_this": [
+    {
+     "when": "several steps each transform the item",
+     "use": "pipeline"
+    },
+    {
+     "when": "many sources converge",
+     "use": "fanIn"
+    }
+   ],
+   "component": "route",
+   "required_props": [
+    "from",
+    "to",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "via",
+    "at",
+    "travel",
+    "summary",
+    "tokenLabel"
+   ],
+   "budget": {
+    "waypoints": 3,
+    "accents": 2
+   },
+   "example": "browser → gateway → billing, the token arriving on 'billing'"
+  },
+  {
+   "id": "splitMorph",
+   "shape": "before / after",
+   "use_when": "The same system in two states, where the change between them is the point (what the fix, cache or migration changed).",
+   "not_this": [
+    {
+     "when": "more than two states in a cycle",
+     "use": "stateRing"
+    },
+    {
+     "when": "one number changed",
+     "use": "bigNumber"
+    }
+   ],
+   "component": "splitMorph",
+   "required_props": [
+    "before",
+    "after",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "after.at",
+    "before.at"
+   ],
+   "budget": {
+    "items_per_side": 5,
+    "accents": 1
+   },
+   "example": "page latency before and after a shared cache"
+  },
+  {
+   "id": "stateRing",
+   "shape": "a lifecycle",
+   "use_when": "One subject passing through a repeating or closed sequence of states; the current state moves as the narration does.",
+   "not_this": [
+    {
+     "when": "the states never loop and each does work",
+     "use": "pipeline"
+    },
+    {
+     "when": "dates matter more than states",
+     "use": "timeline"
+    }
+   ],
+   "component": "stateRing",
+   "required_props": [
+    "states",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "current",
+    "center",
+    "closed"
+   ],
+   "budget": {
+    "states": 7,
+    "accents": 1
+   },
+   "example": "an order: created → paid → shipped → delivered"
+  },
+  {
+   "id": "funnel",
+   "shape": "drop-off",
+   "use_when": "Volume shrinking stage by stage; the lost share between stages is the message.",
+   "not_this": [
+    {
+     "when": "values grow, not shrink",
+     "use": "ledger"
+    },
+    {
+     "when": "stages do work but volume is constant",
+     "use": "pipeline"
+    }
+   ],
+   "component": "funnel",
+   "required_props": [
+    "stages",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "unit",
+    "format",
+    "stages[i].at"
+   ],
+   "budget": {
+    "stages": 6,
+    "accents": 1
+   },
+   "example": "sign-up page → form → verified email"
+  },
+  {
+   "id": "failCard",
+   "shape": "a failure",
+   "use_when": "Something broke: quote the one line that carries the meaning, say why, say what to change.",
+   "not_this": [
+    {
+     "when": "a chain of causes leads to the failure",
+     "use": "causeChain"
+    },
+    {
+     "when": "several checks, one failing",
+     "use": "checklist"
+    }
+   ],
+   "component": "failCard",
+   "required_props": [
+    "error",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "label",
+    "where",
+    "cause",
+    "fix",
+    "at"
+   ],
+   "budget": {
+    "parts": 3,
+    "accents": 1
+   },
+   "example": "SchemaError on an unexpected column, with cause and fix"
+  },
+  {
+   "id": "timeline",
+   "shape": "ordered events in time",
+   "use_when": "Events where WHEN they happened matters (an incident, a release history); dates or times label each event.",
+   "not_this": [
+    {
+     "when": "order matters but time does not",
+     "use": "pipeline"
+    },
+    {
+     "when": "messages between parties",
+     "use": "sequence"
+    }
+   ],
+   "component": "timeline",
+   "required_props": [
+    "events",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "axisLabel",
+    "events[i].at"
+   ],
+   "budget": {
+    "events": 7,
+    "accents": 1
+   },
+   "example": "an incident from deploy to recovery"
+  },
+  {
+   "id": "layerStack",
+   "shape": "stack / layers",
+   "use_when": "Layers that a request crosses or that build on each other (network stack, middleware, storage tiers).",
+   "not_this": [
+    {
+     "when": "the layers are peers, not stacked",
+     "use": "zoneMap"
+    },
+    {
+     "when": "each layer transforms the item in order",
+     "use": "pipeline"
+    }
+   ],
+   "component": "layerStack",
+   "required_props": [
+    "layers",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "focus",
+    "direction",
+    "axis",
+    "layers[i].note"
+   ],
+   "budget": {
+    "layers": 6,
+    "accents": 1
+   },
+   "example": "edge → auth → service → storage, auth in focus"
+  },
+  {
+   "id": "fanIn",
+   "shape": "fan-in (many → one)",
+   "use_when": "Several sources converging on one consumer (aggregation, a bottleneck, a merge).",
+   "not_this": [
+    {
+     "when": "one source, many readers",
+     "use": "fanOut"
+    },
+    {
+     "when": "the many are stages in order",
+     "use": "pipeline"
+    }
+   ],
+   "component": "fanIn",
+   "required_props": [
+    "sources",
+    "sink",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "note",
+    "sources[i].at",
+    "sink.at"
+   ],
+   "budget": {
+    "sources": 6,
+    "accents": 1
+   },
+   "example": "three regional feeds into one aggregator"
+  },
+  {
+   "id": "fanOut",
+   "shape": "fan-out (one → many)",
+   "use_when": "One producer broadcasting to several consumers (publish/subscribe, a dispatcher).",
+   "not_this": [
+    {
+     "when": "many producers, one consumer",
+     "use": "fanIn"
+    },
+    {
+     "when": "a request/response exchange",
+     "use": "sequence"
+    }
+   ],
+   "component": "fanOut",
+   "required_props": [
+    "source",
+    "targets",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "note",
+    "targets[i].at",
+    "source.at"
+   ],
+   "budget": {
+    "targets": 6,
+    "accents": 1
+   },
+   "example": "one order event read by billing, shipping and email"
+  },
+  {
+   "id": "pipeline",
+   "shape": "pipeline stages",
+   "use_when": "A staged process where each stage does work on the item and hands it on; the stage being explained is highlighted.",
+   "not_this": [
+    {
+     "when": "one item travelling, stages do nothing",
+     "use": "route"
+    },
+    {
+     "when": "volume drops per stage",
+     "use": "funnel"
+    }
+   ],
+   "component": "pipeline",
+   "required_props": [
+    "stages",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "token",
+    "tokenLabel",
+    "stages[i].note",
+    "stages[i].at"
+   ],
+   "budget": {
+    "stages": 6,
+    "accents": 1
+   },
+   "example": "ingest → clean → score → publish"
+  },
+  {
+   "id": "comparisonTable",
+   "shape": "a comparison table",
+   "use_when": "Options compared on three or more attributes; a 3-column table that says the same thing as a diagram wins.",
+   "not_this": [
+    {
+     "when": "two options on one scale",
+     "use": "balance"
+    },
+    {
+     "when": "a number per option",
+     "use": "barCompare"
+    }
+   ],
+   "component": "comparisonTable",
+   "required_props": [
+    "columns",
+    "rows",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "highlight",
+    "rows[i].at"
+   ],
+   "budget": {
+    "columns": 4,
+    "rows": 5,
+    "accents": 1
+   },
+   "example": "three queue options on ordering, cost and replay"
+  },
+  {
+   "id": "bigNumber",
+   "shape": "one decisive number",
+   "use_when": "A single quantity is the payoff; it counts up and lands on the spoken word that names it.",
+   "not_this": [
+    {
+     "when": "the number is the sum of steps worth showing",
+     "use": "ledger"
+    },
+    {
+     "when": "a number against a limit",
+     "use": "gauge"
+    }
+   ],
+   "component": "bigNumber",
+   "required_props": [
+    "value",
+    "label",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "at",
+    "from",
+    "unit",
+    "format",
+    "context",
+    "countSeconds"
+   ],
+   "budget": {
+    "context_chips": 3,
+    "accents": 1
+   },
+   "example": "12,000 requests per second, landing on 'thousand'"
+  },
+  {
+   "id": "evidenceCard",
+   "shape": "a quote / evidence card",
+   "use_when": "The proof is a quoted line, a document passage or a screenshot; show it verbatim with its source.",
+   "not_this": [
+    {
+     "when": "the proof is a line of code to point at",
+     "use": "codeSpotlight"
+    },
+    {
+     "when": "the proof is a region of a bigger screen",
+     "use": "zoomDetail"
+    }
+   ],
+   "component": "evidenceCard",
+   "required_props": [
+    "quote",
+    "source",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "at",
+    "asset{path,subjectId,srcW,srcH,subsystem,caption,at}"
+   ],
+   "budget": {
+    "quote_lines": 7,
+    "assets": 1,
+    "accents": 1
+   },
+   "example": "the timeout line and the dashboard that shows it"
+  },
+  {
+   "id": "codeSpotlight",
+   "shape": "a code-chip spotlight",
+   "use_when": "One line of code decides the behaviour; show the surrounding lines, light up the deciding one, cite path:line.",
+   "not_this": [
+    {
+     "when": "a quote from prose or a log",
+     "use": "evidenceCard"
+    },
+    {
+     "when": "the logic has several branches",
+     "use": "treeReveal"
+    }
+   ],
+   "component": "codeSpotlight",
+   "required_props": [
+    "code",
+    "focus",
+    "ref",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "explain",
+    "firstLine"
+   ],
+   "budget": {
+    "code_lines": 10,
+    "accents": 1
+   },
+   "example": "router.py:88 sending an order to review"
+  },
+  {
+   "id": "zoneMap",
+   "shape": "a map / zones",
+   "use_when": "Regions, boundaries or trust zones; what sits where and what crosses a boundary.",
+   "not_this": [
+    {
+     "when": "the regions are stacked layers",
+     "use": "layerStack"
+    },
+    {
+     "when": "a value per cell",
+     "use": "heatmap"
+    }
+   ],
+   "component": "zoneMap",
+   "required_props": [
+    "zones",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "grid",
+    "boundary",
+    "marker",
+    "zones[i].note",
+    "zones[i].at"
+   ],
+   "budget": {
+    "zones": 9,
+    "accents": 1
+   },
+   "example": "public web, gateway and a private network boundary"
+  },
+  {
+   "id": "treeReveal",
+   "shape": "a tree reveal (branching / decomposition)",
+   "use_when": "A decision with forks, or a whole broken into parts; every fork has labelled exits.",
+   "not_this": [
+    {
+     "when": "the branches never rejoin and there is only one path",
+     "use": "pipeline"
+    },
+    {
+     "when": "the nodes form loops",
+     "use": "network"
+    }
+   ],
+   "component": "treeReveal",
+   "required_props": [
+    "root",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "node.when",
+    "node.outcome",
+    "node.at"
+   ],
+   "budget": {
+    "nodes": 9,
+    "depth": 3,
+    "accents": 1
+   },
+   "example": "a refund decided by age and amount"
+  },
+  {
+   "id": "sequence",
+   "shape": "a sequence of messages",
+   "use_when": "Parties exchanging messages over time (request/response, a handshake); time runs down the page.",
+   "not_this": [
+    {
+     "when": "one item travelling, no replies",
+     "use": "route"
+    },
+    {
+     "when": "timestamps are the point",
+     "use": "timeline"
+    }
+   ],
+   "component": "sequence",
+   "required_props": [
+    "actors",
+    "messages",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "messages[i].reply",
+    "messages[i].at"
+   ],
+   "budget": {
+    "actors": 5,
+    "messages": 7,
+    "accents": 1
+   },
+   "example": "app → API → user store → token"
+  },
+  {
+   "id": "gauge",
+   "shape": "a gauge / threshold",
+   "use_when": "One measure against a limit; which side of the threshold it sits on is the message.",
+   "not_this": [
+    {
+     "when": "no limit, the number alone matters",
+     "use": "bigNumber"
+    },
+    {
+     "when": "several measures against one target",
+     "use": "barCompare"
+    }
+   ],
+   "component": "gauge",
+   "required_props": [
+    "value",
+    "min",
+    "max",
+    "threshold",
+    "label",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "at",
+    "unit",
+    "format",
+    "above",
+    "badText",
+    "goodText"
+   ],
+   "budget": {
+    "thresholds": 1,
+    "accents": 1
+   },
+   "example": "disk use at 86% against an 80% alarm"
+  },
+  {
+   "id": "heatmap",
+   "shape": "a heatmap grid",
+   "use_when": "A value per (row, column) where the pattern — the hot spot — is the point; ink is one hue at stepped opacity.",
+   "not_this": [
+    {
+     "when": "one row only",
+     "use": "barCompare"
+    },
+    {
+     "when": "categories, not values, per cell",
+     "use": "zoneMap"
+    }
+   ],
+   "component": "heatmap",
+   "required_props": [
+    "rows",
+    "cols",
+    "values",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "legend",
+    "highlight",
+    "rowAt",
+    "showValues"
+   ],
+   "budget": {
+    "rows": 8,
+    "cols": 10,
+    "accents": 1
+   },
+   "example": "errors by region and hour, west at noon highlighted"
+  },
+  {
+   "id": "checklist",
+   "shape": "a checklist",
+   "use_when": "Criteria that are met or unmet; status is shown by shape AND word, never by hue alone.",
+   "not_this": [
+    {
+     "when": "one failure and its cause",
+     "use": "failCard"
+    },
+    {
+     "when": "options compared on criteria",
+     "use": "comparisonTable"
+    }
+   ],
+   "component": "checklist",
+   "required_props": [
+    "items",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "items[i].status",
+    "items[i].at"
+   ],
+   "budget": {
+    "items": 7,
+    "accents": 1
+   },
+   "example": "a release checklist with the load test failing"
+  },
+  {
+   "id": "network",
+   "shape": "a network graph",
+   "use_when": "Many-to-many relationships (who calls whom); seeded deterministic layout, and no edge is drawn behind an unrelated node.",
+   "not_this": [
+    {
+     "when": "strictly one-to-many",
+     "use": "fanOut"
+    },
+    {
+     "when": "a hierarchy",
+     "use": "treeReveal"
+    }
+   ],
+   "component": "network",
+   "required_props": [
+    "nodes",
+    "edges",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "hub",
+    "seed",
+    "nodes[i].group",
+    "edges[i].at"
+   ],
+   "budget": {
+    "nodes": 9,
+    "edges": 12,
+    "accents": 1
+   },
+   "example": "five services with orders as the hub"
+  },
+  {
+   "id": "zoomDetail",
+   "shape": "zoom into a detail",
+   "use_when": "One region of something larger is what matters; keep the whole visible and show the region enlarged beside it.",
+   "not_this": [
+    {
+     "when": "the whole is not needed for context",
+     "use": "evidenceCard"
+    },
+    {
+     "when": "the detail is a code line",
+     "use": "codeSpotlight"
+    }
+   ],
+   "component": "zoomDetail",
+   "required_props": [
+    "overview",
+    "region",
+    "detail",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "at",
+    "overview.asset",
+    "overview.parts",
+    "detail.lines",
+    "detail.lineAt"
+   ],
+   "budget": {
+    "detail_lines": 6,
+    "assets": 1,
+    "accents": 1
+   },
+   "example": "the failed-payments panel of an operations dashboard"
+  },
+  {
+   "id": "causeChain",
+   "shape": "a cause → effect chain",
+   "use_when": "A causal chain where each step makes the next happen; the first cause and the final effect are marked.",
+   "not_this": [
+    {
+     "when": "the steps are deliberate stages of a process",
+     "use": "pipeline"
+    },
+    {
+     "when": "a single failure",
+     "use": "failCard"
+    }
+   ],
+   "component": "causeChain",
+   "required_props": [
+    "links",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "causeLabel",
+    "effectLabel",
+    "links[i].at"
+   ],
+   "budget": {
+    "links": 6,
+    "accents": 1
+   },
+   "example": "a pool-size typo that took checkout down"
+  },
+  {
+   "id": "barCompare",
+   "shape": "quantities against a baseline",
+   "use_when": "A few quantities compared with each other and with a budget or baseline; bar length carries the value.",
+   "not_this": [
+    {
+     "when": "one quantity against a limit",
+     "use": "gauge"
+    },
+    {
+     "when": "a running total",
+     "use": "ledger"
+    }
+   ],
+   "component": "barCompare",
+   "required_props": [
+    "bars",
+    "enter"
+   ],
+   "optional_props": [
+    "title",
+    "unit",
+    "format",
+    "baseline",
+    "highlight",
+    "bars[i].at"
+   ],
+   "budget": {
+    "bars": 7,
+    "accents": 1
+   },
+   "example": "build time per target against a ten-minute budget"
+  }
+ ]
+}

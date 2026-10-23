@@ -1,0 +1,484 @@
+{
+ "schema": 1,
+ "doctrine": [
+  "Shapes are starting points, never fences: a caller may name an invented shape ('invented: <name>') with its own ordered part list, and an explanation that uses no catalog shape is judged only on outcomes (fenced analogies, one example, an actionable ending, defined jargon).",
+  "Lead with the answer; length follows the question; purpose before mechanism.",
+  "Where code is on screen, the code is the example: point at real lines instead of inventing a parallel one."
+ ],
+ "shapes": [
+  {
+   "id": "error",
+   "label": "error or log line",
+   "detect_cues": [
+    "traceback",
+    "stack trace",
+    "exception",
+    "error",
+    "errno",
+    "failed with",
+    "what does this (?:error|log|message) mean",
+    "\\blog\\b",
+    "crash(?:es|ed)?",
+    "exit code"
+   ],
+   "parts": [
+    {
+     "id": "quote",
+     "label": "quotes the one line that carries the meaning",
+     "kind": "quoted_error_line"
+    },
+    {
+     "id": "translate",
+     "label": "translates it into plain words",
+     "cues": [
+      "in plain (?:words|english|terms)",
+      "this means",
+      "that means",
+      "it'?s saying",
+      "is saying",
+      "in other words",
+      "put simply",
+      "what it'?s telling you",
+      "translat",
+      "means (?:that )?(?:the|your|it|a|an)\\b",
+      "is (?:the|a) (?:way|message) (?:of )?saying"
+     ]
+    },
+    {
+     "id": "cause",
+     "label": "names what caused it",
+     "cues": [
+      "because",
+      "caused by",
+      "the cause",
+      "cause is",
+      "happens when",
+      "due to",
+      "root cause",
+      "the reason",
+      "occurs when",
+      "triggered by",
+      "comes from",
+      "is raised when",
+      "fires when",
+      "\\b(?:likely|possible|common|two) causes?\\b"
+     ]
+    },
+    {
+     "id": "change",
+     "label": "says what to change",
+     "cues": [
+      "to fix",
+      "the fix",
+      "fix (?:it|this)",
+      "\\bchange\\b",
+      "\\bset\\b",
+      "\\badd\\b",
+      "\\breplace\\b",
+      "\\bupdate\\b",
+      "\\bremove\\b",
+      "\\brename\\b",
+      "\\bupgrade\\b",
+      "\\binstall\\b",
+      "\\brestart\\b",
+      "\\bpass\\b",
+      "\\bswitch\\b",
+      "\\bincrease\\b",
+      "\\blower\\b",
+      "\\braise\\b"
+     ]
+    }
+   ],
+   "rules": {
+    "quote_max_lines": 1,
+    "two_causes": {
+     "multiplicity_cues": [
+      "two (?:likely |possible |common )?causes",
+      "\\beither\\b",
+      "another (?:likely |possible |common )?cause",
+      "second (?:likely |possible )?cause",
+      "or it could be",
+      "the other (?:likely |possible )?cause",
+      "alternatively"
+     ],
+     "tell_apart_cues": [
+      "tell (?:them|which|the two) apart",
+      "to tell which",
+      "to know which",
+      "if you see",
+      "check whether",
+      "check if",
+      "distinguish",
+      "the way to tell",
+      "one way to tell",
+      "if (?:it|the \\w+) (?:says|shows|mentions)"
+     ]
+    }
+   }
+  },
+  {
+   "id": "function",
+   "label": "function or file",
+   "detect_cues": [
+    "this function",
+    "this method",
+    "this file",
+    "this class",
+    "this module",
+    "walk me through (?:this|the) (?:function|file|method|class|module)",
+    "\\bdef\\s+\\w+",
+    "what does `[^`]+` do"
+   ],
+   "parts": [
+    {
+     "id": "job",
+     "label": "its job in one sentence",
+     "within_first": 1,
+     "max_words": 30,
+     "cues": [
+      "(?:its|the) job is",
+      "(?:this|the) (?:function|method|file|module|class|script|component)\\b",
+      "\\b(?:takes|turns|returns|checks|decides|reads|writes|computes|converts|sends|builds|validates|loads|parses|renders|stores|fetches|handles|creates|finds|picks|maps|filters|merges|keeps|makes|runs|starts|answers|exists to|is responsible for|is there to)\\b"
+     ]
+    },
+    {
+     "id": "steps",
+     "label": "the 2-4 parts that do real work, in the order they run",
+     "kind": "ordered_steps",
+     "min": 2,
+     "max": 4
+    },
+    {
+     "id": "skipped",
+     "label": "says what boilerplate was skipped",
+     "kind": "skipped_statement"
+    }
+   ],
+   "rules": {
+    "steps_in_code_order_when_code_given": true
+   }
+  },
+  {
+   "id": "architecture",
+   "label": "architecture or flow",
+   "detect_cues": [
+    "architecture",
+    "end to end",
+    "end-to-end",
+    "data flow",
+    "\\bflow\\b",
+    "pipeline",
+    "how does (?:a|the) \\w+ get (?:from|to)",
+    "how do the (?:pieces|services|parts) fit",
+    "system design"
+   ],
+   "parts": [
+    {
+     "id": "one_path",
+     "label": "picks ONE path (a single request or record)",
+     "cues": [
+      "(?:trace|follow|watch|take|pick|track) (?:one|a single|a) (?:request|record|message|order|event|file|job|call|row|payload|upload|reading|case|click|query)",
+      "(?:one|a single) (?:request|record|message|order|event|file|job|call|row|payload|upload|reading|case|click|query)\\b"
+     ]
+    },
+    {
+     "id": "hops",
+     "label": "traces it end to end, hop by hop",
+     "kind": "hops",
+     "min": 3,
+     "cues": [
+      "→",
+      "->",
+      "\\bthen\\b",
+      "\\bnext\\b",
+      "passes (?:it )?(?:on )?to",
+      "hands (?:it )?(?:off )?to",
+      "sends (?:it )?to",
+      "forwards",
+      "goes to",
+      "moves to",
+      "arrives (?:at|in)",
+      "reaches",
+      "picks it up",
+      "writes it to",
+      "reads it from",
+      "\\bcalls\\b",
+      "puts it (?:on|in)",
+      "pulls it (?:off|from)",
+      "\\breceives\\b",
+      "\\bpulls\\b",
+      "\\bpushes\\b",
+      "\\bwrites\\b.{0,40}\\bto\\b",
+      "\\bsends\\b",
+      "\\bpasses\\b",
+      "\\bstores\\b",
+      "\\bputs\\b",
+      "\\bhands\\b",
+      "\\breturns\\b",
+      "\\bpublishes\\b",
+      "\\bconsumes\\b"
+     ]
+    },
+    {
+     "id": "end",
+     "label": "reaches the end of the path",
+     "cues": [
+      "\\bfinally\\b",
+      "at the end",
+      "ends (?:up )?(?:in|at|on)",
+      "lands (?:in|on)",
+      "comes back",
+      "returns to",
+      "the (?:user|caller|client|customer|browser) (?:sees|gets|receives)",
+      "is stored",
+      "reaches the end",
+      "the path ends",
+      "end of the (?:line|path|trip)"
+     ]
+    }
+   ],
+   "rules": {
+    "other_path_cues": [
+     "(?:another|a second|the other|an alternative|a different) (?:path|flow|route|branch)",
+     "\\bmeanwhile\\b",
+     "in parallel,"
+    ],
+    "deferral_cues": [
+     "can wait",
+     "\\blater\\b",
+     "\\bskip",
+     "not covered",
+     "off (?:this|that|the) path",
+     "another time",
+     "if you ask",
+     "out of scope",
+     "set aside"
+    ],
+    "piece_role_cues": [
+     "\\b(?:which|that|who)\\b",
+     "the (?:part|piece|step|service|job) that",
+     "[—–(:]",
+     "\\b(?:checks|stores|sends|decides|reads|writes|holds|keeps|routes|turns|validates|queues|picks|receives|accepts|handles|serves|logs|renders|caches|retries|signs|counts|throttles|limits|resizes|scans|matches|merges|records|publishes|consumes|produces|transforms|filters|returns|forwards|saves|loads|fetches|pushes|pulls|emits|runs|starts|wakes|polls|notifies|charges|bills|ships|tags|labels|scores|ranks|sorts|splits|joins|compresses|encrypts|decrypts|hashes|verifies|authenticates|authorizes|answers|asks|calls|builds|makes|creates|deletes|updates|marks|watches|listens|waits)\\b"
+    ]
+   }
+  },
+  {
+   "id": "concept",
+   "label": "concept",
+   "detect_cues": [
+    "what is (?:a|an|the)?",
+    "explain (?:what|how) ",
+    "teach me",
+    "i don'?t get",
+    "concept of",
+    "\\bidea of\\b",
+    "how does \\w+ work"
+   ],
+   "parts": [
+    {
+     "id": "what",
+     "label": "what it is",
+     "within_first": 2,
+     "cues": [
+      "\\b(?:is|are|means|refers to)\\b",
+      "\\bis short for\\b",
+      " — (?:a|an|the)\\b",
+      "\\bstands for\\b"
+     ]
+    },
+    {
+     "id": "analogy",
+     "label": "an analogy (fenced)",
+     "kind": "analogy"
+    },
+    {
+     "id": "details",
+     "label": "the details that matter",
+     "kind": "details_after_analogy",
+     "min": 1
+    },
+    {
+     "id": "so_what",
+     "label": "so what — why it matters to the reader",
+     "cues": [
+      "(?:this|that|it) matters",
+      "why (?:it|this|that) matters",
+      "\\bso what\\b",
+      "which means you",
+      "that'?s why",
+      "this is why",
+      "so you can",
+      "means you can",
+      "\\bfor you\\b",
+      "the payoff",
+      "useful because",
+      "(?:this|that|it) lets you",
+      "the point is",
+      "you can now",
+      "this means (?:you|we|the)"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "term",
+   "label": "what a single term means (short answer)",
+   "detect_cues": [
+    "what does (?:a |an |the )?[\\w`.-]+(?: [\\w`.-]+){0,3} mean",
+    "^what(?:'s| is) (?:a |an |the )?[\\w`.-]+(?: [\\w`.-]+){0,2}\\??$",
+    "define "
+   ],
+   "parts": [
+    {
+     "id": "definition",
+     "label": "the definition, first",
+     "within_first": 1,
+     "cues": [
+      "\\b(?:is|are|means|refers to|stands for)\\b",
+      "[—–:(]",
+      "\\bis short for\\b"
+     ]
+    }
+   ],
+   "rules": {
+    "max_words": 60,
+    "no_headings": true
+   }
+  },
+  {
+   "id": "how-it-works",
+   "label": "a process with real moving parts",
+   "detect_cues": [
+    "how does .* work",
+    "walk me through",
+    "what happens when",
+    "step by step",
+    "how do (?:i|we|you) "
+   ],
+   "parts": [
+    {
+     "id": "point",
+     "label": "the point in one to three sentences",
+     "within_first": 3,
+     "cues": [
+      "\\b(?:is|are|means|does|lets|turns|makes|keeps|takes|gets|works by)\\b"
+     ]
+    },
+    {
+     "id": "steps",
+     "label": "how it works as ordered steps",
+     "kind": "ordered_steps",
+     "min": 2,
+     "max": 7
+    },
+    {
+     "id": "example",
+     "label": "one example",
+     "kind": "example",
+     "min": 1,
+     "max": 1
+    }
+   ]
+  },
+  {
+   "id": "design-question",
+   "label": "a design or trade-off question",
+   "detect_cues": [
+    "should (?:we|i) ",
+    "which is better",
+    "trade-?offs?",
+    "\\bvs\\.?\\b",
+    "versus",
+    "pros and cons",
+    "when (?:should|would) (?:i|we|you) use"
+   ],
+   "parts": [
+    {
+     "id": "answer",
+     "label": "the answer or recommendation first",
+     "within_first": 2,
+     "cues": [
+      "\\b(?:use|pick|choose|go with|prefer|recommend|stick with|keep)\\b",
+      "\\bthe answer is\\b",
+      "\\bit depends on one thing\\b"
+     ]
+    },
+    {
+     "id": "deciding_tradeoff",
+     "label": "the trade-off that actually decides it",
+     "cues": [
+      "comes down to",
+      "(?:what|the thing that) decides",
+      "the trade-?off",
+      "the deciding (?:factor|question)",
+      "hinges on",
+      "depends on whether",
+      "the cost is",
+      "you pay (?:for it )?(?:in|with)"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "decision-brief",
+   "label": "a decision for a business audience",
+   "detect_cues": [
+    "fund(?:ing)?",
+    "approve",
+    "budget",
+    "should we invest",
+    "go/no-go",
+    "business case",
+    "decision"
+   ],
+   "parts": [
+    {
+     "id": "impact",
+     "label": "impact first (money, risk, users, time)",
+     "within_first": 2,
+     "cues": [
+      "\\bcost",
+      "\\brisk",
+      "\\brevenue",
+      "\\bcustomers?\\b",
+      "\\busers?\\b",
+      "\\bsav(?:e|es|ings)\\b",
+      "\\$\\s?\\d",
+      "\\d+ ?%",
+      "\\b\\d+ (?:hours?|days?|weeks?|months?)\\b",
+      "\\boutage",
+      "\\bdelay",
+      "\\bimpact\\b",
+      "\\bloses?\\b"
+     ]
+    },
+    {
+     "id": "options",
+     "label": "the options, named",
+     "cues": [
+      "\\boptions?\\b",
+      "\\beither\\b",
+      "two (?:ways|choices|paths)",
+      "\\bwe can\\b",
+      "\\bor we\\b",
+      "\\balternatively\\b",
+      "\\bthe choice\\b"
+     ]
+    },
+    {
+     "id": "decision",
+     "label": "the decision ('this means we should ...')",
+     "cues": [
+      "this means we should",
+      "\\bwe should\\b",
+      "\\brecommend",
+      "\\bthe call is\\b",
+      "\\bthe decision\\b",
+      "\\bi'?d (?:fund|approve|pick|choose|go with)\\b",
+      "\\bask(?:ing)? (?:you )?(?:to|for)\\b"
+     ]
+    }
+   ]
+  }
+ ]
+}

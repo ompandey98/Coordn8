@@ -1,0 +1,368 @@
+{
+ "schema": 1,
+ "id": "ledger-ink",
+ "name": "Ledger Ink",
+ "base": "light",
+ "palette_family": "ledger-evergreen",
+ "mood": [
+  "sober",
+  "precise",
+  "confident",
+  "trustworthy",
+  "measured"
+ ],
+ "use_when": [
+  "finance, payments, pricing and risk",
+  "numbers that must be read exactly",
+  "decision-makers who want the figure first"
+ ],
+ "avoid_when": [
+  "children",
+  "playful or whimsical subjects",
+  "loose creative brainstorming"
+ ],
+ "signals": {
+  "for": [
+   "fintech",
+   "finance",
+   "financial",
+   "payment",
+   "payments",
+   "bank",
+   "banking",
+   "money",
+   "pricing",
+   "price",
+   "revenue",
+   "cost",
+   "risk",
+   "trading",
+   "ledger",
+   "accounting",
+   "invoice",
+   "billing",
+   "budget",
+   "investor",
+   "loan",
+   "credit",
+   "fraud",
+   "executive"
+  ],
+  "against": [
+   "kids",
+   "children",
+   "toy",
+   "party",
+   "fairy"
+  ]
+ },
+ "palette": {
+  "family": "ledger-ink",
+  "roles": {
+   "paper": "#fbfbf8",
+   "ink": "#0f1b2d",
+   "muted": "#4c586a",
+   "accent": "#006b75",
+   "link": "#2846a6",
+   "positive": "#1b7343",
+   "negative": "#b02a37",
+   "warning": "#985000",
+   "deterministic": "#2846a6",
+   "model-judgement": "#6e3aa8",
+   "data-field": "#1b7343",
+   "vision": "#985000"
+  },
+  "dark": {
+   "paper": "#0d1522",
+   "ink": "#e9eef6",
+   "muted": "#a5b0c0",
+   "accent": "#4fd0da",
+   "link": "#9fb4ff",
+   "positive": "#78d6a0",
+   "negative": "#ff919a",
+   "warning": "#f2b25c",
+   "deterministic": "#9fb4ff",
+   "model-judgement": "#cba8ff",
+   "data-field": "#78d6a0",
+   "vision": "#f2b25c"
+  },
+  "note": "the kit's own built-in skin (light in roles, dark in dark); when the Palette Director has chosen a palette for the build, that palette replaces this one"
+ },
+ "theme": {
+  "family": {
+   "display": "'Hoefler Text', Baskerville, 'Libre Baskerville', 'Times New Roman', serif",
+   "body": "'Avenir Next', Avenir, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+   "mono": "'SF Mono', Menlo, Consolas, monospace"
+  },
+  "weights": {
+   "display": 600,
+   "body": 450,
+   "strong": 650
+  },
+  "scale": {
+   "title": 60,
+   "h1": 44,
+   "h2": 34,
+   "body": 30,
+   "caption": 30,
+   "label": 28
+  },
+  "page_scale": {
+   "title": 40,
+   "h1": 28,
+   "h2": 21,
+   "body": 17,
+   "caption": 14,
+   "small": 13
+  },
+  "line_height": 1.4,
+  "tracking_em": 0.0,
+  "numerals": "tabular lining everywhere a number can move",
+  "vendorable": [
+   {
+    "name": "Libre Baskerville",
+    "licence": "OFL-1.1",
+    "shipped": false,
+    "note": "optional display face where Hoefler Text / Baskerville are missing"
+   }
+  ]
+ },
+ "stage": {
+  "background": {
+   "treatment": "ruled",
+   "base_role": "paper",
+   "texture": {
+    "kind": "lines",
+    "alpha": 0.05,
+    "spacing_px": 54
+   },
+   "vignette": 0.0
+  },
+  "grid": {
+   "columns": 12,
+   "gutter_px": 32,
+   "margin_px": 112,
+   "baseline_px": 6
+  },
+  "safe_area": {
+   "x_pct": 6,
+   "y_pct": 6
+  },
+  "radius": {
+   "card": 8,
+   "chip": 4,
+   "node": 6
+  },
+  "stroke": {
+   "hairline": 1,
+   "connector": 2.5,
+   "emphasis": 3.5
+  },
+  "depth": {
+   "shadow": "soft",
+   "shadow_alpha": 0.05,
+   "offset_px": 4
+  }
+ },
+ "props": {
+  "card": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "ink",
+    "alpha": 0.12
+   },
+   "border_width": 1,
+   "radius": 8,
+   "pad_px": 24,
+   "shadow": "soft",
+   "rule_under_header": true
+  },
+  "chip": {
+   "fill": {
+    "role": "ink",
+    "alpha": 0.06
+   },
+   "text": {
+    "role": "ink"
+   },
+   "shape": "tag",
+   "radius": 4,
+   "weight": 600
+  },
+  "node": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "ink",
+    "alpha": 0.45
+   },
+   "border_width": 1.5,
+   "radius": 6,
+   "text_px": 28
+  },
+  "connector": {
+   "stroke": {
+    "role": "muted"
+   },
+   "width": 2.5,
+   "dash": [],
+   "arrow": "triangle",
+   "routing": "orthogonal",
+   "draw_on": true
+  },
+  "callout": {
+   "style": "figure-tag",
+   "stroke": {
+    "role": "accent"
+   },
+   "width": 2,
+   "label": {
+    "role": "accent"
+   },
+   "leader": "straight"
+  }
+ },
+ "charts": {
+  "series": {
+   "role": "ink",
+   "steps": [
+    1.0,
+    0.74,
+    0.52,
+    0.34
+   ]
+  },
+  "highlight": {
+   "role": "accent",
+   "max": 1
+  },
+  "gridline": {
+   "stroke": {
+    "role": "muted",
+    "alpha": 0.22
+   },
+   "width": 1,
+   "dash": []
+  },
+  "axis": {
+   "stroke": {
+    "role": "ink",
+    "alpha": 0.7
+   },
+   "width": 1.5
+  },
+  "label": {
+   "role": "muted",
+   "size_px": 28,
+   "numerals": "tabular"
+  },
+  "increase_decrease": {
+   "increase": "solid bar with +",
+   "decrease": "outline bar with −"
+  },
+  "draw_on": true,
+  "count_up": true
+ },
+ "motion": {
+  "ease": "cubic-bezier(.4,0,.2,1)",
+  "enter_ms": 340,
+  "exit_ms": 220,
+  "stagger_ms": 60,
+  "lead_ms": 100,
+  "hold_min_ms": 900,
+  "entrance": {
+   "kind": "slide-up",
+   "opacity_from": 0,
+   "translate_y_px": 24,
+   "blur_px": 0
+  },
+  "exit": {
+   "kind": "fade",
+   "opacity_to": 0
+  }
+ },
+ "transitions": [
+  {
+   "id": "morph",
+   "use": "within-section",
+   "ms": 420,
+   "morph": true,
+   "note": "numbers count from the old value to the new one"
+  },
+  {
+   "id": "cut-on-beat",
+   "use": "within-section",
+   "ms": 0,
+   "on_beat": true
+  },
+  {
+   "id": "slide-up",
+   "use": "section",
+   "ms": 360,
+   "move": {
+    "x": 0,
+    "y": -0.35
+   },
+   "blend": "crossfade"
+  }
+ ],
+ "continuity": {
+  "prefer": "morph",
+  "first_second_anchor": "the headline figure is on screen, already settled, at frame 0"
+ },
+ "caption_style": {
+  "font_px": 30,
+  "weight": 500,
+  "max_lines": 2,
+  "max_marks": 2,
+  "overflow": "truncate",
+  "position": "bottom-center",
+  "width_pct": 72,
+  "text": {
+   "role": "ink"
+  },
+  "scrim": {
+   "role": "paper",
+   "alpha": 0.9,
+   "radius_px": 6,
+   "pad_px": 18
+  },
+  "reveal": "phrase",
+  "dim_previous": true,
+  "marks": {
+   "good": {
+    "role": "positive",
+    "styles": [
+     "weight-700"
+    ]
+   },
+   "bad": {
+    "role": "negative",
+    "styles": [
+     "strike-through"
+    ]
+   },
+   "key": {
+    "role": "accent",
+    "styles": [
+     "underline",
+     "small-caps"
+    ]
+   }
+  },
+  "markup": "⟦good:…⟧ ⟦bad:…⟧ ⟦key:…⟧ — spoken form strips the marks"
+ },
+ "do": [
+  "lead each section with the one number that matters, then show where it comes from",
+  "count values up from the previous figure, never from zero each time",
+  "align every figure on its decimal point"
+ ],
+ "dont": [
+  "no 3-D charts and no pie charts beyond two slices",
+  "never say a number aloud digit by digit — say what it means",
+  "no colour-only up/down — always a sign or a shape too"
+ ]
+}

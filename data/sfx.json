@@ -1,0 +1,56 @@
+{
+ "schema": 1,
+ "about": "Synthesized sound effects (rendered locally by scripts/render/audio.py from code; nothing is downloaded). A menu of starting points, never a fence: an effect not listed here is always allowed as {\"invented\": \"<name>\", \"why\": \"...\", \"recipe\": [layers]} and is judged only by outcome (audible over the bed, no clipping, loudness).",
+ "how_to_choose": [
+  "One effect per visual event that MEANS something (a reveal, a count, a failure, a section change). Never decoration.",
+  "Sound is OFF by default; it is switched on by storyboard.audio or design_system.audio.",
+  "Keep effects sparse: at most one every ~2 s of narration, and never on top of the key word of a line unless it is the hit itself.",
+  "gain_db is the effect's RMS relative to the narration's active level; the mix measures and reports real audibility against the bed."
+ ],
+ "invented_form": {
+  "invented": "<name>",
+  "why": "<what visual event it marks and why no listed effect fits>",
+  "recipe": [
+   {"kind": "tone", "f0": 880, "f1": 440, "dur": 0.3, "decay": 12, "gain": 1.0, "at": 0.0},
+   {"kind": "noise", "filter": "bp", "freq": 2000, "q": 1.5, "dur": 0.2, "decay": 30, "gain": 0.5, "at": 0.0}
+  ],
+  "kinds": {"tone": "sine sweeping f0 -> f1 (exponential), exp(-decay*t) envelope",
+            "noise": "seeded white noise through lp|hp|bp at freq/q, exp(-decay*t) envelope",
+            "pluck": "plucked string at f0 (Karplus-Strong)",
+            "bell": "inharmonic bell partials at f0"}
+ },
+ "effects": [
+  {"id": "click", "label": "UI click", "seconds": 0.06, "default_gain_db": -10,
+   "use_when": ["a button, toggle or selection on screen", "a small state change"], "character": "short bright tick with a noisy edge"},
+  {"id": "tick", "label": "clock tick", "seconds": 0.03, "default_gain_db": -12,
+   "use_when": ["waiting, polling, a timer counting", "a step in a fast sequence"], "character": "narrow band noise click, very short"},
+  {"id": "pop", "label": "pop", "seconds": 0.14, "default_gain_db": -8,
+   "use_when": ["a node, card or label appears", "an item is added to a list"], "character": "falling sine blip"},
+  {"id": "whoosh", "label": "whoosh", "seconds": 0.5, "default_gain_db": -10,
+   "use_when": ["a camera move or a panel sliding in", "something travels from A to B"], "character": "band-pass noise sweep up and down"},
+  {"id": "ding", "label": "ding", "seconds": 1.6, "default_gain_db": -10,
+   "use_when": ["a result arrives", "a check passes", "the end of a worked example"], "character": "two bright bell strikes"},
+  {"id": "chime", "label": "rising chime", "seconds": 1.4, "default_gain_db": -12,
+   "use_when": ["an idea clicks into place", "a reveal of the answer"], "character": "fast rising bell arpeggio"},
+  {"id": "error", "label": "error buzz", "seconds": 0.6, "default_gain_db": -9,
+   "use_when": ["a failure, a rejected request, a wrong path"], "character": "two low square-wave buzzes, falling"},
+  {"id": "stamp", "label": "stamp", "seconds": 0.4, "default_gain_db": -8,
+   "use_when": ["a verdict or decision is recorded", "an approval or a label is applied"], "character": "low thump with paper noise"},
+  {"id": "paper", "label": "page turn", "seconds": 0.35, "default_gain_db": -12,
+   "use_when": ["a document or record is opened", "a new section of a file"], "character": "short rising band-pass rustle"},
+  {"id": "type", "label": "typing", "seconds": 0.9, "default_gain_db": -14,
+   "use_when": ["code or text is being written on screen", "a log streams"], "character": "irregular burst of key clicks"},
+  {"id": "question", "label": "question", "seconds": 0.55, "default_gain_db": -10,
+   "use_when": ["a question is posed", "an unknown or an open item"], "character": "two short rising tones"},
+  {"id": "riser", "label": "riser", "seconds": 2.0, "default_gain_db": -12,
+   "use_when": ["the build-up into a hit or a key reveal (place it to END on the hit)"], "character": "noise and tone rising for two seconds, cut just before the end"},
+  {"id": "impact", "label": "impact", "seconds": 1.6, "default_gain_db": -6,
+   "use_when": ["the hit itself: the key word lands", "a big number appears"], "character": "low falling sine with a rumble tail"},
+  {"id": "chapter", "label": "section card", "seconds": 0.5, "default_gain_db": -10,
+   "use_when": ["a section title appears", "a change of chapter"], "character": "short low thump with a high glint"},
+  {"id": "rewind", "label": "rewind", "seconds": 1.3, "default_gain_db": -12,
+   "use_when": ["going back to an earlier step", "a replay or undo"], "character": "falling wobbling tone with hiss"},
+  {"id": "clink", "label": "glass clink", "seconds": 0.45, "default_gain_db": -12,
+   "use_when": ["two things meet or match", "a small success in a series"], "character": "high inharmonic partials, very fast decay"}
+ ]
+}

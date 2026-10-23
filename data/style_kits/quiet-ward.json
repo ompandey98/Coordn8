@@ -1,0 +1,360 @@
+{
+ "schema": 1,
+ "id": "quiet-ward",
+ "name": "Quiet Ward",
+ "base": "light",
+ "palette_family": "clinic-tide",
+ "mood": [
+  "calm",
+  "reassuring",
+  "trustworthy",
+  "gentle",
+  "clear"
+ ],
+ "use_when": [
+  "health, medicine and care",
+  "safety-critical procedures explained to non-experts",
+  "older or anxious audiences who need large, steady text"
+ ],
+ "avoid_when": [
+  "games and entertainment",
+  "hype or sales",
+  "dense expert-only dumps"
+ ],
+ "signals": {
+  "for": [
+   "medical",
+   "medicine",
+   "health",
+   "healthcare",
+   "clinic",
+   "clinical",
+   "hospital",
+   "patient",
+   "patients",
+   "care",
+   "nurse",
+   "doctor",
+   "treatment",
+   "diagnosis",
+   "safety",
+   "wellbeing",
+   "pharmacy",
+   "therapy",
+   "accessibility"
+  ],
+  "against": [
+   "game",
+   "gaming",
+   "hype",
+   "esports",
+   "party",
+   "shooter"
+  ]
+ },
+ "palette": {
+  "family": "quiet-ward",
+  "roles": {
+   "paper": "#f6f9fa",
+   "ink": "#16313a",
+   "muted": "#4d6770",
+   "accent": "#0b7480",
+   "link": "#2a59a8",
+   "positive": "#2f7a3e",
+   "negative": "#a8343a",
+   "warning": "#8c5800",
+   "deterministic": "#2a59a8",
+   "model-judgement": "#71439c",
+   "data-field": "#2f7a3e",
+   "vision": "#8c5800"
+  },
+  "dark": {
+   "paper": "#0f1d20",
+   "ink": "#e5f1f2",
+   "muted": "#a8c0c4",
+   "accent": "#5fd0d8",
+   "link": "#9ab9f2",
+   "positive": "#8ed39c",
+   "negative": "#f39a9a",
+   "warning": "#efbf6a",
+   "deterministic": "#9ab9f2",
+   "model-judgement": "#cfabef",
+   "data-field": "#8ed39c",
+   "vision": "#efbf6a"
+  },
+  "note": "the kit's own built-in skin (light in roles, dark in dark); when the Palette Director has chosen a palette for the build, that palette replaces this one"
+ },
+ "theme": {
+  "family": {
+   "display": "Optima, Candara, 'Segoe UI', 'Noto Sans', sans-serif",
+   "body": "Seravek, 'Segoe UI', Ubuntu, 'Noto Sans', sans-serif",
+   "mono": "Menlo, Consolas, monospace"
+  },
+  "weights": {
+   "display": 600,
+   "body": 400,
+   "strong": 650
+  },
+  "scale": {
+   "title": 58,
+   "h1": 44,
+   "h2": 36,
+   "body": 34,
+   "caption": 34,
+   "label": 30
+  },
+  "page_scale": {
+   "title": 40,
+   "h1": 30,
+   "h2": 23,
+   "body": 19,
+   "caption": 16,
+   "small": 15
+  },
+  "line_height": 1.5,
+  "tracking_em": 0.005,
+  "numerals": "lining",
+  "vendorable": [
+   {
+    "name": "Atkinson Hyperlegible",
+    "licence": "OFL-1.1",
+    "shipped": false,
+    "note": "designed for low-vision readers; an optional body upgrade"
+   }
+  ]
+ },
+ "stage": {
+  "background": {
+   "treatment": "soft-wash",
+   "base_role": "paper",
+   "texture": {
+    "kind": "none"
+   },
+   "vignette": 0.0,
+   "wash": {
+    "role": "accent",
+    "alpha": 0.05
+   }
+  },
+  "grid": {
+   "columns": 8,
+   "gutter_px": 40,
+   "margin_px": 128,
+   "baseline_px": 8
+  },
+  "safe_area": {
+   "x_pct": 7,
+   "y_pct": 7
+  },
+  "radius": {
+   "card": 22,
+   "chip": 999,
+   "node": 18
+  },
+  "stroke": {
+   "hairline": 1.5,
+   "connector": 3.5,
+   "emphasis": 5
+  },
+  "depth": {
+   "shadow": "soft",
+   "shadow_alpha": 0.06,
+   "offset_px": 10
+  }
+ },
+ "props": {
+  "card": {
+   "fill": {
+    "role": "paper"
+   },
+   "border": {
+    "role": "accent",
+    "alpha": 0.22
+   },
+   "border_width": 1.5,
+   "radius": 22,
+   "pad_px": 32,
+   "shadow": "soft"
+  },
+  "chip": {
+   "fill": {
+    "role": "accent",
+    "alpha": 0.12
+   },
+   "text": {
+    "role": "ink"
+   },
+   "shape": "pill",
+   "radius": 999,
+   "weight": 600
+  },
+  "node": {
+   "fill": {
+    "role": "ink",
+    "alpha": 0.04
+   },
+   "border": {
+    "role": "ink",
+    "alpha": 0.6
+   },
+   "border_width": 2,
+   "radius": 18,
+   "text_px": 32
+  },
+  "connector": {
+   "stroke": {
+    "role": "muted",
+    "alpha": 0.9
+   },
+   "width": 3.5,
+   "dash": [],
+   "arrow": "rounded",
+   "routing": "curved",
+   "draw_on": true
+  },
+  "callout": {
+   "style": "soft-spotlight",
+   "stroke": {
+    "role": "accent"
+   },
+   "width": 3,
+   "label": {
+    "role": "ink"
+   },
+   "leader": "none",
+   "dim_rest": 0.35
+  }
+ },
+ "charts": {
+  "series": {
+   "role": "ink",
+   "steps": [
+    1.0,
+    0.66,
+    0.4
+   ]
+  },
+  "highlight": {
+   "role": "accent",
+   "max": 1
+  },
+  "gridline": {
+   "stroke": {
+    "role": "muted",
+    "alpha": 0.18
+   },
+   "width": 1,
+   "dash": []
+  },
+  "axis": {
+   "stroke": {
+    "role": "muted"
+   },
+   "width": 2
+  },
+  "label": {
+   "role": "muted",
+   "size_px": 30
+  },
+  "increase_decrease": {
+   "increase": "solid with ▲",
+   "decrease": "outline with ▼"
+  },
+  "draw_on": true
+ },
+ "motion": {
+  "ease": "cubic-bezier(.33,0,.15,1)",
+  "enter_ms": 640,
+  "exit_ms": 420,
+  "stagger_ms": 150,
+  "lead_ms": 150,
+  "hold_min_ms": 1400,
+  "entrance": {
+   "kind": "fade",
+   "opacity_from": 0,
+   "translate_y_px": 8,
+   "blur_px": 0
+  },
+  "exit": {
+   "kind": "fade",
+   "opacity_to": 0
+  }
+ },
+ "transitions": [
+  {
+   "id": "dissolve",
+   "use": "within-section",
+   "ms": 600,
+   "blend": "crossfade"
+  },
+  {
+   "id": "morph",
+   "use": "within-section",
+   "ms": 700,
+   "morph": true
+  },
+  {
+   "id": "fade-through-paper",
+   "use": "section",
+   "ms": 820,
+   "blend": "via",
+   "via_role": "paper"
+  }
+ ],
+ "continuity": {
+  "prefer": "morph",
+  "first_second_anchor": "a single calm statement of what this explains, on screen at frame 0"
+ },
+ "caption_style": {
+  "font_px": 34,
+  "weight": 500,
+  "max_lines": 2,
+  "max_marks": 2,
+  "overflow": "truncate",
+  "position": "bottom-center",
+  "width_pct": 70,
+  "text": {
+   "role": "ink"
+  },
+  "scrim": {
+   "role": "paper",
+   "alpha": 0.94,
+   "radius_px": 14,
+   "pad_px": 18
+  },
+  "reveal": "phrase",
+  "dim_previous": true,
+  "marks": {
+   "good": {
+    "role": "positive",
+    "styles": [
+     "underline",
+     "weight-700"
+    ]
+   },
+   "bad": {
+    "role": "negative",
+    "styles": [
+     "dotted-underline"
+    ]
+   },
+   "key": {
+    "role": "accent",
+    "styles": [
+     "box"
+    ]
+   }
+  },
+  "markup": "⟦good:…⟧ ⟦bad:…⟧ ⟦key:…⟧ — spoken form strips the marks"
+ },
+ "do": [
+  "one idea per frame with generous space around it",
+  "pair every risk with what to do about it, on the same frame",
+  "hold each label at least as long as it takes to read it aloud twice"
+ ],
+ "dont": [
+  "no flashing, shaking or fast cuts",
+  "never signal danger by colour alone — use a symbol and a word",
+  "no dense tables on screen; show the one row that matters"
+ ]
+}
