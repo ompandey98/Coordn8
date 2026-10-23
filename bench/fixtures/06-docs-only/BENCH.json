@@ -1,0 +1,49 @@
+{
+ "schema": 1,
+ "project": "incident-handbook",
+ "subject": "the team handbook that says how engineers respond to a production incident",
+ "tone": "calm, direct",
+ "conclusion": "An incident moves through six steps: detect, triage, escalate if needed, mitigate, resolve and review.",
+ "why": "A fixed sequence means nobody has to decide what to do next under pressure. Mitigation comes before the root cause, so customers stop losing first.",
+ "glossary": [
+  {"term": "incident commander", "definition": "the person who coordinates the response and owns the updates"},
+  {"term": "postmortem", "definition": "a written review of an incident that looks for causes in systems, not people"}
+ ],
+ "flow": {
+  "id": "fig-incident",
+  "title": "The life of one incident",
+  "text": "A staged process with one optional branch: triage leads to escalation when mitigation takes too long.",
+  "items": [
+   {"id": "detect", "label": "Detect", "kind": "step", "ref": {"path": "docs/incident-response.md", "match": "## 1. Detect"}, "desc": "An alert, a customer report or an engineer opens the incident and pages on-call."},
+   {"id": "triage", "label": "Triage", "kind": "decision", "ref": {"path": "docs/incident-response.md", "match": "## 2. Triage"}, "desc": "The on-call engineer sets a severity within 15 minutes and names a commander for SEV1 and SEV2."},
+   {"id": "escalate", "label": "Escalate", "kind": "step", "ref": {"path": "docs/escalation.md", "match": "Page the secondary"}, "desc": "Escalation pages the secondary engineer and, for payments or SEV1, the leads."},
+   {"id": "mitigate", "label": "Mitigate", "kind": "step", "ref": {"path": "docs/incident-response.md", "match": "## 4. Mitigate"}, "desc": "The team stops the harm first: roll back, fail over or switch the feature off."},
+   {"id": "resolve", "label": "Resolve", "kind": "step", "ref": {"path": "docs/incident-response.md", "match": "## 5. Resolve"}, "desc": "The commander declares the incident resolved after 30 minutes of normal metrics."},
+   {"id": "review", "label": "Review", "kind": "terminal", "ref": {"path": "docs/incident-response.md", "match": "## 6. Review"}, "desc": "Every SEV1 and SEV2 gets a blameless postmortem within five working days."}
+  ],
+  "relations": [
+   {"from": "detect", "to": "triage", "kind": "next"},
+   {"from": "triage", "to": "mitigate", "kind": "next"},
+   {"from": "triage", "to": "escalate", "kind": "next", "when": "no mitigation within 30 minutes", "label": "30 min"},
+   {"from": "escalate", "to": "mitigate", "kind": "next"},
+   {"from": "mitigate", "to": "resolve", "kind": "next"},
+   {"from": "resolve", "to": "review", "kind": "next"}
+  ]
+ },
+ "facts": [
+  {"text": "A page that the primary does not acknowledge in 10 minutes goes to the secondary.", "path": "docs/on-call.md", "match": "after 10 minutes"},
+  {"text": "A SEV1 needs a status update every 30 minutes.", "path": "docs/severity-levels.md", "match": "| SEV1 |"}
+ ],
+ "inferred": ["The handbook assumes one incident at a time; it does not say who commands two concurrent SEV1s."],
+ "scenes": [
+  {"id": "s1", "title": "The life of one incident", "lines": [
+   {"name": "open", "text": "Someone notices a problem and opens the incident.", "show": ["detect"]},
+   {"name": "triage", "text": "On-call sets a severity, and escalates if mitigation takes too long.", "show": ["triage", "escalate"]},
+   {"name": "close", "text": "The team stops the harm, confirms recovery and writes the review.", "show": ["mitigate", "resolve", "review"]}
+  ]},
+  {"id": "s2", "title": "The clocks that matter", "lines": [
+   {"name": "fast", "text": "Acknowledge a page in five minutes and set a severity in fifteen.", "chips": ["ack: 5 min", "severity: 15 min"]},
+   {"name": "slow", "text": "Escalate after thirty minutes and review within five working days.", "chips": ["escalate: 30 min", "review: 5 days"]}
+  ]}
+ ]
+}

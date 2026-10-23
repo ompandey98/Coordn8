@@ -1,0 +1,48 @@
+{
+ "schema": 1,
+ "project": "orderflow",
+ "subject": "a nightly batch pipeline that cleans order exports and writes them for reporting",
+ "tone": "steady, factual",
+ "conclusion": "orderflow reads the day's exports, sends bad rows to quarantine, drops duplicates, adds the region and writes JSON Lines.",
+ "why": "A bad row never stops the run. The quarantine file keeps each rejected row with its reason, so a person can fix the source.",
+ "glossary": [
+  {"term": "quarantine", "definition": "a file that keeps rejected rows with the reason they failed"},
+  {"term": "JSON Lines", "definition": "a text file with one JSON object on each line"}
+ ],
+ "flow": {
+  "id": "fig-pipeline",
+  "title": "One nightly run",
+  "text": "A staged process with one branch: rows that fail a check leave the main path for quarantine.",
+  "items": [
+   {"id": "ingest", "label": "Ingest", "kind": "step", "ref": {"path": "pipeline/ingest.py", "match": "def read_exports"}, "desc": "The ingest step reads every CSV export for the date, row by row."},
+   {"id": "validate", "label": "Validate", "kind": "decision", "ref": {"path": "pipeline/validate.py", "match": "def check_row"}, "desc": "Each row passes every check or gets the first reason it failed."},
+   {"id": "quarantine", "label": "Quarantine", "kind": "terminal", "ref": {"path": "pipeline/dag.py", "match": "bad.append"}, "desc": "A failed row goes to the quarantine file with its reason and its source file."},
+   {"id": "dedupe", "label": "Dedupe", "kind": "step", "ref": {"path": "pipeline/dedupe.py", "match": "def drop_duplicates"}, "desc": "The dedupe step keeps the first copy of each order and counts the rest."},
+   {"id": "enrich", "label": "Enrich", "kind": "step", "ref": {"path": "pipeline/enrich.py", "match": "def add_region"}, "desc": "The enrich step adds the customer's region from a lookup file."},
+   {"id": "load", "label": "Load", "kind": "terminal", "ref": {"path": "pipeline/load.py", "match": "def write_jsonl"}, "desc": "The load step writes the clean rows as one JSON Lines file per date."}
+  ],
+  "relations": [
+   {"from": "ingest", "to": "validate", "kind": "next"},
+   {"from": "validate", "to": "quarantine", "kind": "next", "when": "a check fails", "label": "fails"},
+   {"from": "validate", "to": "dedupe", "kind": "next", "when": "every check passes", "label": "passes"},
+   {"from": "dedupe", "to": "enrich", "kind": "next"},
+   {"from": "enrich", "to": "load", "kind": "next"}
+  ]
+ },
+ "facts": [
+  {"text": "An amount of zero or less sends the row to quarantine.", "path": "pipeline/validate.py", "match": "amount must be positive"},
+  {"text": "The load step writes to a temporary file and then renames it, so a reader never sees half a file.", "path": "pipeline/load.py", "match": "tmp.replace(path)"}
+ ],
+ "inferred": ["A rerun for the same date replaces that date's output instead of adding to it."],
+ "scenes": [
+  {"id": "s1", "title": "One nightly run", "lines": [
+   {"name": "read", "text": "The run reads every export for the date.", "show": ["ingest"]},
+   {"name": "check", "text": "Each row passes the checks, or it goes to quarantine with a reason.", "show": ["validate", "quarantine"]},
+   {"name": "clean", "text": "Good rows lose their duplicates, gain a region and land in one file.", "show": ["dedupe", "enrich", "load"]}
+  ]},
+  {"id": "s2", "title": "What one run reports", "lines": [
+   {"name": "counts", "text": "The run reports how many rows it wrote and how many it rejected.", "chips": ["rows written", "rows quarantined"]},
+   {"name": "duplicates", "text": "It also counts the duplicate orders it dropped.", "chips": ["duplicates dropped"]}
+  ]}
+ ]
+}

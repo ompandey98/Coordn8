@@ -1,0 +1,38 @@
+{
+ "id": "shape-function-file",
+ "requirement": "I2",
+ "covers": "explanation shape for a file: its job in one sentence, then 2-4 parts in run order, say what was skipped",
+ "fixture": "01-cli",
+ "prompt": "Explain what this tool's command-line entry file does. Reply in the chat as text.",
+ "assertions": [
+  {
+   "id": "job-in-one-sentence",
+   "kind": "sentence_stats",
+   "scope": "first_sentence",
+   "max_longest": 35,
+   "describe": "the first sentence (the file's job) is at most 35 words"
+  },
+  {
+   "id": "two-to-four-parts",
+   "kind": "list_items",
+   "min": 2,
+   "max": 4,
+   "describe": "between 2 and 4 top-level list items (the parts that do real work)"
+  },
+  {
+   "id": "says-what-was-skipped",
+   "kind": "regex_count",
+   "min": 1,
+   "pattern": "(skip|skipped|boilerplate|left out|not covered|leaving out|ignor|omit)",
+   "describe": "says out loud what boilerplate was skipped"
+  },
+  {
+   "id": "cites-lines",
+   "kind": "path_line_refs",
+   "min": 1,
+   "resolve": true,
+   "min_resolved": 1,
+   "describe": "at least one path:line reference that exists in the fixture"
+  }
+ ]
+}

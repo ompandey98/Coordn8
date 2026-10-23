@@ -1,0 +1,49 @@
+{
+ "schema": 1,
+ "project": "tinyclf",
+ "subject": "a NumPy training loop for a small two-layer classifier with early stopping",
+ "tone": "precise, rigorous",
+ "conclusion": "tinyclf trains in shuffled mini-batches, checks the validation loss after each epoch, keeps the best checkpoint and stops early.",
+ "why": "Early stopping on a held-out split guards against overfitting. The best checkpoint, not the last one, is the model you keep.",
+ "glossary": [
+  {"term": "epoch", "definition": "one full pass over the training split"},
+  {"term": "early stopping", "definition": "ending training when the validation loss has not improved for a set number of epochs"}
+ ],
+ "flow": {
+  "id": "fig-loop",
+  "title": "One epoch of training",
+  "text": "A loop: batches, forward pass, loss, update, then an evaluation that decides whether the next epoch starts.",
+  "items": [
+   {"id": "batch", "label": "Batch", "kind": "step", "ref": {"path": "tinyclf/data.py", "match": "def batches"}, "desc": "The data step shuffles the training split and yields mini-batches in a new order each epoch."},
+   {"id": "forward", "label": "Forward", "kind": "step", "ref": {"path": "tinyclf/model.py", "match": "def forward"}, "desc": "The forward pass runs two dense layers and a softmax to get class probabilities."},
+   {"id": "loss", "label": "Loss", "kind": "step", "ref": {"path": "tinyclf/model.py", "match": "def loss_and_grads"}, "desc": "The loss step computes cross-entropy and the gradient for every parameter."},
+   {"id": "update", "label": "Update", "kind": "step", "ref": {"path": "tinyclf/optim.py", "match": "def sgd_step"}, "desc": "The optimiser clips the gradient norm and moves each parameter against its gradient."},
+   {"id": "evaluate", "label": "Evaluate", "kind": "decision", "ref": {"path": "tinyclf/evaluate.py", "match": "def evaluate"}, "desc": "After each epoch the loop measures validation loss and accuracy without updating anything."},
+   {"id": "stop", "label": "Stop", "kind": "terminal", "ref": {"path": "tinyclf/train.py", "match": "if waited >= cfg"}, "desc": "The loop stops when the validation loss has not improved for the patience window."}
+  ],
+  "relations": [
+   {"from": "batch", "to": "forward", "kind": "next"},
+   {"from": "forward", "to": "loss", "kind": "next"},
+   {"from": "loss", "to": "update", "kind": "next"},
+   {"from": "update", "to": "evaluate", "kind": "next", "label": "end of epoch"},
+   {"from": "evaluate", "to": "batch", "kind": "next", "when": "the loss still improves", "label": "next epoch"},
+   {"from": "evaluate", "to": "stop", "kind": "next", "when": "no improvement for the patience window", "label": "stop"}
+  ]
+ },
+ "facts": [
+  {"text": "The loop saves a checkpoint only when the validation loss improves.", "path": "tinyclf/train.py", "match": "checkpoint.save("},
+  {"text": "The patience window is five epochs in the shipped configuration.", "path": "config.json", "match": "\"patience\": 5"}
+ ],
+ "inferred": ["With the fixed seed, two runs on the same machine give the same loss curve."],
+ "scenes": [
+  {"id": "s1", "title": "One epoch of training", "lines": [
+   {"name": "batches", "text": "Each epoch starts with a fresh shuffle into mini-batches.", "show": ["batch"]},
+   {"name": "step", "text": "Every batch runs forward, gets a loss and updates the weights.", "show": ["forward", "loss", "update"]},
+   {"name": "decide", "text": "Then the loop evaluates, and either starts the next epoch or stops.", "show": ["evaluate", "stop"]}
+  ]},
+  {"id": "s2", "title": "What a run leaves behind", "lines": [
+   {"name": "best", "text": "The run keeps the checkpoint with the lowest validation loss.", "chips": ["best checkpoint"]},
+   {"name": "summary", "text": "It also reports how many epochs ran and the final accuracy.", "chips": ["epochs run", "final accuracy"]}
+  ]}
+ ]
+}

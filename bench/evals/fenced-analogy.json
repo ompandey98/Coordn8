@@ -1,0 +1,56 @@
+{
+ "id": "fenced-analogy",
+ "requirement": "I3",
+ "covers": "one analogy that says where it stops being true; one example only",
+ "fixture": "01-cli",
+ "prompt": "Explain what this tool does to my grandmother, who has never programmed. Use one analogy. Reply in the chat as text.",
+ "assertions": [
+  {
+   "id": "has-an-analogy",
+   "kind": "regex_count",
+   "min": 1,
+   "pattern": "(like a |like an |think of |imagine |similar to |as if |picture )",
+   "describe": "an analogy is present"
+  },
+  {
+   "id": "analogy-is-fenced",
+   "kind": "regex_count",
+   "min": 1,
+   "pattern": "(where (the|this|that) (analogy|comparison) (breaks|stops|ends|falls)|stops being true|breaks down|isn't quite|is not quite|unlike a |unlike an |unlike your|the difference is|one difference|doesn't quite|does not quite|not exactly like)",
+   "describe": "the analogy says where it stops being true"
+  },
+  {
+   "id": "one-example-only",
+   "kind": "regex_count",
+   "max": 1,
+   "pattern": "(for example|for instance|e\\.g\\.)",
+   "describe": "at most one 'for example'"
+  },
+  {
+   "id": "no-jargon",
+   "kind": "forbidden_terms",
+   "max": 1,
+   "terms": [
+    "function",
+    "parser",
+    "argparse",
+    "argument",
+    "stdin",
+    "regex",
+    "API",
+    "module",
+    "subcommand",
+    "CLI",
+    "configparser",
+    "ini file"
+   ],
+   "describe": "at most one programming term"
+  },
+  {
+   "id": "no-code",
+   "kind": "code_fences",
+   "max": 0,
+   "describe": "no code blocks"
+  }
+ ]
+}

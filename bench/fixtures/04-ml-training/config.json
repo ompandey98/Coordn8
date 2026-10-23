@@ -1,0 +1,2 @@
+{"seed": 13, "hidden": 32, "lr": 0.05, "batch_size": 64, "epochs": 40, "patience": 5,
+ "val_fraction": 0.2, "checkpoint": "checkpoints/best.npz"}

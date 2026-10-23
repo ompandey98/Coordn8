@@ -1,0 +1,40 @@
+{
+ "id": "end-where-they-can-act",
+ "requirement": "I4",
+ "covers": "end on what the reader can now do; caveats only when they cost something",
+ "fixture": "01-cli",
+ "prompt": "I'm a new contributor. Explain how I would add a new subcommand to this tool. Reply in the chat as text.",
+ "assertions": [
+  {
+   "id": "ends-on-an-action",
+   "kind": "regex_count",
+   "scope": "last_paragraph",
+   "min": 1,
+   "pattern": "(you can now|now you can|you're ready|you are ready|next step|next,|then run|try |run |open |add |start )",
+   "describe": "the last paragraph says what the reader can now do"
+  },
+  {
+   "id": "caveats-capped",
+   "kind": "regex_count",
+   "max": 1,
+   "pattern": "(note that|be aware|keep in mind|caveat|warning|be careful|one thing to watch)",
+   "describe": "at most one caveat"
+  },
+  {
+   "id": "no-sign-off",
+   "kind": "regex_count",
+   "scope": "last_paragraph",
+   "max": 0,
+   "pattern": "(let me know|any questions|hope this helps|feel free|happy to help)",
+   "describe": "does not end on a sign-off instead of an action"
+  },
+  {
+   "id": "cites-lines",
+   "kind": "path_line_refs",
+   "min": 1,
+   "resolve": true,
+   "min_resolved": 1,
+   "describe": "at least one path:line reference that exists in the fixture"
+  }
+ ]
+}

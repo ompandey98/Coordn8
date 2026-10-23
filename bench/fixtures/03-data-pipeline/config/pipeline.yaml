@@ -1,0 +1,6 @@
+source_dir: data/incoming
+output_dir: data/clean
+quarantine_dir: data/quarantine
+regions_file: data/regions.csv
+required_columns: [order_id, customer_id, amount, currency, created_at]
+currencies: [EUR, USD, GBP]

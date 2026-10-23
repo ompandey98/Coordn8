@@ -1,0 +1,30 @@
+{
+ "id": "claims-path-line",
+ "requirement": "C3",
+ "covers": "every claim carries a path:line that resolves",
+ "fixture": "01-cli",
+ "prompt": "List five factual claims about how this tool processes its input. After each claim, give the file and line number that proves it, written as path:line. Reply in the chat as text.",
+ "assertions": [
+  {
+   "id": "five-references",
+   "kind": "path_line_refs",
+   "min": 5,
+   "describe": "at least five path:line references"
+  },
+  {
+   "id": "references-resolve",
+   "kind": "path_line_refs",
+   "min": 5,
+   "resolve": true,
+   "min_resolved": 4,
+   "describe": "at least four of them name a real file and a line that exists in it"
+  },
+  {
+   "id": "five-claims",
+   "kind": "list_items",
+   "min": 5,
+   "max": 7,
+   "describe": "five to seven top-level list items"
+  }
+ ]
+}

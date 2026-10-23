@@ -1,0 +1,8 @@
+[project]
+name = "logtally"
+version = "0.3.1"
+description = "Count log entries per level and component"
+requires-python = ">=3.9"
+
+[project.scripts]
+logtally = "logtally.cli:main"

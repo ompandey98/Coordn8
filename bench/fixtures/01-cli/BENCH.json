@@ -1,0 +1,180 @@
+{
+ "schema": 1,
+ "project": "logtally",
+ "subject": "a command-line tool that counts log entries per level and per component",
+ "tone": "precise, calm",
+ "conclusion": "logtally reads each file once, keeps the entries that pass one filter, counts them by one key and prints the counts.",
+ "why": "One pass over each file keeps memory flat. The parser counts a malformed line and reports it, so a bad line never stops the count.",
+ "glossary": [
+  {
+   "term": "entry",
+   "definition": "one parsed log line: a timestamp, a level, a component and a message"
+  },
+  {
+   "term": "exit status",
+   "definition": "the number the tool returns to the shell when it stops"
+  }
+ ],
+ "flow": {
+  "id": "fig-main",
+  "title": "From log files to counts",
+  "text": "A staged process: each step hands its output to the next step, then the run ends with an exit status.",
+  "items": [
+   {
+    "id": "args",
+    "label": "Options",
+    "kind": "step",
+    "ref": {
+     "path": "logtally/cli.py",
+     "match": "def build_parser"
+    },
+    "desc": "The entry point reads the file names and the options from the command line."
+   },
+   {
+    "id": "parse",
+    "label": "Parse",
+    "kind": "step",
+    "ref": {
+     "path": "logtally/parse.py",
+     "match": "def parse_file"
+    },
+    "desc": "The parser reads each file once and turns every line into an entry or a skipped count."
+   },
+   {
+    "id": "filter",
+    "label": "Filter",
+    "kind": "step",
+    "ref": {
+     "path": "logtally/filters.py",
+     "match": "def build_filter"
+    },
+    "desc": "One combined test drops entries below the level floor or before the start time."
+   },
+   {
+    "id": "tally",
+    "label": "Count",
+    "kind": "step",
+    "ref": {
+     "path": "logtally/aggregate.py",
+     "match": "def tally"
+    },
+    "desc": "The counter groups the kept entries by level or by component, highest count first."
+   },
+   {
+    "id": "render",
+    "label": "Print",
+    "kind": "step",
+    "ref": {
+     "path": "logtally/render.py",
+     "match": "def render_table"
+    },
+    "desc": "A renderer prints the counts as an aligned table or as JSON."
+   },
+   {
+    "id": "exit",
+    "label": "Exit status",
+    "kind": "terminal",
+    "ref": {
+     "path": "logtally/cli.py",
+     "match": "return EXIT_SKIPPED"
+    },
+    "desc": "The tool returns 2 when it skipped malformed lines and 0 when every line parsed."
+   }
+  ],
+  "relations": [
+   {
+    "from": "args",
+    "to": "parse",
+    "kind": "next"
+   },
+   {
+    "from": "parse",
+    "to": "filter",
+    "kind": "next"
+   },
+   {
+    "from": "filter",
+    "to": "tally",
+    "kind": "next"
+   },
+   {
+    "from": "tally",
+    "to": "render",
+    "kind": "next"
+   },
+   {
+    "from": "render",
+    "to": "exit",
+    "kind": "next"
+   }
+  ]
+ },
+ "facts": [
+  {
+   "text": "A usage error returns exit status 64.",
+   "path": "logtally/cli.py",
+   "match": "EXIT_USAGE = 64"
+  },
+  {
+   "text": "The log format is a timestamp, a level, a bracketed component and a message.",
+   "path": "logtally/parse.py",
+   "match": "LINE = re.compile"
+  }
+ ],
+ "inferred": [
+  "Memory use grows with the number of kept entries, not with the size of the files."
+ ],
+ "scenes": [
+  {
+   "id": "s1",
+   "title": "From log files to counts",
+   "lines": [
+    {
+     "name": "read-options",
+     "text": "The tool starts by reading the file names and the options.",
+     "show": [
+      "args"
+     ]
+    },
+    {
+     "name": "parse-and-filter",
+     "text": "Each line becomes an entry, and one test keeps the entries you asked for.",
+     "show": [
+      "parse",
+      "filter"
+     ]
+    },
+    {
+     "name": "count-and-print",
+     "text": "The counter groups the kept entries, and a renderer prints them as a table or as JSON.",
+     "show": [
+      "tally",
+      "render",
+      "exit"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "title": "What the exit status tells you",
+   "lines": [
+    {
+     "name": "clean-run",
+     "text": "When every line parses, the tool returns zero.",
+     "chips": [
+      "exit 0: every line parsed"
+     ]
+    },
+    {
+     "name": "skipped-lines",
+     "text": "When it skips a malformed line, it still prints the counts and returns two.",
+     "chips": [
+      "exit 2: lines skipped",
+      "counts still printed"
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+{
+ "id": "shape-error-log",
+ "requirement": "I2",
+ "covers": "explanation shape for an error: quote the line, translate, cause, what to change",
+ "fixture": "builtin-cli",
+ "prompt": "Running `tally top notes.txt` stops, and the last line of the output is:\n\nKeyError: 'limit'\n\nWhat does it mean and what should I change? Reply in the chat as text.",
+ "assertions": [
+  {
+   "id": "quotes-the-line",
+   "kind": "regex_count",
+   "min": 1,
+   "pattern": "KeyError: 'limit'",
+   "case_sensitive": true,
+   "describe": "quotes the one line that carries the meaning"
+  },
+  {
+   "id": "line-then-cause-then-fix",
+   "kind": "ordered_patterns",
+   "patterns": [
+    "KeyError: 'limit'",
+    "(because|caus|means|happens when|raised when|there is no|isn't set|is not set|missing)",
+    "(change|add|set|fix|edit|put|pass)"
+   ],
+   "describe": "the quoted line comes before the cause, and the cause before the change"
+  },
+  {
+   "id": "points-at-the-code",
+   "kind": "path_line_refs",
+   "min": 1,
+   "resolve": true,
+   "min_resolved": 1,
+   "describe": "at least one path:line reference that exists in the fixture"
+  },
+  {
+   "id": "short",
+   "kind": "word_count",
+   "max": 400,
+   "describe": "at most 400 words"
+  }
+ ]
+}

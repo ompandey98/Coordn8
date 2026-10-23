@@ -1,0 +1,46 @@
+{
+ "schema": 1,
+ "project": "billing-infra",
+ "subject": "Terraform that builds the network, load balancer, container service and database for a billing service",
+ "tone": "clear, careful",
+ "conclusion": "The root module builds a private network, then a load balancer and a container service, then a Postgres database that only the service can reach.",
+ "why": "Each tier only accepts traffic from the tier in front of it. The database has no public route at all.",
+ "glossary": [
+  {"term": "module", "definition": "a folder of Terraform resources that the root configuration calls with inputs"},
+  {"term": "security group", "definition": "a firewall rule set that says which traffic may reach a resource"}
+ ],
+ "flow": {
+  "id": "fig-tiers",
+  "title": "How traffic reaches the database",
+  "text": "Data flows through three tiers; each tier depends on the network module's outputs.",
+  "items": [
+   {"id": "network", "label": "Network", "kind": "service", "ref": {"path": "modules/network/main.tf", "match": "resource \"aws_vpc\" \"this\""}, "desc": "The network module creates the private network, two public and two private subnets and a NAT gateway."},
+   {"id": "lb", "label": "Load balancer", "kind": "service", "ref": {"path": "modules/app/main.tf", "match": "resource \"aws_lb\" \"this\""}, "desc": "The load balancer accepts HTTPS on port 443 in the public subnets."},
+   {"id": "service", "label": "Service", "kind": "service", "ref": {"path": "modules/app/main.tf", "match": "resource \"aws_ecs_service\" \"app\""}, "desc": "The container service runs the billing image in the private subnets on port 8080."},
+   {"id": "db", "label": "Database", "kind": "service", "ref": {"path": "modules/db/main.tf", "match": "resource \"aws_db_instance\" \"this\""}, "desc": "The Postgres database runs in two zones and accepts port 5432 only from the service."},
+   {"id": "outputs", "label": "Outputs", "kind": "terminal", "ref": {"path": "outputs.tf", "match": "output \"public_url\""}, "desc": "The root module prints the public URL and keeps the database address marked sensitive."}
+  ],
+  "relations": [
+   {"from": "network", "to": "lb", "kind": "depends", "label": "subnets"},
+   {"from": "lb", "to": "service", "kind": "request", "label": "port 8080"},
+   {"from": "service", "to": "db", "kind": "request", "label": "port 5432"},
+   {"from": "lb", "to": "outputs", "kind": "depends", "label": "DNS name"}
+  ]
+ },
+ "facts": [
+  {"text": "Deletion protection is on for the database.", "path": "modules/db/main.tf", "match": "deletion_protection"},
+  {"text": "The production file runs four copies of the service.", "path": "envs/prod.tfvars", "match": "app_count"}
+ ],
+ "inferred": ["A plan that changes the database engine version would replace the instance unless the provider supports an in-place upgrade."],
+ "scenes": [
+  {"id": "s1", "title": "How traffic reaches the database", "lines": [
+   {"name": "network", "text": "Everything sits inside one private network.", "show": ["network"]},
+   {"name": "front", "text": "The load balancer takes HTTPS and passes it to the service.", "show": ["lb", "service"]},
+   {"name": "back", "text": "Only the service can reach the database, and the root prints the public URL.", "show": ["db", "outputs"]}
+  ]},
+  {"id": "s2", "title": "What protects the data", "lines": [
+   {"name": "guards", "text": "The database keeps seven days of backups and refuses deletion.", "chips": ["7-day backups", "deletion protection"]},
+   {"name": "reach", "text": "Its firewall admits the service and nothing else.", "chips": ["port 5432 from the service only"]}
+  ]}
+ ]
+}

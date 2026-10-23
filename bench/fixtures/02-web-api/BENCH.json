@@ -1,0 +1,48 @@
+{
+ "schema": 1,
+ "project": "shortlink",
+ "subject": "a small HTTP API that turns long URLs into short codes and redirects visitors",
+ "tone": "clear, practical",
+ "conclusion": "Every request takes the same path: authenticate, check the rate limit, route, validate, store and send the response.",
+ "why": "One handler chain means every route gets the same checks. A route never has to remember to authenticate or to limit callers.",
+ "glossary": [
+  {"term": "token bucket", "definition": "a counter that refills at a fixed rate; each request spends one token"},
+  {"term": "short code", "definition": "the seven-letter key that stands for one stored URL"}
+ ],
+ "flow": {
+  "id": "fig-request",
+  "title": "One request through the API",
+  "text": "A staged process: every request passes the same checks in order before a route handles it.",
+  "items": [
+   {"id": "request", "label": "Request", "kind": "step", "ref": {"path": "shortlink/app.py", "match": "def _handle"}, "desc": "The handler reads the method, the path, the token and the body of each request."},
+   {"id": "auth", "label": "Auth", "kind": "step", "ref": {"path": "shortlink/auth.py", "match": "def authenticate"}, "desc": "The auth check turns a bearer token into an owner, or leaves the caller anonymous."},
+   {"id": "limit", "label": "Rate limit", "kind": "step", "ref": {"path": "shortlink/ratelimit.py", "match": "def allow"}, "desc": "A token bucket per client refuses the request with status 429 when the client is too fast."},
+   {"id": "route", "label": "Route", "kind": "step", "ref": {"path": "shortlink/routes.py", "match": "def dispatch"}, "desc": "The router matches the method and the path against one table of routes."},
+   {"id": "validate", "label": "Validate", "kind": "step", "ref": {"path": "shortlink/validate.py", "match": "def parse_new_link"}, "desc": "The validator accepts only an http or https URL with a host and a sane length."},
+   {"id": "store", "label": "Store", "kind": "step", "ref": {"path": "shortlink/store.py", "match": "def create"}, "desc": "The store writes the link to SQLite under a new random short code."}
+  ],
+  "relations": [
+   {"from": "request", "to": "auth", "kind": "next"},
+   {"from": "auth", "to": "limit", "kind": "next"},
+   {"from": "limit", "to": "route", "kind": "next"},
+   {"from": "route", "to": "validate", "kind": "next"},
+   {"from": "validate", "to": "store", "kind": "next"}
+  ]
+ },
+ "facts": [
+  {"text": "A redirect answers with status 302 and a Location header.", "path": "shortlink/routes.py", "match": "return 302"},
+  {"text": "A short code has seven characters from an alphabet without look-alike letters.", "path": "shortlink/store.py", "match": "ALPHABET ="}
+ ],
+ "inferred": ["Two server processes on one database would share links but not rate-limit state, because the buckets live in memory."],
+ "scenes": [
+  {"id": "s1", "title": "One request through the API", "lines": [
+   {"name": "arrive", "text": "Every request starts in one handler.", "show": ["request"]},
+   {"name": "checks", "text": "First the API checks the token, then the rate limit.", "show": ["auth", "limit"]},
+   {"name": "route-and-store", "text": "Then the router picks a route, which validates the input and stores the link.", "show": ["route", "validate", "store"]}
+  ]},
+  {"id": "s2", "title": "What a caller gets back", "lines": [
+   {"name": "success", "text": "A valid request gets status 201 and the new short code.", "chips": ["201: link created"]},
+   {"name": "refusals", "text": "A missing token gets 401, and a caller that is too fast gets 429.", "chips": ["401: token required", "429: too fast"]}
+  ]}
+ ]
+}

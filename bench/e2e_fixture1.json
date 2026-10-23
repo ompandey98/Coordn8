@@ -1,0 +1,75 @@
+{
+ "schema": 1,
+ "what": "end-to-end run from a fresh plugin load (claude -p --plugin-dir <clean extraction of the release zip>) on bench fixture 01-cli, video + page, sandboxed user home",
+ "date": "2026-10-23",
+ "deliverables": [
+  "REBUILD.md",
+  "logtally.claims.md",
+  "logtally.html",
+  "logtally.mp4",
+  "logtally.srt",
+  "logtally.vtt"
+ ],
+ "video_seconds": 145.7,
+ "narration_lines": 26,
+ "frame_review": {
+  "verdicts": 26,
+  "lines_with_verdict": 26,
+  "counts": {
+   "partial": 3,
+   "match": 23
+  },
+  "reviewer": "coordn8-frame-reviewer (blind)"
+ },
+ "quality_build_score": 97.0,
+ "voice": {
+  "id": "kokoro:af_bella",
+  "rejected": 3,
+  "reasons": [
+   "energy 0.63 is further from the explainer target 0.40 than the chosen voice (0.45)",
+   "energy 0.62 is further from the explainer target 0.40 than the chosen voice (0.45); clarity 0.70 is further from the explainer target 0.88 than the chosen voice (0.90)",
+   "energy 0.65 is further from the explainer target 0.40 than the chosen voice (0.45); clarity 0.70 is further from the explainer target 0.88 than the chosen voice (0.90)"
+  ]
+ },
+ "divergence_decisions": 3,
+ "frames_left": 0,
+ "manifest": {
+  "items": 24,
+  "pass": 24
+ },
+ "gates": {
+  "env_detect": "PASS",
+  "disk": "PASS",
+  "perf": "PASS",
+  "quality": "REVIEW",
+  "tree_shape": "PASS",
+  "diagram_plan": "PASS",
+  "diagram_budget": "PASS",
+  "palette": "PASS",
+  "facts_trace": "PASS",
+  "dom_smoke": "PASS",
+  "content_ban:html": "REVIEW",
+  "content_ban:narration": "PASS",
+  "visual_density:page": "PASS",
+  "visual_density:video": "PASS",
+  "content_coverage": "PASS",
+  "language:page": "REVIEW",
+  "language:narration": "PASS",
+  "terms": "PASS",
+  "truth": "REVIEW",
+  "page_content": "REVIEW",
+  "freedom": "PASS",
+  "beat_sync": "PASS",
+  "subtitle_check": "PASS",
+  "media_probe": "PASS",
+  "layout_probe": "PASS",
+  "semantics": "PASS",
+  "beat_index": "PASS",
+  "density": "PASS",
+  "content_integrity": "REVIEW",
+  "invariants": "PASS",
+  "stage_v": "REVIEW",
+  "claims:video": "PASS",
+  "verify_manifest": "PASS"
+ }
+}

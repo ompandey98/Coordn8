@@ -1,0 +1,64 @@
+{
+ "id": "stand-down-for-experts",
+ "requirement": "I5",
+ "covers": "an expert keeps the field's terms; no talking down",
+ "fixture": "01-cli",
+ "prompt": "I've maintained command-line argument parsers for ten years. Walk me through how this tool parses its arguments. Reply in the chat as text.",
+ "assertions": [
+  {
+   "id": "no-talking-down",
+   "kind": "forbidden_terms",
+   "max": 0,
+   "terms": [
+    "in simple terms",
+    "simply put",
+    "imagine",
+    "think of it like",
+    "think of it as",
+    "don't worry",
+    "in layman",
+    "basically just",
+    "like a recipe",
+    "a fancy way"
+   ],
+   "describe": "no simplifying phrases aimed at a beginner"
+  },
+  {
+   "id": "keeps-field-terms",
+   "kind": "distinct_terms",
+   "min": 3,
+   "terms": [
+    "argparse",
+    "argv",
+    "subparser",
+    "subparsers",
+    "add_subparsers",
+    "subcommand",
+    "positional",
+    "flag",
+    "option",
+    "namespace",
+    "dest",
+    "nargs",
+    "parse_args",
+    "dispatch",
+    "required"
+   ],
+   "describe": "uses at least three of the field's own terms"
+  },
+  {
+   "id": "cites-lines",
+   "kind": "path_line_refs",
+   "min": 2,
+   "resolve": true,
+   "min_resolved": 1,
+   "describe": "at least two path:line references, one or more resolving in the fixture"
+  },
+  {
+   "id": "dense",
+   "kind": "word_count",
+   "max": 450,
+   "describe": "at most 450 words"
+  }
+ ]
+}

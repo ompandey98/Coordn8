@@ -1,0 +1,5 @@
+2026-03-01T10:00:00 INFO [api] request served in 12ms
+2026-03-01T10:00:03 WARN [db.pool] slow checkout 420ms
+2026-03-01T10:00:04 ERROR [db.pool] connection refused
+this line is malformed
+2026-03-01T10:00:09 INFO [api] request served in 9ms

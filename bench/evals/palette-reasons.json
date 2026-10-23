@@ -1,0 +1,78 @@
+{
+ "id": "palette-reasons",
+ "requirement": "A1",
+ "covers": "a palette where every colour has a role and a reason",
+ "fixture": "01-cli",
+ "prompt": "Propose a colour palette for one diagram that explains how this tool turns input text into counts. Give between 4 and 6 colours. For each colour give its hex value, the role it plays in the diagram and the reason it was chosen.",
+ "json_schema": {
+  "type": "object",
+  "properties": {
+   "palette": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "hex": {
+       "type": "string"
+      },
+      "role": {
+       "type": "string"
+      },
+      "reason": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "hex",
+      "role",
+      "reason"
+     ]
+    }
+   }
+  },
+  "required": [
+   "palette"
+  ]
+ },
+ "assertions": [
+  {
+   "id": "four-to-six-colours",
+   "kind": "json_items",
+   "path": "palette",
+   "min": 4,
+   "max": 6,
+   "describe": "between 4 and 6 colours"
+  },
+  {
+   "id": "valid-hex",
+   "kind": "json_each",
+   "path": "palette",
+   "field": "hex",
+   "pattern": "^#[0-9A-Fa-f]{6}$",
+   "describe": "every colour is a six-digit hex value"
+  },
+  {
+   "id": "reason-per-colour",
+   "kind": "json_each",
+   "path": "palette",
+   "field": "reason",
+   "min_words": 5,
+   "describe": "every colour has a reason of at least five words"
+  },
+  {
+   "id": "role-per-colour",
+   "kind": "json_each",
+   "path": "palette",
+   "field": "role",
+   "min_words": 1,
+   "describe": "every colour has a role"
+  },
+  {
+   "id": "distinct-colours",
+   "kind": "json_distinct",
+   "path": "palette",
+   "field": "hex",
+   "describe": "no colour repeated"
+  }
+ ]
+}

@@ -1,0 +1,43 @@
+{
+ "id": "audience-manager-decision",
+ "requirement": "I1",
+ "covers": "audience framing: a business reader gets impact and the decision first",
+ "fixture": "01-cli",
+ "prompt": "My engineering manager has to decide next week whether this command-line tool gets more engineering time. Explain the tool to them in under 300 words. Reply in the chat as text.",
+ "assertions": [
+  {
+   "id": "length",
+   "kind": "word_count",
+   "max": 330,
+   "describe": "at most 330 words (the brief asked for under 300)"
+  },
+  {
+   "id": "no-code-blocks",
+   "kind": "code_fences",
+   "max": 0,
+   "describe": "no code blocks for a manager"
+  },
+  {
+   "id": "lead-with-impact",
+   "kind": "regex_count",
+   "scope": "first_paragraph",
+   "min": 1,
+   "pattern": "(decid|decision|invest|cost|risk|impact|worth|value|recommend|engineering time)",
+   "describe": "the first paragraph names impact, cost, risk or the decision"
+  },
+  {
+   "id": "names-the-decision",
+   "kind": "regex_count",
+   "min": 1,
+   "pattern": "(we should|you should|I recommend|I'd recommend|recommendation|my advice|I suggest|the decision is|this means we)",
+   "describe": "says what to decide (this means we should...)"
+  },
+  {
+   "id": "little-inline-code",
+   "kind": "regex_count",
+   "max": 2,
+   "pattern": "`[^`\\n]+`",
+   "describe": "at most two inline code spans"
+  }
+ ]
+}

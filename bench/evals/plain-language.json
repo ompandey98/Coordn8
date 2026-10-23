@@ -1,0 +1,46 @@
+{
+ "id": "plain-language",
+ "requirement": "D1",
+ "covers": "plain language: short sentences, no inflated words",
+ "fixture": "01-cli",
+ "prompt": "In plain language, explain what this tool does for a product manager who will write its user guide. Reply in the chat as text.",
+ "assertions": [
+  {
+   "id": "short-sentences-on-average",
+   "kind": "sentence_stats",
+   "max_avg": 20,
+   "describe": "average sentence at most 20 words"
+  },
+  {
+   "id": "no-very-long-sentence",
+   "kind": "sentence_stats",
+   "max_longest": 35,
+   "describe": "no sentence over 35 words"
+  },
+  {
+   "id": "no-inflated-words",
+   "kind": "forbidden_terms",
+   "max": 0,
+   "terms": [
+    "utilize",
+    "utilise",
+    "leverage",
+    "facilitate",
+    "in order to",
+    "robust",
+    "seamless",
+    "seamlessly",
+    "cutting-edge",
+    "state-of-the-art",
+    "empower"
+   ],
+   "describe": "none of the inflated words"
+  },
+  {
+   "id": "length",
+   "kind": "word_count",
+   "max": 300,
+   "describe": "at most 300 words"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+[server]
+port = 8080
+
+[limits]
+requests_per_minute = 60
+max_url_length = 2048
