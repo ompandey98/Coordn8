@@ -1,0 +1,21 @@
+{
+ "schema": 1,
+ "title": "How the resize worker answers a request",
+ "conclusion": "Most requests are answered from the cache in one step.",
+ "glossary": [
+  {"term": "worker", "definition": "the process that resizes an image; also called a processor in older notes."},
+  {"term": "miss", "definition": "a request whose copy is not cached yet.", "aliases": ["misses"]},
+  {"term": "rate limiter", "code": "RateLimiter", "definition": "the part that caps calls per minute."}
+ ],
+ "claims": [{"id": "c1", "claim": "a cached copy is served in 3 ms", "ref": "cache.py:42", "status": "read"}],
+ "sections": [
+  {"id": "path", "title": "One request",
+   "summary": "The worker resizes a copy on a miss; the misses are rare.",
+   "what": "The cache serves a cached copy in 3 ms [c1]. The new path is 40% faster.",
+   "components": [
+    {"type": "steps", "id": "setup", "steps": ["Open the settings file.", "You should restart the service."]},
+    {"type": "callout", "kind": "warning", "title": "WARNING", "body": "Do not delete the cache folder."},
+    {"type": "flow", "id": "f", "caption": "The processor writes the copy that the `RateLimiter` allows."}
+   ]}
+ ]
+}

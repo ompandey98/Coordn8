@@ -1,0 +1,24 @@
+%% Request path through the edge and core services
+flowchart LR
+    subgraph edge [Edge]
+        web[Web App]
+        mobile([Mobile App])
+    end
+    subgraph core [Core Services]
+        gw{{API Gateway}}
+        auth{Token valid?}
+        orders[Orders <b>service</b>]
+    end
+    db[(Postgres)]
+    legacy[Legacy note - unconnected]
+    web & mobile --> gw
+    gw -- verify --> auth
+    auth -->|yes| orders
+    auth -.->|no| web
+    orders ==> db
+    gw --> gw
+    db ~~~ legacy
+    classDef hot fill:#f96
+    class gw hot
+    style db fill:#eee
+    click web "https://example.invalid" "open"

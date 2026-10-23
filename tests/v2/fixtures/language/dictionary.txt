@@ -1,0 +1,6 @@
+open
+the
+file
+restart
+service
+worker

@@ -1,0 +1,21 @@
+{
+  "id": "full-cache",
+  "title": "What a full cache changes",
+  "summary": "When room runs out, the oldest-used copy goes first, so the next request for it becomes a miss again.",
+  "what": "The comparison shows the same eight slots before and after one new thumbnail arrives at a full cache.",
+  "interaction": "tick the box to highlight the slot that changes",
+  "primary_visual": "comparison: eight cache slots before and after one store",
+  "custom_html": "<style>.fc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:1rem;margin-top:.8rem}.fc-card{border:1px solid var(--c8p-line);border-radius:var(--c8-radius-card,10px);padding:.8rem 1rem;background:var(--c8p-surface)}.fc-card svg{width:100%;height:auto;display:block}.fc-slot{fill:var(--c8-paper);stroke:var(--c8-ink);stroke-width:1.5}.fc-new{fill:var(--c8p-surface-2)}.fc-toggle:checked ~ .fc-grid .fc-changed{stroke:var(--c8-accent);stroke-width:4}.fc-label{margin-left:.4rem}</style><input type=\"checkbox\" id=\"fc-toggle\" class=\"fc-toggle\"><label class=\"fc-label\" for=\"fc-toggle\">Highlight the slot that changes</label><div class=\"fc-grid\"><figure class=\"fc-card\"><svg viewBox=\"0 0 340 60\" role=\"img\" aria-label=\"Eight full slots; the leftmost was used longest ago\"><rect class=\"fc-slot fc-changed\" x=\"2\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"44\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"86\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"128\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"170\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"212\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"254\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"296\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/></svg><figcaption>Before: all eight slots hold a copy; the first was used longest ago.</figcaption></figure><figure class=\"fc-card\"><svg viewBox=\"0 0 340 60\" role=\"img\" aria-label=\"The leftmost slot now holds the new copy\"><rect class=\"fc-slot fc-new fc-changed\" x=\"2\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"44\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"86\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"128\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"170\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"212\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"254\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/><rect class=\"fc-slot\" x=\"296\" y=\"10\" width=\"36\" height=\"40\" rx=\"5\"/></svg><figcaption>After: that slot was freed by eviction and now holds the new copy.</figcaption></figure></div>",
+  "custom_elements": [
+    {
+      "id": "fc-before",
+      "kind": "diagram",
+      "explains": "the eight slots of a full cache, oldest-used first"
+    },
+    {
+      "id": "fc-after",
+      "kind": "diagram",
+      "explains": "the same slots after eviction freed the oldest-used one"
+    }
+  ]
+}

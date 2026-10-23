@@ -1,0 +1,4 @@
+{"fps": 30, "sentences": [
+ {"idx": 1, "text": "The request is handled by the router, and then it goes to the worker, and the processor writes the answer, which is sent back to whoever asked for it in the first place a moment ago.", "start": 0.0, "end": 8.0},
+ {"idx": 2, "text": "The worker is fast; it is e.g. quick.", "start": 8.0, "end": 10.0}
+]}

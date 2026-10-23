@@ -1,0 +1,9 @@
+{"id": "mesh", "title": "Mesh with a retry loop",
+ "groups": [{"id": "core", "label": "Core", "parent": "platform"}, {"id": "platform", "label": "Platform"}, {"id": "edge", "label": "Edge tier"}],
+ "nodes": [{"id": "a", "label": "Gateway A", "group": "edge"}, {"id": "b", "label": "Gateway B", "group": "edge"},
+  {"id": "c", "label": "Orders", "group": "core"}, {"id": "d", "label": "Billing", "group": "core"},
+  {"id": "e", "label": "Ledger", "group": "platform"}, {"id": "f", "label": "Notifier"}],
+ "edges": [{"from": "a", "to": "c", "label": "POST"}, {"from": "a", "to": "d"}, {"from": "b", "to": "c"},
+  {"from": "b", "to": "d", "label": "charge"}, {"from": "c", "to": "e"}, {"from": "d", "to": "e"},
+  {"from": "e", "to": "a", "label": "retry"}, {"from": "a", "to": "f"}, {"from": "f", "to": "f", "label": "poll"},
+  {"from": "b", "to": "e", "kind": "accent"}]}

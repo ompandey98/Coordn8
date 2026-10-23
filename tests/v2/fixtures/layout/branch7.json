@@ -1,0 +1,25 @@
+{
+ "id": "request-routing",
+ "type": "flowchart",
+ "title": "How a request is routed",
+ "nodes": [
+  {"id": "in", "label": "Request arrives"},
+  {"id": "auth", "label": "Check token"},
+  {"id": "cache", "label": "Cache lookup"},
+  {"id": "reject", "label": "Reject 401"},
+  {"id": "db", "label": "Query database"},
+  {"id": "render", "label": "Render response"},
+  {"id": "log", "label": "Audit log"}
+ ],
+ "edges": [
+  {"from": "in", "to": "auth"},
+  {"from": "auth", "to": "cache", "label": "valid"},
+  {"from": "auth", "to": "reject", "label": "invalid"},
+  {"from": "cache", "to": "render", "label": "hit"},
+  {"from": "cache", "to": "db", "label": "miss"},
+  {"from": "db", "to": "render"},
+  {"from": "reject", "to": "log"},
+  {"from": "render", "to": "log"},
+  {"from": "in", "to": "log", "label": "always"}
+ ]
+}

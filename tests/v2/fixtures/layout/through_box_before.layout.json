@@ -1,0 +1,16 @@
+{"schema": 1, "id": "skip-level", "note": "hand-made coordinates: the a->c connector is drawn straight down through 'Validate'",
+ "orthogonal": true,
+ "nodes": [{"id": "a", "x": 100, "y": 40, "w": 120, "h": 40}, {"id": "b", "x": 100, "y": 140, "w": 120, "h": 40},
+           {"id": "c", "x": 100, "y": 240, "w": 120, "h": 40}],
+ "groups": [],
+ "edges": [
+  {"id": "e0", "from": "a", "to": "b", "points": [{"x": 140, "y": 80}, {"x": 140, "y": 140}], "arrowAt": "to"},
+  {"id": "e1", "from": "b", "to": "c", "points": [{"x": 140, "y": 180}, {"x": 140, "y": 240}], "arrowAt": "to"},
+  {"id": "e2", "from": "a", "to": "c", "points": [{"x": 180, "y": 80}, {"x": 180, "y": 240}], "arrowAt": "to",
+   "label": {"text": "bypass", "x": 188, "y": 200, "w": 52, "h": 17, "mask": true}}
+ ],
+ "hops": [],
+ "paint_order": [{"kind": "background", "id": "background", "index": 0}, {"kind": "edge", "id": "e0", "index": 1},
+  {"kind": "edge", "id": "e1", "index": 2}, {"kind": "edge", "id": "e2", "index": 3}, {"kind": "label", "id": "e2", "index": 4},
+  {"kind": "node", "id": "a", "index": 5}, {"kind": "node", "id": "b", "index": 6}, {"kind": "node", "id": "c", "index": 7}],
+ "bbox": {"x": 0, "y": 0, "w": 320, "h": 320}}

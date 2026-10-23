@@ -1,0 +1,3 @@
+{"gate": "semantics", "status": "REVIEW", "scenes": ["s4"], "counts": {"S1": 0, "S2": 0, "S3": 0, "S4": 0, "S5": 2, "S6": 0, "S7": 0, "S8": 0},
+ "blocking_count": 2, "summary": "S5 x2 (blocking)",
+ "findings": [{"scene": "s4", "S5": ["beat 'cache-hit' subject cache-a draws asset of subject router-b"]}]}

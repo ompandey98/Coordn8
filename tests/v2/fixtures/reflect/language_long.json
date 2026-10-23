@@ -1,0 +1,1 @@
+{"gate": "language", "status": "REVIEW", "summary": "3 sentences over the length limit", "findings": [{"rule": "sentence-length", "detail": "line 4 has 41 words"}]}

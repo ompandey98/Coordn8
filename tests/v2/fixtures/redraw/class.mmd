@@ -1,0 +1,14 @@
+classDiagram
+    class Order {
+        +String id
+        +total() Money
+    }
+    class Shape~T~
+    <<interface>> Payable
+    Order ..|> Payable
+    Customer "1" --> "*" Order : places
+    Order *-- LineItem
+    Animal <|-- Dog
+    Order ..> Shape
+    Dog : +bark()
+    note for Order "the aggregate root"

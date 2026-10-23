@@ -1,0 +1,6 @@
+{
+  "id": "hostile",
+  "title": "A section with unsafe markup",
+  "summary": "Everything here that could run code or reach another server must be removed by the build.",
+  "custom_html": "<script>window.__pwned = 1</script><p onclick=\"window.__pwned=2\">Plain text stays.</p><img src=\"https://example.invalid/pixel.png\" alt=\"remote\"><a href=\"javascript:alert(1)\">bad link</a><a href=\"//example.invalid/x\">protocol relative</a><iframe src=\"https://example.invalid/\"></iframe><style>@import url(https://example.invalid/x.css); .ok{background:url(https://example.invalid/bg.png)}</style><svg viewBox=\"0 0 10 10\"><use href=\"https://example.invalid/sprite.svg#a\"/><image href=\"https://example.invalid/i.png\"/></svg><form action=\"https://example.invalid/post\"><input type=\"text\" name=\"q\"></form><object data=\"https://example.invalid/o\"></object>"
+}

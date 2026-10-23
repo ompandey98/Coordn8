@@ -1,0 +1,7 @@
+[project]
+name = "fixture-shop"
+version = "0.1.0"
+description = "Fixture shop for the index tests"
+
+[project.scripts]
+fixture-shop = "shop.cli:main"

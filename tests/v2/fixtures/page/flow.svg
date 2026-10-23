@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430" width="760" height="430">
+  <style>.c8-edge{marker-end:url(#c8-arrow-a)}</style>
+  <defs>
+    <marker id="c8-arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path class="c8-arrow" d="M0 0 L10 5 L0 10 z"/>
+    </marker>
+  </defs>
+  <g class="c8-edges">
+    <path class="c8-edge" d="M380 70 L380 110"/>
+    <path class="c8-edge" d="M310 150 L170 150 L170 200"/>
+    <path class="c8-edge" d="M450 150 L560 150 L560 200"/>
+    <path class="c8-edge" d="M490 240 L410 240 L410 300"/>
+    <path class="c8-edge" d="M630 240 L680 240 L680 300"/>
+    <path class="c8-edge" d="M410 340 L410 360"/>
+  </g>
+  <g class="c8-edge-label"><rect x="210" y="136" width="60" height="26" rx="13"/><text x="240" y="154" text-anchor="middle">found</text></g>
+  <g class="c8-edge-label"><rect x="470" y="136" width="70" height="26" rx="13"/><text x="505" y="154" text-anchor="middle">missing</text></g>
+  <g class="c8-edge-label"><rect x="420" y="256" width="62" height="26" rx="13"/><text x="451" y="274" text-anchor="middle">exists</text></g>
+  <g class="c8-edge-label"><rect x="640" y="256" width="78" height="26" rx="13"/><text x="679" y="274" text-anchor="middle">no source</text></g>
+  <g class="c8-node" data-node-id="request" data-source="data-field"><rect x="290" y="20" width="180" height="50" rx="10"/><text x="380" y="50" text-anchor="middle">A thumbnail is asked for</text></g>
+  <g class="c8-node" data-node-id="check-cache" data-source="deterministic"><rect x="310" y="112" width="140" height="76" rx="10"/><text x="380" y="146" text-anchor="middle">Is it already</text><text x="380" y="166" text-anchor="middle">in the cache?</text></g>
+  <g class="c8-node" data-node-id="serve-cached" data-kind="terminal" data-source="deterministic"><rect x="80" y="202" width="180" height="60" rx="10"/><text x="170" y="228" text-anchor="middle">Serve the stored copy</text><text x="170" y="248" text-anchor="middle">200, from cache</text></g>
+  <g class="c8-node" data-node-id="check-origin" data-source="data-field"><rect x="490" y="202" width="140" height="76" rx="10"/><text x="560" y="236" text-anchor="middle">Is the original</text><text x="560" y="256" text-anchor="middle">in the origin store?</text></g>
+  <g class="c8-node" data-node-id="resize" data-source="deterministic"><rect x="330" y="302" width="160" height="38" rx="10"/><text x="410" y="326" text-anchor="middle">Resize and keep a copy</text></g>
+  <g class="c8-node" data-node-id="serve-new" data-kind="terminal" data-source="deterministic"><rect x="320" y="362" width="180" height="56" rx="10"/><text x="410" y="386" text-anchor="middle">Serve the new copy</text><text x="410" y="406" text-anchor="middle">200, freshly made</text></g>
+  <g class="c8-node" data-node-id="not-found" data-kind="terminal" data-source="deterministic"><rect x="600" y="302" width="150" height="56" rx="10"/><text x="675" y="326" text-anchor="middle">Answer not found</text><text x="675" y="346" text-anchor="middle">404, nothing kept</text></g>
+</svg>

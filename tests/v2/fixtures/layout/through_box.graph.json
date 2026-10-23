@@ -1,0 +1,3 @@
+{"id": "skip-level", "title": "A connector that skips a level",
+ "nodes": [{"id": "a", "label": "Ingest"}, {"id": "b", "label": "Validate the schema and every field"}, {"id": "c", "label": "Store"}],
+ "edges": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}, {"from": "a", "to": "c", "label": "bypass"}]}

@@ -1,0 +1,2 @@
+{"gate": "verify_manifest", "status": "REVIEW", "still_open": [], "overclaimed": ["sync"],
+ "findings": ["OVERCLAIM: the end-user claim \"sync\" is NOT backed by a passing item (item(s): beat_sync)."], "summary": "NOT READY: 1 overclaim"}

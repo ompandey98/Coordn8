@@ -1,0 +1,1 @@
+{"gate": "media_probe", "status": "SKIPPED", "summary": "ffprobe not found on PATH - cannot probe the final file"}

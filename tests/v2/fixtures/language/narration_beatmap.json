@@ -1,0 +1,4 @@
+{"fps": 30, "sentences": [
+ {"idx": 1, "text": "You'll set up the cache.", "start": 0.0, "end": 2.0},
+ {"idx": 2, "text": "Then we'll walk through how it picks up a request and hands it off.", "start": 2.0, "end": 5.0}
+]}

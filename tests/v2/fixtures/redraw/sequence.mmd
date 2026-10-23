@@ -1,0 +1,21 @@
+sequenceDiagram
+    autonumber
+    actor U as Shopper
+    participant W as Web
+    participant A as Auth
+    participant O as Orders
+    U->>W: open checkout
+    W->>A: verify token
+    activate A
+    A-->>W: token ok
+    deactivate A
+    loop every item
+        W->>O: reserve item
+        O-->>W: reserved
+    end
+    alt payment fails
+        W-xU: show error
+    else payment succeeds
+        W->>O: confirm order
+    end
+    Note right of O: orders are idempotent

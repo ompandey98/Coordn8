@@ -1,0 +1,5 @@
+Read
+Bash
+mcp__claude_ai_Figma__get_frame
+mcp__claude_ai_Figma__list_files
+mcp__coordn8-browser__browser_navigate

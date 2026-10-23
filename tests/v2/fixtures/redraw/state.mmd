@@ -1,0 +1,21 @@
+stateDiagram-v2
+    direction LR
+    [*] --> Idle
+    Idle --> Validating : submit
+    state "Checking payment" as Pay
+    Validating --> check
+    state check <<choice>>
+    check --> Pay : valid
+    check --> Rejected : invalid
+    state Fulfilment {
+        [*] --> Packing
+        Packing --> Shipped : label printed
+        Shipped --> [*]
+    }
+    Pay --> Fulfilment : paid
+    Rejected --> [*]
+    Idle : waiting for input
+    note right of Rejected : customer is emailed
+    note left of Idle
+        the start state
+    end note

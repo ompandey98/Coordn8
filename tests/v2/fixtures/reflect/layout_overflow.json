@@ -1,0 +1,1 @@
+{"gate": "layout_probe", "status": "REVIEW", "summary": "1 element crosses the 5% safe area", "findings": [{"check": "safe-area", "id": "title", "detail": "title box right edge 1890px > 1824px"}]}

@@ -1,0 +1,3 @@
+{"drop":   [{"id": "legacy", "reason": "unconnected note, first step of the degrade ladder"}],
+ "merge":  [{"ids": ["web", "mobile"], "label": "Client apps", "reason": "both are entry points that call the gateway the same way"}],
+ "rename": [{"id": "gw", "label": "Gateway", "reason": "shorter name for an inline figure"}]}

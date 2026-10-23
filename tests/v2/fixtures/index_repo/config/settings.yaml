@@ -1,0 +1,4 @@
+# Settings for the fixture shop
+cache_size: 128
+tax_region: eu
+currency: eur

@@ -1,0 +1,7 @@
+{"id": "braid", "type": "braided-relay", "title": "Two relays braided through a shared buffer",
+ "desc": "Two producers hand work to a shared buffer that alternates delivery between two consumers.",
+ "nodes": [{"id": "p1", "label": "Producer one"}, {"id": "p2", "label": "Producer two"}, {"id": "buf", "label": "Shared buffer"},
+  {"id": "c1", "label": "Consumer one"}, {"id": "c2", "label": "Consumer two"}],
+ "edges": [{"from": "p1", "to": "buf", "label": "odd"}, {"from": "p2", "to": "buf", "label": "even"},
+  {"from": "buf", "to": "c1", "label": "turn A"}, {"from": "buf", "to": "c2", "label": "turn B"},
+  {"from": "p1", "to": "c2"}, {"from": "p2", "to": "c1"}]}

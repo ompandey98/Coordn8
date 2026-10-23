@@ -1,0 +1,516 @@
+{
+ "type": "excalidraw",
+ "version": 2,
+ "source": "local",
+ "elements": [
+  {
+   "id": "f1",
+   "type": "frame",
+   "x": 0,
+   "y": 0,
+   "width": 420,
+   "height": 260,
+   "name": "Capture",
+   "isDeleted": false
+  },
+  {
+   "id": "form",
+   "type": "rectangle",
+   "x": 20,
+   "y": 40,
+   "width": 160,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "seed": 11,
+   "version": 3,
+   "isDeleted": false,
+   "frameId": "f1"
+  },
+  {
+   "id": "t_form",
+   "type": "text",
+   "x": 30,
+   "y": 60,
+   "width": 100,
+   "height": 25,
+   "text": "Web Form",
+   "containerId": "form",
+   "isDeleted": false,
+   "version": 2,
+   "frameId": "f1"
+  },
+  {
+   "id": "csv",
+   "type": "ellipse",
+   "x": 20,
+   "y": 150,
+   "width": 160,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "seed": 11,
+   "version": 3,
+   "isDeleted": false,
+   "frameId": "f1"
+  },
+  {
+   "id": "t_csv",
+   "type": "text",
+   "x": 30,
+   "y": 170,
+   "width": 100,
+   "height": 25,
+   "text": "CSV Import",
+   "containerId": "csv",
+   "isDeleted": false,
+   "version": 2,
+   "frameId": "f1"
+  },
+  {
+   "id": "valid",
+   "type": "diamond",
+   "x": 520,
+   "y": 90,
+   "width": 140,
+   "height": 100,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "seed": 11,
+   "version": 3,
+   "isDeleted": false
+  },
+  {
+   "id": "t_valid",
+   "type": "text",
+   "x": 530,
+   "y": 130,
+   "width": 100,
+   "height": 25,
+   "text": "Valid record?",
+   "containerId": "valid",
+   "isDeleted": false,
+   "version": 2
+  },
+  {
+   "id": "crm",
+   "type": "rectangle",
+   "x": 800,
+   "y": 40,
+   "width": 160,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "seed": 11,
+   "version": 3,
+   "isDeleted": false
+  },
+  {
+   "id": "t_crm",
+   "type": "text",
+   "x": 810,
+   "y": 60,
+   "width": 100,
+   "height": 25,
+   "text": "CRM DB",
+   "containerId": "crm",
+   "isDeleted": false,
+   "version": 2
+  },
+  {
+   "id": "queue",
+   "type": "rectangle",
+   "x": 800,
+   "y": 180,
+   "width": 160,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "seed": 11,
+   "version": 3,
+   "isDeleted": false,
+   "link": "https://example.invalid/queue"
+  },
+  {
+   "id": "t_queue",
+   "type": "text",
+   "x": 810,
+   "y": 200,
+   "width": 100,
+   "height": 25,
+   "text": "Review queue",
+   "containerId": "queue",
+   "isDeleted": false,
+   "version": 2
+  },
+  {
+   "id": "a1",
+   "type": "arrow",
+   "x": 0,
+   "y": 0,
+   "width": 10,
+   "height": 10,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     50,
+     0
+    ],
+    [
+     100,
+     20
+    ]
+   ],
+   "startBinding": {
+    "elementId": "form",
+    "focus": 0,
+    "gap": 4
+   },
+   "endBinding": {
+    "elementId": "valid",
+    "focus": 0,
+    "gap": 4
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "isDeleted": false
+  },
+  {
+   "id": "a2",
+   "type": "arrow",
+   "x": 0,
+   "y": 0,
+   "width": 10,
+   "height": 10,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     50,
+     0
+    ],
+    [
+     100,
+     20
+    ]
+   ],
+   "startBinding": {
+    "elementId": "csv",
+    "focus": 0,
+    "gap": 4
+   },
+   "endBinding": {
+    "elementId": "valid",
+    "focus": 0,
+    "gap": 4
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "isDeleted": false
+  },
+  {
+   "id": "a3",
+   "type": "arrow",
+   "x": 0,
+   "y": 0,
+   "width": 10,
+   "height": 10,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     50,
+     0
+    ],
+    [
+     100,
+     20
+    ]
+   ],
+   "startBinding": {
+    "elementId": "valid",
+    "focus": 0,
+    "gap": 4
+   },
+   "endBinding": {
+    "elementId": "crm",
+    "focus": 0,
+    "gap": 4
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "isDeleted": false
+  },
+  {
+   "id": "t_a3",
+   "type": "text",
+   "x": 700,
+   "y": 80,
+   "width": 100,
+   "height": 25,
+   "text": "yes",
+   "containerId": "a3",
+   "isDeleted": false,
+   "version": 2
+  },
+  {
+   "id": "a4",
+   "type": "arrow",
+   "x": 0,
+   "y": 0,
+   "width": 10,
+   "height": 10,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     50,
+     0
+    ],
+    [
+     100,
+     20
+    ]
+   ],
+   "startBinding": {
+    "elementId": "valid",
+    "focus": 0,
+    "gap": 4
+   },
+   "endBinding": {
+    "elementId": "queue",
+    "focus": 0,
+    "gap": 4
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "isDeleted": false,
+   "strokeStyle": "dashed"
+  },
+  {
+   "id": "t_a4",
+   "type": "text",
+   "x": 700,
+   "y": 200,
+   "width": 100,
+   "height": 25,
+   "text": "no",
+   "containerId": "a4",
+   "isDeleted": false,
+   "version": 2
+  },
+  {
+   "id": "a5",
+   "type": "line",
+   "x": 0,
+   "y": 0,
+   "width": 10,
+   "height": 10,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     50,
+     0
+    ],
+    [
+     100,
+     20
+    ]
+   ],
+   "startBinding": {
+    "elementId": "crm",
+    "focus": 0,
+    "gap": 4
+   },
+   "endBinding": {
+    "elementId": "queue",
+    "focus": 0,
+    "gap": 4
+   },
+   "startArrowhead": null,
+   "endArrowhead": null,
+   "isDeleted": false
+  },
+  {
+   "id": "a6",
+   "type": "arrow",
+   "x": 0,
+   "y": 0,
+   "width": 10,
+   "height": 10,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     50,
+     0
+    ],
+    [
+     100,
+     20
+    ]
+   ],
+   "startBinding": {
+    "elementId": "queue",
+    "focus": 0,
+    "gap": 4
+   },
+   "endBinding": null,
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "isDeleted": false
+  },
+  {
+   "id": "sticky",
+   "type": "text",
+   "x": 300,
+   "y": 400,
+   "width": 100,
+   "height": 25,
+   "text": "Old flow - ignore",
+   "containerId": null,
+   "isDeleted": false,
+   "version": 2
+  },
+  {
+   "id": "fd1",
+   "type": "freedraw",
+   "x": 10,
+   "y": 300,
+   "width": 80,
+   "height": 6,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     80,
+     3
+    ]
+   ],
+   "isDeleted": false
+  },
+  {
+   "id": "img1",
+   "type": "image",
+   "x": 900,
+   "y": 400,
+   "width": 40,
+   "height": 40,
+   "fileId": "abc",
+   "isDeleted": false
+  },
+  {
+   "id": "gone",
+   "type": "rectangle",
+   "x": 0,
+   "y": 600,
+   "width": 160,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "seed": 11,
+   "version": 3,
+   "isDeleted": true
+  },
+  {
+   "id": "g1a",
+   "type": "rectangle",
+   "x": 1000,
+   "y": 40,
+   "width": 160,
+   "height": 70,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "#a5d8ff",
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "seed": 11,
+   "version": 3,
+   "isDeleted": false,
+   "groupIds": [
+    "grp1"
+   ]
+  },
+  {
+   "id": "t_g1a",
+   "type": "text",
+   "x": 1010,
+   "y": 60,
+   "width": 100,
+   "height": 25,
+   "text": "Audit log",
+   "containerId": "g1a",
+   "isDeleted": false,
+   "version": 2,
+   "groupIds": [
+    "grp1"
+   ]
+  },
+  {
+   "id": "a7",
+   "type": "arrow",
+   "x": 0,
+   "y": 0,
+   "width": 10,
+   "height": 10,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     50,
+     0
+    ],
+    [
+     100,
+     20
+    ]
+   ],
+   "startBinding": {
+    "elementId": "crm",
+    "focus": 0,
+    "gap": 4
+   },
+   "endBinding": {
+    "elementId": "g1a",
+    "focus": 0,
+    "gap": 4
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "isDeleted": false
+  }
+ ],
+ "appState": {
+  "viewBackgroundColor": "#fff"
+ },
+ "files": {}
+}

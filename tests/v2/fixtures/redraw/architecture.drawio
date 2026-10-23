@@ -1,0 +1,62 @@
+<mxfile host="local" version="1">
+  <diagram id="p0" name="Request path">
+    <mxGraphModel dx="800" dy="600" grid="1">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="zone" value="Core Services" style="swimlane;fillColor=#dae8fc;" vertex="1" parent="1">
+          <mxGeometry x="200" y="40" width="420" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="client" value="Client" style="shape=actor;" vertex="1" parent="1">
+          <mxGeometry x="20" y="100" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="gw" value="API&lt;br&gt;Gateway" style="rounded=1;html=1;" vertex="1" parent="zone">
+          <mxGeometry x="20" y="60" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <object id="auth" label="Auth Service" link="https://example.invalid/runbook" tooltip="owned by team a">
+          <mxCell style="rounded=1;" vertex="1" parent="zone">
+            <mxGeometry x="200" y="20" width="120" height="60" as="geometry"/>
+          </mxCell>
+        </object>
+        <mxCell id="orders" value="Orders" style="rounded=1;" vertex="1" parent="zone">
+          <mxGeometry x="200" y="130" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="db" value="Postgres" style="shape=cylinder3;" vertex="1" parent="1">
+          <mxGeometry x="700" y="150" width="80" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="draft" value="Old draft box" style="rounded=0;" vertex="1" parent="1" visible="0">
+          <mxGeometry x="700" y="20" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="deco" value="" style="ellipse;fillColor=#eee;" vertex="1" parent="1">
+          <mxGeometry x="10" y="300" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="client" target="gw">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="100" y="130"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e2" value="" style="endArrow=classic;" edge="1" parent="1" source="gw" target="auth">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2lbl" value="verify token" style="edgeLabel;html=1;" vertex="1" connectable="0" parent="e2">
+          <mxGeometry x="-0.2" relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="create order" style="" edge="1" parent="1" source="gw" target="orders">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="writes" style="startArrow=classic;endArrow=none;dashed=1;" edge="1" parent="1" source="db" target="orders">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="orphaned" style="" edge="1" parent="1" source="orders">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="900" y="300" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="" style="startArrow=classic;endArrow=classic;" edge="1" parent="1" source="auth" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="p1" name="Appendix">
+    <mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+      <mxCell id="x" value="Second page" vertex="1" parent="1"><mxGeometry x="0" y="0" width="80" height="40" as="geometry"/></mxCell>
+    </root></mxGraphModel>
+  </diagram>
+</mxfile>

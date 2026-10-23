@@ -1,0 +1,9 @@
+{"build": "Coordn8", "halted_after": "plan", "stages": [
+ {"stage": "source", "counts": {"PASS": 2}, "gates": [
+   {"gate": "beat_index", "status": "PASS", "returncode": 0, "summary": "all beats bound by name", "payload": {"gate": "beat_index", "status": "PASS"}},
+   {"gate": "content_integrity", "status": "PASS", "returncode": 0, "summary": "ok", "payload": null}]},
+ {"stage": "plan", "counts": {"REVIEW": 1, "PASS": 1}, "gates": [
+   {"gate": "visual_density:video", "status": "REVIEW", "returncode": 1,
+    "summary": "scene s2: primary visual is text; 0 moving elements",
+    "payload": {"gate": "visual_density", "status": "REVIEW", "findings": ["s2: primary_visual is text-only", "s2: moving_element_count 0"]}},
+   {"gate": "tree_shape", "status": "PASS", "returncode": 0, "summary": "ok", "payload": null}]}]}
