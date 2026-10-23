@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="{{lang}}" data-c8-kit="{{kit_id}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{{title}}</title>
+<style id="c8-kit-vars">
+{{{kit_css}}}
+</style>
+<style id="c8-page-css">
+{{{font_css}}}
+{{{page_css}}}
+</style>
+</head>
+<body>
+<a class="c8-skip" href="#c8-main">Skip to the content</a>
+<div class="c8-progress" aria-hidden="true"><div class="c8-progress-bar" data-c8-progress></div></div>
+<header class="c8-header">
+  <div class="c8-header-inner">
+    <p class="c8-brandline">{{kicker}}</p>
+    <div class="c8-header-tools">
+      {{{tabs}}}
+      <button type="button" class="c8-btn c8-theme" data-c8-theme aria-pressed="false" hidden>Dark theme</button>
+    </div>
+  </div>
+</header>
+<div class="c8-panel" id="c8-panel-read" data-c8-panel="read"{{{read_panel_attrs}}}>
+  <div class="c8-layout">
+    {{{toc}}}
+    <main id="c8-main" class="c8-main" tabindex="-1">
+      {{{hero}}}
+      {{{sections}}}
+    </main>
+  </div>
+</div>
+{{{watch}}}
+<footer class="c8-footer">
+  {{{footer}}}
+</footer>
+<script type="application/json" id="c8-claims">{{{claims_json}}}</script>
+<script>
+{{{page_js}}}
+</script>
+</body>
+</html>
