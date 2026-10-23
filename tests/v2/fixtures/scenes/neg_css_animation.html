@@ -1,0 +1,13 @@
+<!doctype html>
+<!-- SRC: tests/v2/fixtures/scenes/neg_css_animation.html — NEGATIVE fixture: motion driven by CSS on the browser clock -->
+<html><head><meta charset="utf-8"><style>
+  body { margin: 0; background: #10141c; width: 1920px; height: 1080px; }
+  @keyframes slide { from { transform: translateX(0); } to { transform: translateX(900px); } }
+  .token { position: absolute; top: 500px; left: 200px; width: 80px; height: 80px; border-radius: 40px;
+           background: #7cc4ff; animation: slide 3s linear infinite; }
+  .card { position: absolute; top: 200px; left: 200px; width: 600px; height: 200px; background: #223;
+          transition: opacity 400ms ease; }
+</style></head>
+<body><div class="card"></div><div class="token"></div>
+<script>window.renderAt = function (t) { /* t is ignored: the CSS animation owns the motion */ }; document.title = 'READY';</script>
+</body></html>
