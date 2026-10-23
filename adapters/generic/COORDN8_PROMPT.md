@@ -1,4 +1,4 @@
-> **Coordn8 v1.5.0** — turns a codebase into an interactive page + narrated video. Author: pandeom.
+> **Coordn8 v2.0.0** — turns a codebase into an interactive page + narrated video. Author: pandeom.
 >
 > This is the universal fallback: paste this entire file as the first message of a fresh session in ANY capable coding agent or chat. It is the raw brain — the baseline every other adapter is measured against.
 >
@@ -107,6 +107,8 @@ Before you read a single file, do this: **scroll back through the entire current
   git rev-parse HEAD              # if the snapshot is a git commit
   ```
 - [ ] Do not skip long or tedious files. Claiming a branch/field/rule "doesn't exist" because you stopped reading early is a defect in YOUR work.
+- [ ] **Query the index, then read.** Build or refresh the project index first (`python3 scripts/index/build_index.py <repo> --incremental`; maps under `Coordn8/_research/index/maps/`). Read a directory's map before its files and use `coordn8 find <name>` to locate a symbol's `path:line` — then read the code there end to end. The index tells you where; it never replaces reading.
+- [ ] **Current references, dated.** Before relying on a host feature (skills, agents, hooks, plugins, MCP) or a vendored library's behaviour, run `coordn8 refs check` (or `python3 scripts/refs/check.py`). For every ref it lists as stale, re-fetch that one public URL (`coordn8 refs --only <id>`, or the host's own web fetch) — never a third-party AI search service. Stamp "as of <date>" (from the check's `stamps`) next to anything you relied on, in the operator handover only.
 
 ### 0.2 Build the project map (your single source for all content — your MEMORY PALACE)
 
@@ -294,7 +296,7 @@ The tiers (each describes the *ceiling*; you still build only what's in scope):
 Unblock the machine so the FULL deliverable set is producible. Never stall, never give up early, never ask permission to install standard open-source tooling. **Run the bundled auto-installer first — it does all of this and verifies each install by re-probing:**
 
 ```bash
-python3 scripts/setup_env.py         # installs ffmpeg, chromium (sudo-free), TTS, Pillow, Manim, + vendors JS libs; re-probes
+python3 scripts/setup_env.py         # installs ffmpeg, chromium (sudo-free), Pillow, Manim, + vendors JS libs and the layout library; detects local voices; never prompts; re-probes
 # or, from anywhere:  npx github:ompandey98/coordn8 setup
 ```
 
@@ -302,11 +304,11 @@ If the bundled script isn't present, do the same by hand, in this priority (sudo
 
 - [ ] **Headless browser (sudo-free):** `pip install playwright && python3 -m playwright install chromium`. This needs NO root and works in most restricted environments. Only if that fails, try the OS package manager (`brew install chromium`, `apt-get install -y chromium-browser`, etc.). `find_chrome()` already looks in Playwright's cache, so a pip-installed browser promotes you to Tier A automatically.
 - [ ] **ffmpeg + ffprobe:** OS package manager (`brew install ffmpeg` / `apt-get install -y ffmpeg` / `dnf` / `pacman` / `apk` / `winget` / `choco`). If no package manager and no root, download a static build from ffmpeg.org and put it on `PATH`. Re-check `ffmpeg -version` && `ffprobe -version` afterward.
-- [ ] **TTS (sudo-free):** `pip install edge-tts` (or piper); macOS has `say` built in. Never block on cloud TTS.
+- [ ] **TTS (local only):** local open-source neural voices are installed by `coordn8 voices install` (the voice step, right after dependencies; models live in `~/.coordn8/voices/`), and macOS `say` / espeak remain the last fallback. Never install or use a hosted speech service — no text leaves the machine.
 - [ ] **Python libs (sudo-free):** `pip install Pillow numpy` (Pillow powers the layout pixel-probe; use `--user` if a plain pip is denied).
 - [ ] **Visual ENHANCEMENTS (better-looking video — install, but never block on them; see 2.5):**
   - **Manim CE** (3Blue1Brown's engine, for math/geometry scenes): `pip install manim`, plus its native deps — macOS `brew install cairo pango pkg-config`, Debian/Ubuntu `apt-get install -y build-essential python3-dev libcairo2-dev libpango1.0-dev pkg-config` (optional `texlive-full` for LaTeX in Manim). If Manim can't install here, those scenes fall back to the HTML/Canvas engine — the base video is unaffected.
-  - **Vendored JS libraries** (GSAP / D3 / Rough.js / anime.js — free, no key): `python3 scripts/render/fetch_visual_libs.py` downloads them once into `_build/vendor/` so scenes stay self-contained/offline after the fetch. They are inlined into each scene that uses them.
+  - **Vendored JS libraries** (GSAP / D3 / Rough.js / anime.js, plus the dagre layout library — free, no key; every file whose bytes the npm package fixes is sha256-pinned and checked): `python3 scripts/render/fetch_visual_libs.py` downloads them once into `_build/vendor/` so scenes stay self-contained/offline after the fetch. They are inlined into each scene that uses them.
   - **Bundled icon library** (open-licensed, crisp inline SVG): `python3 scripts/render/fetch_icons.py` vendors thousands of Lucide (ISC) + Tabler (MIT) icons into `_build/vendor/icons/` once (`--only heroicons material-symbols simple-icons` adds more open sets). Then `fetch_icons.py render --set <set> --name <icon> --size <px>` emits one icon as inline SVG (explicit `viewBox`, scales to any size) to drop into a scene/page — the reliable default for iconography (0.4a rule 10, 0.4c). If the fetch fails (no network), scenes use drawn shapes; the base video is unaffected.
 - [ ] **Cloud credentials** (premium TTS, etc.): use ONLY if the user gave you a command/profile. Otherwise use the local fallbacks above — never block on missing cloud access.
 - [ ] **Verify every install by re-running its probe.** Installed ≠ working. Report a capability as available only after you've observed it run. Then check CPU cores (`nproc` / `sysctl -n hw.ncpu`) and load for the bounded render budget (PHASE R).
@@ -339,7 +341,7 @@ Then present the **build plan** and get explicit approval before Phase 1:
 
 **Before you present the plan, run the R.7 best-work pass ON THE PLAN ITSELF.** Planning is the first and cheapest place to reach for the ceiling, so do it here, unprompted: *Is this the strongest approach to explaining THIS system — or just the first one that occurred to me? Is the section/beat structure genuinely MECE and sequentially-building (doctrine 13), or a flat pile of topics? Did I deep-dive the code enough to plan well, or am I planning on a shallow read (if the latter, dive NOW — R.6: never hesitate from a needed deep-dive)? Is there a materially better framing, spine, or engine choice I can see but haven't chosen?* Name the better plan if one exists and adopt it before presenting. A weak plan waved through here is the most expensive defect in the whole build — everything downstream inherits it.
 
-**Do NOT start building until the user approves the plan.** Present it through the host's own plan affordance where one exists (in Claude Code, plan mode / ExitPlanMode — R.3c), so approval is an explicit gate rather than a paragraph the user scrolls past. This is where you also propose any creative deviations (see the Creative Freedom Clause).
+**Do NOT start building until the user approves the plan.** Present it through the host's own plan affordance where one exists (in Claude Code, EnterPlanMode then ExitPlanMode — R.3c), so approval is an explicit gate rather than a paragraph the user scrolls past. This is where you also propose any creative deviations (see the Creative Freedom Clause).
 
 ### 0.7a THE REQUIREMENT-COVERAGE LEDGER — capture every ask, prove every ask was covered (`_research/requirements.md`)
 
@@ -443,7 +445,7 @@ The fleet in R.1/F.6 needs a **supervisor** and a **communication channel**, or 
 
 | Host | Fleet execution | What stays identical |
 |---|---|---|
-| **Claude Code** | real sub-agents via the **Task tool, dispatched in ONE message** so they run concurrently, each with its own context; **TodoWrite** for phase tracking; **background Bash + BashOutput** for long renders; process-level parallelism for frames (see R.3c) | everything |
+| **Claude Code** | real sub-agents via the **Agent tool** (older builds call it the Task tool), **dispatched in ONE message** so they run concurrently, each with its own context; **TaskCreate/TaskUpdate** for phase tracking (TodoWrite only where the host still enables it); **background Bash read through its output file or `Monitor`** (BashOutput on hosts that still have it) for long renders; process-level parallelism for frames (see R.3c) | everything |
 | **Codex / AGENTS.md CLIs** | shell-level parallelism (`orchestrate.py` + the adaptive pool); roles run as separate invocations | stage ladder, bus files, blindness |
 | **Cursor / Kiro** | agent runs the ladder; parallelism via the pool; roles as sequential passes with role-scoped prompts | stage ladder, bus files, blindness |
 | **A host with no spawn and no shell** (chat-only) | ONE agent performs each role **in sequence**, writing the same bus files, and **explicitly re-reading only the predecessor's artefact** for the next role | stage ladder, bus files, blindness |
@@ -452,20 +454,23 @@ In the degraded case the **order and the blindness are what must survive**: run 
 
 ### R.3c HOST INTEGRATION — use the host's REAL mechanisms, by name (Claude Code first)
 
-Everything above describes the fleet in the abstract. "Spawn sub-agents" is aspirational; **"dispatch these six Task calls in ONE message so they actually run concurrently" is executable.** A session that reads only the abstract version does the whole build single-threaded in one context and then wonders why it was slow. So this section names the mechanisms.
+Everything above describes the fleet in the abstract. "Spawn sub-agents" is aspirational; **"dispatch these six Agent calls in ONE message so they actually run concurrently" is executable.** A session that reads only the abstract version does the whole build single-threaded in one context and then wonders why it was slow. So this section names the mechanisms.
 
 **In Claude Code, use these — they are the difference between the fleet being real and being a metaphor:**
 
 | Do this | With | Why it matters here |
 |---|---|---|
-| Dispatch every independent fleet role | the **Task tool** (`subagent_type: general-purpose` unless a better-fitting agent exists), **all in a single message** | Independent Task calls issued in one message run **concurrently, each with its own context window**. Issued in separate messages they serialise, and the readers/adversaries are exactly the roles that must NOT share a context (F.5 blindness). One message per fan-out wave. |
-| Track the build's phases | **TodoWrite**, one item per phase and per in-flight scene | A build has many stages over a long session. Without a live list the user cannot see where it is, and a dropped stage is invisible — which is how "it silently skipped Stage V" happens. Mark exactly one item `in_progress`. |
-| Long renders, `setup_env.py`, installs | **Bash with `run_in_background: true`**, then poll with **BashOutput** | A render can run for an hour. Blocking the session on it means no progress reporting, no ability to answer a question mid-run, and a timeout kills work already done. Background it, poll, and report the progress lines the render is already emitting (2.5b). |
-| The Phase-0 plan (0.7) | **plan mode / ExitPlanMode** where the host offers it | The plan is a real approval gate, not a paragraph to scroll past. Using the host's own plan affordance makes approval explicit and gives the user a first-class chance to widen or narrow scope (DELIVERABLE SCOPE) before anything is built. |
-| Reading and searching the repo | **Read / Glob / Grep**, not `cat`/`find`/`grep` through Bash | The dedicated tools are faster, paginate large files, and do not blow the context on a stray binary. Reserve Bash for things that genuinely need a shell (the render, the gates, ffmpeg). |
+| Dispatch every independent fleet role | the **Agent tool** — the Task tool in older builds — (`subagent_type`: the matching `coordn8-*` role agent where installed, else `general-purpose`), **all in a single message**; up to 20 run at once, and a subagent cannot spawn further subagents (check the current docs) | Independent Task calls issued in one message run **concurrently, each with its own context window**. Issued in separate messages they serialise, and the readers/adversaries are exactly the roles that must NOT share a context (F.5 blindness). One message per fan-out wave. |
+| Track the build's phases | **TaskCreate / TaskUpdate** (TaskList / TaskGet to read back; **TodoWrite** only on hosts that still enable it), one item per phase and per in-flight scene | A build has many stages over a long session. Without a live list the user cannot see where it is, and a dropped stage is invisible — which is how "it silently skipped Stage V" happens. Mark exactly one item `in_progress`. |
+| Long renders, `setup_env.py`, installs | **Bash with `run_in_background: true`**, then **Read its output file** (BashOutput on hosts that still have it), or **Monitor** to stream each progress line; **TaskStop** to stop one | A render can run for an hour. Blocking the session on it means no progress reporting, no ability to answer a question mid-run, and a timeout kills work already done. Background it, poll, and report the progress lines the render is already emitting (2.5b). |
+| The Phase-0 plan (0.7) | **EnterPlanMode / ExitPlanMode** where the host offers it | The plan is a real approval gate, not a paragraph to scroll past. Using the host's own plan affordance makes approval explicit and gives the user a first-class chance to widen or narrow scope (DELIVERABLE SCOPE) before anything is built. |
+| Reading and searching the repo | the project index first (`coordn8 find`), then **Read / Glob / Grep** where the host offers them, not `cat`/`find`/`grep` through Bash | The dedicated tools are faster, paginate large files, and do not blow the context on a stray binary. Reserve Bash for things that genuinely need a shell (the render, the gates, ffmpeg). |
 | Independent reads in the ingest phase | **multiple Read/Grep calls in ONE message** | 0.1 requires reading the whole repo. Batched calls are parallel; sequential ones are not. This is the cheapest speedup available and it is free. |
 | Design references, icon sets, open-licensed assets | **WebSearch / WebFetch**, when the environment allows and the user has not forbidden it | 0.4a rule 10 already permits this. It is an *enhancement*: everything fetched must still be vendored/inlined (offline contract) and open-licensed. Never a dependency. |
-| Continuing a role you already spawned | **SendMessage** to that agent, rather than a fresh Task | The agent keeps its context — its reads, its findings — so a follow-up question costs nothing to re-establish. A new Task starts cold. |
+| Continuing a role you already spawned | **SendMessage** to that agent, rather than a fresh Agent call |
+| Roles that write many files | **`isolation: worktree`** on the Agent call | each writer gets its own checkout, so parallel writers cannot collide |
+| Looking at a frame (Stage V) | **Read** on PNG/JPEG — contact sheets from `scripts/review/frame_review.py` | the reviewer sees the real pixels; crop large frames first |
+| Deterministic batch steps | **`claude -p --output-format json --json-schema '<schema>'`** → `structured_output` | a schema-checked result instead of free text | The agent keeps its context — its reads, its findings — so a follow-up question costs nothing to re-establish. A new Task starts cold. |
 
 **The concurrency rule, stated once:** *if two things do not depend on each other, they go out in the same message.* That applies to Task dispatches, Reads, Greps, and Bash calls alike. Serialising independent work is the single most common way a capable host is wasted.
 
@@ -484,7 +489,7 @@ Task(... "classify requester lines DIRECTION/CONTENT/CORRECTION" -> _research/br
 
 Then a **serial** join (the cartographer) merges them — that one is serial because it genuinely needs all of the results at once (R.2).
 
-**Blindness is a dispatch property, not a good intention.** A verifier must be a **separate Task whose prompt does not contain the builder's claims** (F.5 rule 1). If you hand a reviewer your checklist, it verifies the checklist and misses everything else — which is exactly what happened. The claim-auditor is the *last* Task, and it is the only one that receives the claim list.
+**Blindness is a dispatch property, not a good intention.** A verifier must be a **separate Agent call (a separate Task on older builds) whose prompt does not contain the builder's claims** (F.5 rule 1). If you hand a reviewer your checklist, it verifies the checklist and misses everything else — which is exactly what happened. The claim-auditor is the *last* Agent call, and it is the only one that receives the claim list.
 
 **Other hosts: same discipline, different mechanism.** Where a host has no agent spawn, ONE agent performs each role **in sequence**, writing the same bus files (R.3b) and re-reading only its predecessor's artefact — the order and the blindness are what must survive, not the parallelism. Never claim a fleet ran when it did not: say which roles were sequential.
 
@@ -548,7 +553,7 @@ Coordn8 runs slower and burns more tokens than it needs to when **every** sub-ta
 - **Token discipline that never costs accuracy:**
   - **Don't re-read what the palace already holds.** The memory palace (`_research/`, `_build/`) exists so you read the code/decisions ONCE and reuse; re-deriving a fact you already wrote down is wasted tokens (0.4 memory-palace discipline).
   - **Summarize once, reference after.** A reader emits a compact `file:line`-anchored fact file; downstream roles cite that file, they don't re-ingest raw source.
-  - **Batch the mechanical, stream the rest.** Fan mechanical work out at high concurrency (R.3); reserve serial deep passes for judgment. Concretely: independent tool calls go out in ONE message, and independent agent roles go out as one wave of Task calls (R.3c) — separate messages serialise them and waste the host.
+  - **Batch the mechanical, stream the rest.** Fan mechanical work out at high concurrency (R.3); reserve serial deep passes for judgment. Concretely: independent tool calls go out in ONE message, and independent agent roles go out as one wave of Agent calls (R.3c) — separate messages serialise them and waste the host.
   - **Right-size output.** FAST-lane steps return terse structured results (a status line, a JSON blob), not essays. Verbose narration belongs only where a human reads it (the handover, the deliverables themselves).
 - **The invariant.** Speed comes from *not wasting effort*, never from *skipping verification*. If a shortcut would reduce how thoroughly a load-bearing claim, fact, or frame is checked, it is not allowed — full stop. Every fidelity gate (facts, sync, coverage, subtitle fidelity, visual density) runs exactly as hard as before; only the deterministic plumbing around them got cheaper and more parallel.
 - **NEVER HESITATE FROM A DEEP-DIVE WHEN ONE IS NEEDED.** Effort tiering rations reasoning on *mechanical* work; it NEVER rations it on understanding, coverage, or correctness. If at any point you sense a gap — a module you skimmed, a branch you didn't trace, a claim you're "fairly sure" about, a design choice you picked without weighing the alternative, an area you'd feel uneasy defending if questioned — you STOP and dig in until the uncertainty is resolved. A deep-dive is never "too expensive," never "probably fine," never deferred to "if someone asks." The token cost of a deep-dive is trivial next to the cost of shipping something you hadn't actually examined. When in doubt, dive — the DEEP lane has no budget ceiling on the things that decide whether the work is right and complete.
@@ -742,7 +747,7 @@ If the storyboard fails any of these, redesign it BEFORE rendering — that is t
 
 ### 2.2 Narration
 
-- Cloud generative-grade TTS voice IF the user provided credentials; otherwise the best local TTS available (e.g., `say` on macOS, piper, edge-tts).
+- The best **local** voice installed (`coordn8 voices list`), **cast** to the narrative and audience by `python3 scripts/voice/cast.py <brief>` (it ranks the installed voices, rejects at least two with reasons, honours any voice the user asked for, avoids repeating the last builds' voice, and records the choice in `_build/design_system.json`); macOS `say` / espeak only as the last fallback. Never a hosted speech service.
 - SSML rate ~105–110% — crisp, not rushed. Adjust to audience (leadership slightly slower and weightier; SME brisk).
 - Render narration per scene, not one monolith, so scenes can be re-cut independently (and re-rendered in parallel — R.3).
 - **Feed the TTS the *spoken* form, not the display text, wherever they differ (2.2c).** Initialisms said letter-by-letter (SOP, POD, API, SLA) must be spelled for the voice — via SSML `<say-as interpret-as="characters">` or spaced letters for engines that ignore SSML — while the caption and page still read the clean token. Word-acronyms (NASA, JSON, REST) are left alone. Derive with `scripts/render/pronounce.py`; never spell an abbreviation inside the narration `text` itself (that corrupts the captions).
@@ -786,7 +791,7 @@ A recurring, jarring defect: local TTS engines read short **initialisms** as if 
 - **Display form (`text`)** — authored clean, exactly as a reader expects: `SOP`, `POD`, `API`. This is the single source of truth for the **caption** (2.3a) and the **page**. Never spaced-out, never SSML. `subtitle_check.py` keeps caption==`text` verbatim, unchanged by any of this.
 - **Spoken form (`speech`)** — derived for the **TTS engine only**. Add an optional `speech` field to a beat-map sentence when its spoken form differs from `text`; the render step feeds `speech` to TTS when present, else `text`. The beat map's timestamps still come from the speech marks on the audio that was actually rendered (2.3) — nothing about sync changes, because the audio is generated from `speech`.
 - **How the spoken form is derived** — deterministically, via `scripts/render/pronounce.py` (advisory helper, like every gate — you may hand-author `speech` where the project needs it):
-  - **Initialisms said letter-by-letter get spelled.** SSML-capable engine (edge-tts, cloud): `<say-as interpret-as="characters">SOP</say-as>` — the correct, standard instruction. Engines that ignore SSML (macOS `say`, espeak): space the letters — `S O P` — which they read one at a time. Plurals stay attached: `SOPs` → the letters then an "s".
+  - **Initialisms said letter-by-letter get spelled.** SSML-capable local engine: `<say-as interpret-as="characters">SOP</say-as>` — the correct, standard instruction. Engines that ignore SSML (macOS `say`, espeak): space the letters — `S O P` — which they read one at a time. Plurals stay attached: `SOPs` → the letters then an "s".
   - **Word-acronyms are LEFT ALONE.** An acronym pronounced *as a word* — **NASA, JSON, YAML, REST, LASER, radar** — must NOT be spelled, or you introduce the opposite bug ("N-A-S-A"). The helper ships a conservative allowlist of these.
   - **Ambiguous-by-shop cases are the agent's call.** Whether `SQL` is *"sequel"* or *"S-Q-L"*, `GUI` is *"gooey"* or *"G-U-I"*, `JWT` is *"jot"* or *"J-W-T"* — differs by team. Decide per project and pass `--spell SQL,GUI` / `--word POD` (or hand-edit `speech`). When unsure, match how the codebase's own people say it.
 - **Also applies wherever the voice reads a token the eye would read differently:** a leading-zero/formatted number, a symbol-heavy token, a mixed-case identifier the frame shows but the voice should characterize (this overlaps 2.2a: the voice speaks *meaning*, the frame carries the *specific*). Pronunciation is the same principle at the token level: what's *heard* may differ from what's *shown*, and the shown form is authoritative for captions/page.
@@ -1067,6 +1072,107 @@ Everything above is a **FLOOR, not a ceiling**. Look hard at THIS project's real
 
 ---
 
+## THE TOOLKIT — catalogs are menus, choosers record their reasons, gates judge outcomes
+
+Every catalog, chooser and gate below is a script or a data file in this package. Paths are relative to the package root: `${CLAUDE_PLUGIN_ROOT}` in a plugin session, otherwise the `pkg_root` that `coordn8 doctor --json` prints. These tools **do** the work the sections above describe. They never replace the judgement those sections ask for.
+
+### H — Freedom and divergence (read this before you open any catalog)
+
+- **Catalogs are menus, never fences.** Every palette (`data/palettes.json`), style kit (`data/style_kits/`), diagram type (`data/diagram_types.json`), scene type (`data/scene_types.json`), caption style (`data/caption_styles.json`) and page component (`templates/page/components/`) is a *starting point*. You may combine them, bend them, ignore them, or invent a new one. When you invent, record `invented: <name>` and one sentence of why in the plan file. No gate may fail something just because it is not in a catalog: `scripts/gates/check_freedom.py` audits every gate for exactly that and fails any gate that does. Gates judge outcomes only — contrast, legibility, sync, honesty, budget and geometry.
+- **Diverge before you commit.** Generate options before you fix the look, the narrative spine, each hero figure, or each pivotal scene. The **idea generator** (agent `coordn8-idea-generator`) produces **at least three genuinely different options**. It uses named techniques from `data/idea_techniques.json` matched to the problem type, plus real seeded random stimuli from `python3 scripts/design/seed.py draw`; the seed is recorded so the draw can be replayed. A **separate idea critic** (`coordn8-idea-critic`) never sees which option the generator preferred. It rejects any option that fails one of three tests: *could the user have thought of this alone?*, *is it a known default dressed up?*, *is it surprising but not useful?* It never lowers the bar to reach a count. Chosen option, rejected options and reasons → `_build/divergence.json` (`scripts/design/divergence.py check`).
+- **Do not repeat yourself across builds.** `~/.coordn8/memory/choices.jsonl` records each build's palette family, kit, opening scene and spine shape. The palette director scores down a family used in the last three builds, and also a palette + opening-scene pair used before, unless the subject calls for it. The reason is recorded either way.
+- **Variants for pivotal moments.** For the opening, the hero figure and the payoff, make 2–3 cheap treatments (`python3 scripts/design/variants.py make`). The blind frame reviewer ranks them; the best ships, and the others are kept in `_build/variants/` with the reviewer's reasons.
+- **The invention ledger.** Every invented palette, kit, diagram form, scene, caption style or page component is logged with `scripts/design/inventions.py record`. When one passes its gates in a second build, you are offered its promotion into the user's local catalog overlay (`~/.coordn8/library/`). The package's own `data/` is never edited.
+
+### I — Explanation craft
+
+- **Frame for the audience.** `python3 scripts/design/audience.py "<brief>"` infers the audience from the brief and context, using `data/audiences.json`: for each role, what they care about, what to frame around, the register to use, and which analogy sources fit. Never default to "explain like I'm five". If the audience is unclear, it goes into the Phase-0 questions. Business audiences get the impact and the decision first ("this means we should…").
+- **Use the shape the subject needs** (`data/explain_shapes.json`, checked by `scripts/gates/check_explain.py`):
+  - **error or log:** quote the one line that carries the meaning, translate it, name the cause, and say what to change. If there are two likely causes, give both and how to tell them apart.
+  - **function or file:** its job in one sentence, then the 2–4 parts that do real work, in the order they run. Say what boilerplate you skipped.
+  - **architecture or flow:** trace **one** path end to end, and name each piece by what it does.
+  - **concept:** what it is → an analogy → the details → so what.
+- **Fence every analogy.** Say where the analogy stops being true. Use **one** example — two make the reader guess which is the real one — and make the code itself the example where you can. A simplification for non-experts may trade away precision, but it must never teach something false; flag that trade-off when you make it.
+- **End where they can act.** Every page section, and the video's last beat, ends on what the viewer can now do. A caveat appears only when skipping it would cost money, data, security or an irreversible decision. Say out loud what you deliberately skipped.
+- **Stand down for experts.** When the audience is expert in the subject, keep the field's own terminology — talking down to them is a defect. Simplify only what lies outside their specialty.
+- **Explain modes** (`scripts/design/modes.py`):
+  - `page`, `diagram` (one figure plus its claims; hover shows `path:line`), `video`, and `answer` (chat only — writes no files).
+  - The **detail** dial (which nodes are kept) and the **audience** dial (which names are used) are separate.
+  - Stop condition: trace the topic end to end; do not explain the whole codebase unless asked. Nothing is ever written outside `<repo>/Coordn8/`.
+
+### Design and render tools (all deterministic; each writes a plan file the gates read)
+
+| Need | Tool | Writes / checks |
+|---|---|---|
+| Palette for this subject, audience and any colour the user stated (the user's words always win, and are quoted) | `scripts/design/palette.py --build <b>` (agent `coordn8-palette-director`) | `_build/design_system.json`: semantic roles in light and dark, ≥ 3 candidates, ≥ 2 rejected with reasons · gate `check_palette.py` (text ≥ 4.5:1, ≤ 2 accents per frame, ΔE ≥ 10 between roles, never meaning by hue alone) |
+| Style kit (type scale, radius, strokes, grid, motion signature, transitions, caption style) | `scripts/design/pick_kit.py` (blend two kits or define a new one) | one design system shared by the video and the page |
+| Brand colours and fonts; style borrowed from a reference video or image | `scripts/design/brand.py` (asks before applying; saved under `~/.coordn8/profiles/`) · `scripts/design/distill.py <video\|image\|folder>` | contrast-adjusted roles + a reported diff · a draft kit + contact sheet. Match the style, never copy the content |
+| Diagram type (two-axis: behaviour, then layout) | `scripts/design/pick_diagram.py` (agent `coordn8-diagram-architect`) | `_build/diagram_plan.json`: the chosen type or an invented form, ≥ 2 rejections with reasons. **No figure is drawn without a plan entry** · gates `check_diagram_plan.py`, `check_diagram_budget.py` (≤ 9 nodes, ≤ 12 edges, ≤ 2 accents, ≤ 2 callouts — over budget → split into overview + detail) |
+| Coordinates for any graph | `node scripts/render/layout_cli.js <graph.json> --dagre <vendor>/dagre.min.js --svg out.svg` | byte-identical SVG for the same input; orthogonal routing, label masks, crossing hops · gate `check_connectors.py` |
+| Redraw a Mermaid / draw.io / Excalidraw figure | `scripts/design/redraw.py` | a fidelity ledger that accounts for every source element — redraw, never convert |
+| Charts that cannot lie | every number in a `data-*` attribute | gate `check_chart_honesty.py` recomputes each mark's geometry with a robust scale fit |
+| Scenes | `scripts/render/scene_runtime.js` + `scene_components.js`, catalog `data/scene_types.json` | named beats that THROW; `atWord(line, word)` throws if the word is not in that line; seeded randomness only — `check_determinism.py` bans `Math.random`, the clock and CSS animation in scenes |
+| Captions, transitions, cover | `captions.js`, `transitions.js`, `cover.py`, `data/caption_styles.json` | colour marks `⟦good⟧ ⟦bad⟧ ⟦key⟧` → kit roles, ≤ 2 per caption; never below 28 px — truncate instead · gates `check_caption_marks.py`, `check_continuity.py` |
+| Word timing | `scripts/render/align.py` (the engine's own timings first, then a local signal-based fallback) | `check_word_timing.py` |
+| Voice | `python3 scripts/voice/cast.py <brief>` (agent `coordn8-voice-caster`) then `scripts/voice/render.py` | casts the best installed local voice for the narrative and rejects two with reasons (recorded in `design_system.json`); the user's stated preference always wins |
+| Key-reveal hit, beat grid, music, sound, loudness (off by default) | `scripts/render/hits.py` / `hits.js`, `scripts/render/audio.py` | pre-darken, hold, then release on the key word; synthesized music and effects; ducking under the voice; −16 LUFS, true peak ≤ −1 dBTP; stems via `audio.py build`. Music and effects are OFF unless `storyboard.audio` switches them on; a key reveal is `C8Hits.hitAtWord(line, word, {fps})` · gate `check_audio.py` |
+| Page | `scripts/render/build_page.py` with `templates/page/` (the default skeleton, not a cage) | gates `check_page_a11y.py`, `dom_smoke.py` |
+
+### Writing and claims (reported, never auto-rewritten)
+
+- `scripts/gates/check_language.py --profile procedure|description|warning|narration` — the measurable rules of ASD-STE100 for on-screen steps and warnings, and plain-language rules for page prose. On **narration it reports only and never fails**: contractions and phrasal verbs are allowed, because the standard is not for speech. It never rewrites the voice.
+- `check_terms.py` — one term per concept across the page, captions and voice (glossary + alias list).
+- `check_truth.py` — an unbacked number, "always/never" or superlative must cite a claim or be marked as an estimate.
+- `check_page_content.py` — conclusion first; outside-in; exact dates and numbers; the delete-the-how-word test; effect-at-stage; ≥ 3 attributes → a table.
+- **Claims:** every page ends with a claims ledger (claim → `path:line` → `read` / `inferred`), and every video ships `<slug>.claims.md` (`check_claims.py emit`). *If you cannot point to a line, you do not know it* — read more, or mark the claim inferred. `facts_trace.py` fails a claim that has neither.
+
+### J/K — Memory, index and data safety
+
+- **Two zones, never mixed.** The **package** (skill, agents, hooks, scripts, data) is replaced on every install. The **user's** data is never touched by install, update or uninstall. It lives in two places: `~/.coordn8/` (memory, profiles, library, lessons, choices, voices, refs, backups) and every project's `Coordn8/` folder, including `_research/`. A file the package does not own (a user's `AGENTS.md`, rules or settings) is changed only by `scripts/lib/safe_write.py`: it backs the file up, then edits only a delimited Coordn8 block.
+- **Two-level memory.** User level: `~/.coordn8/memory/` holds preferences, standing decisions, lessons promoted across projects, choice history and failure classes. Project level: `Coordn8/_research/` holds `decisions.md`, `slop_lessons.md`, `failure_log.jsonl` and `requirements.md`. Entries are typed and append-only, and each carries its source quote, date, confidence and what it supersedes. The **memory curator** (`coordn8-memory-curator`, via `scripts/memory/curate.py capture`) writes them.
+- **Supersede, never delete.** A contrary instruction becomes a new entry naming the old one, and both stay visible. A conflict between memory and the live brief is shown plainly — "memory says X; this chat says Y; the live brief wins" — and is never resolved silently. Session start loads `scripts/memory/recall.py` (≤ 4 KB) automatically.
+- **Retrieval index — query before you re-read.**
+  - `python3 scripts/index/build_index.py <repo>` (incremental by hash) builds the index under `Coordn8/_research/index/`: a file manifest, symbols, doc chunks, import/call cross-references and entry points.
+  - `coordn8 find <query>` (`scripts/index/query.py`) returns ranked `path:line` hits.
+  - `scripts/index/maps.py` writes one "what lives here and why" map per directory.
+  - Readers read the maps first, then query the index, then read files end to end. An entry whose source hash changed is flagged stale (`scripts/index/freshness.py check`) before anyone relies on it.
+- **Current references.** Before relying on a host feature or a vendored library's behaviour, run `coordn8 refs check`. Re-fetch only what it lists as stale, and only from public sources; stamp "as of <date>" in the operator handover.
+
+### F4 — Reflect and retry (no failure is retried blind)
+
+Record every failed gate, refused budget, aborted render or rejected agent output with `python3 scripts/reflect.py record` (or run the gate through `reflect.py wrap -- <cmd>`). The record lands in `_research/failure_log.jsonl` with `{what, where, rule, cause_class, evidence, fix_tried, outcome, prevention}`; the allowed cause classes are in `data/cause_taxonomy.json`. Then:
+
+- **Retry with the record in the brief.** `reflect.py retry-prompt` produces the addendum. Allow at most **two** retries per item; a third failure escalates with the log.
+- **Turn repeats into lessons.** A cause class seen twice in a project becomes a lesson that loads first next run. Seen in two projects, it is promoted to user-level memory (`reflect.py promote`, idempotent).
+- **Use the analyst.** The failure analyst (`coordn8-failure-analyst`) classifies the cause and proposes the fix. It never retries the same thing unchanged.
+
+### Automatic frame review (Stage V without a human step)
+
+After every render, the `coordn8-frame-review` skill runs on its own:
+
+1. `python3 scripts/review/frame_review.py prepare <build>` builds contact sheets from frames at exact times taken from the beat map:
+   - 4 frames before each cut;
+   - −16, −3 and +2 frames around each hit;
+   - 85–90 % of the way through every spoken line.
+
+   The frames are streamed, so none are left on disk, and freshness is asserted.
+2. The **blind** frame reviewer (`coordn8-frame-reviewer`, Read only) gets ONLY `_build/review/blind_brief.md`: the sheets and the exact sentences.
+3. Save its JSON reply as `_build/review/verdicts.json`, then run `frame_review.py collect` on it.
+
+A `contradicts` verdict blocks the build. The orchestrator's artifact stage runs `prepare` automatically, and the post-render hook reminds you of the remaining steps.
+
+### Claude Code plugin pieces (they work on every other host as plain files)
+
+- **Agents** (`agents/coordn8-*.md`, least-privilege tools, the third-party-AI limit in every body): reader, cartographer, audience, idea generator, idea critic, palette director, diagram architect, storyboarder, frame reviewer, writing critic, claims auditor, failure analyst, memory curator, voice caster, coverage critic.
+- **Hooks** (`hooks/hooks.json`):
+  - SessionStart loads memory and open items.
+  - After a render, PostToolUse injects the quality and disk scorecard.
+  - SubagentStop appends to `_build/orchestration/agents.jsonl`.
+  - Stop blocks a "done" while `verify_manifest.py` is not READY.
+- **Federation:** `scripts/federation.py match` lists other installed skills per stage. Use one only when a probe shows it passes that stage's gates. `connectors` suggests the connectors and design commands that are present. Nothing is required: Coordn8 is complete on its own.
+
+---
+
 ## PHASE F — FIRST-GO QUALITY (why a green board still ships a rejected video, and the fix)
 
 **Provenance: this section was written from a real production build.** A ~6-minute narrated video, 11 segments, real screenshots, generative TTS, burned captions. It took **4 delivered versions and 8+ full render cycles** to be accepted. On the run where **every automated gate reported PASS**, the reviewer listed **ten distinct real defects** and said essentially none of what was claimed as done was actually done. The requester's experience was days of back-and-forth prompting for things that should have landed on the first cut. That gap — *all gates green, deliverable rejected* — is the single most expensive failure this engine can commit, and everything in Phase F exists to close it. **Being efficient for the engine while being painful for the user is a failure, not a trade-off.**
@@ -1258,6 +1364,13 @@ The worst output of the reference build was a status line of the form:
 | Aesthetic direction / design system | both | A single design language is committed BEFORE rendering (`_build/design_system.json`, 0.4c) — palette (incl. the source-of-truth legend colors), embedded type scale, spacing grid, one icon/illustration style, motion signature (video) — and applied consistently across every scene/section. Default fonts, off-palette colors, ragged spacing, or mixed clip-art = aesthetic failure (flagged by the composition + anti-slop critics, R.1). "Average/below-average, not aesthetic" is a failing deliverable |
 | Creative freedom / not fenced | both | The bundled engines/libs/icons are a FLOOR, not a fence (0.4a rule 10): the icon library ships bundled (`fetch_icons.py`, Lucide/Tabler + more — the reliable default for iconography), and inventing beyond the roster (direct-draw, bespoke canvas/WebGL/Lottie/etc.) plus web-searching for *additional* open-licensed assets/design references when the environment allows are welcome — the packaged output is never less creative than the raw prompt. Bounds: every asset (bundled OR fetched) vendored/inlined (offline contract holds), open-license + real provenance only, and every other gate still applies |
 | Best-work pass (R.7) | both | The ceiling-seeking pass ran at EVERY stage, unprompted: on the PLAN itself (0.7) before building, after each load-bearing artifact, and on the whole finished deliverable — each asked "is this my best work — is a materially better version visible?", the better version was done (inline or via an improver sub-agent) where genuine/in-scope/affordable, reassessment re-opened any upstream artifact a later insight invalidated, and needed deep-dives were taken without hesitation (R.6). The bar: a user typing "is this your best work?" would surface NOTHING you hadn't already found — that question is answered *yes* before it's asked. Handover states the pass ran plus anything identified-as-improvable-but-consciously-left, with why. Passing the floor is never taken as license to ship the merely-adequate when better was reachable |
+| Palette & contrast (2.0) | both | `check_palette.py` on `_build/design_system.json`: every text role ≥ 4.5:1 (large ≥ 3:1) in light and dark, ≤ 2 accent elements per frame, no undeclared colour, roles ΔE ≥ 10 apart, meaning never by hue alone. An invented palette passes if its outcome passes |
+| Diagram plan & budget (2.0) | both | Every figure has a `_build/diagram_plan.json` entry (type or invented form + ≥ 2 rejections with reasons); ≤ 9 nodes / ≤ 12 edges / ≤ 2 accents / ≤ 2 callouts unless the type overrides; layout from `layout.js`; `check_connectors.py`: no line through an unrelated box, labels masked, arrowheads visible |
+| Language, terms, truth (2.0) | both | `check_language.py` passes on on-screen steps, warnings and page prose (it REPORTS on narration, never fails it, never rewrites it); `check_terms.py` one term per concept; `check_truth.py` every unbacked figure cited or marked as an estimate |
+| Claims ledger (2.0) | both | the page ends with claim → `path:line` → read/inferred; the video ships `<slug>.claims.md`; `facts_trace.py` fails any claim with neither a resolvable line nor `inferred` |
+| Freedom (2.0) | both | `check_freedom.py`: no gate fails anything for not being in a catalog; `_build/divergence.json` holds ≥ 3 options + the critic's reasons for each pivotal decision |
+| Automatic frame review (2.0) | video | contact sheets + blind reviewer verdicts for EVERY spoken line (`frame_review.py prepare` → reviewer → `collect` → `stage_v.py check`); any `contradicts` blocks |
+| Audio (2.0, when music/effects are on) | video | `check_audio.py`: −16 LUFS ± 1, true peak ≤ −1 dBTP, voice ducking ≥ 8 dB, effects audible, no clipping, no silence gap > 1.2 s inside a line |
 | Final verification manifest | both | `verify_manifest.py` reads `_build/verification.json` (one entry per row above, each with status + evidence). It refuses (1) any `pass` with no evidence, (2) any end-user claim word not backed by a genuine pass, (3) any required row silently missing/failed/untested. The **only** "Verified: …" line you may show a human is the gate's `authorized_claim` (claimed ∩ passed) — never free-typed. Open items and any risk/assumption are surfaced in chat, not swept away |
 
 **On "red gates".** These rows are load-bearing: the deliverable is not done until each is genuinely satisfied, and the final manifest above is the mechanical backstop that a false "Verified" can't get past. But the bundled gate *scripts* are deliberately **advisory** — a script cannot be a hard veto, because a false-positive gate must never be able to block a correct deliverable (that failure mode is exactly what the raw prompt doesn't have, and packaging must never be inferior to it). So: a script FAIL is a lead to review, not an automatic block; a script PASS never substitutes for your own check on a load-bearing claim; and a validator agent saying "confirmed" is NOT your verification. The gate *rows* are the bar; the *scripts* are advisory instruments that help you meet it. You hold the bar — you don't get to lower it, and the manifest records exactly what you actually met.
