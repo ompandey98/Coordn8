@@ -3,9 +3,12 @@
  * Coordn8 CLI — `npx coordn8 <command>`
  * Author: pandeom.  Node >= 14, zero npm dependencies.
  *
- *   npx coordn8 init [target]   install adapter(s): claude|cursor|codex|kiro|generic|all
- *   npx coordn8 update [target] force-refresh to the latest (clears the npx cache) and reinstall
- *   npx coordn8 uninstall       remove installed adapters
+ *   npx coordn8 init [target]   install everything: adapter(s) claude|cursor|codex|kiro|generic|all,
+ *                               then dependencies, voices, MCP servers, references, sign-in offers last
+ *                               (--no-deps --no-voices --no-mcp --no-refs --no-signin --yes --project-dir D)
+ *   npx coordn8 update [target] same as init (always force-updates to the latest)
+ *   npx coordn8 uninstall       remove what Coordn8 installed; --purge --yes also deletes ~/.coordn8
+ *   npx coordn8 status          what is installed and whether it is intact
  *   npx coordn8 print           print the raw brain (paste into any agent)
  *   npx coordn8 setup           auto-install missing runtime tools (ffmpeg/chromium/tts) to unlock video
  *   npx coordn8 detect          run environment/tier detection
@@ -69,21 +72,122 @@ function runSh(args) {
   process.exit(runShStatus(args));
 }
 
-const NPX_SPEC = 'github:ompandey98/coordn8';
 
-// Best-effort clear of the npx / npm exec cache so the NEXT `npx github:…` call
-// re-clones the repo instead of serving a stale cached copy. This is the fix for
-// "it keeps running an old version". `npm cache clean --force` is non-interactive
-// and safe — the cache is fully disposable. Never throws; returns true on success.
-function clearNpxCache() {
-  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  const clean = spawnSync(npm, ['cache', 'clean', '--force'], { stdio: 'ignore' });
-  if (clean.error || clean.status !== 0) {
-    console.error('[coordn8] note: could not clear the npm cache automatically. '
-      + `If a later run still shows an old version, run:  npx --yes ${NPX_SPEC}@latest version`);
-    return false;
+// Python-backed commands added in 2.0. Each maps to one script; a missing script
+// reports itself plainly instead of crashing.
+const PY_COMMANDS = {
+  index: 'scripts/index/build_index.py',
+  find: 'scripts/index/query.py',
+  memory: 'scripts/memory/store.py',
+  migrate: 'scripts/memory/migrate.py',
+  palette: 'scripts/design/palette.py',
+  diagram: 'scripts/design/pick_diagram.py',
+  distill: 'scripts/design/distill.py',
+  voices: 'scripts/voice/voices.py',
+  mcp: 'scripts/mcp/install_mcp.py',
+  refs: 'scripts/refs/refresh.py',
+  reflect: 'scripts/reflect.py',
+  bench: 'bench/run.py',
+  evals: 'bench/evals/run_evals.py',
+  brand: 'scripts/design/brand.py',
+  cast: 'scripts/voice/cast.py',
+  review: 'scripts/review/frame_review.py',
+  recall: 'scripts/memory/recall.py',
+  curate: 'scripts/memory/curate.py',
+  federation: 'scripts/federation.py',
+  explain: 'scripts/design/modes.py',
+};
+
+function runPyCommand(name, args) {
+  // `refs check` reads the dated reference copies; plain `refs` refreshes them
+  const rel = (name === 'refs' && args[0] === 'check')
+    ? (args.shift(), 'scripts/refs/check.py') : PY_COMMANDS[name];
+  if (!fs.existsSync(path.join(ROOT, rel))) {
+    console.error(`[coordn8] '${name}' is not available in this build (missing ${rel}).`);
+    process.exit(2);
   }
-  return true;
+  runPy(rel, args);
+}
+
+const NPX_SPEC = 'github:ompandey98/coordn8';
+const INSTALLER = 'scripts/install/installer.py';
+
+// The python installer (scripts/install/installer.py) does the whole install: package files,
+// dependencies, voices, MCP servers, references, sign-in offers last — each step time-bounded,
+// never waiting on input, never overwriting a user file. It needs python >= 3.8.
+function pyForInstaller() {
+  for (const c of ['python3', 'python']) {
+    const r = spawnSync(c, ['-c', 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'],
+      { stdio: 'ignore' });
+    if (!r.error && r.status === 0) return c;
+  }
+  return null;
+}
+
+// Returns the installer's exit status, or null when python is unavailable (caller falls back).
+function runInstaller(sub, args) {
+  const p = pyForInstaller();
+  if (!p || !fs.existsSync(path.join(ROOT, INSTALLER))) return null;
+  const r = spawnSync(p, [path.join(ROOT, INSTALLER), sub, ...args], { stdio: 'inherit' });
+  if (r.error) {
+    console.error('[coordn8] installer failed to start: ' + r.error.message);
+    return 1;
+  }
+  return r.status == null ? 1 : r.status;
+}
+
+// Fallback force-update when python is missing: remove ONLY Coordn8's own cached copies from
+// the npx cache (<cache>/_npx/<hash>/ holding node_modules/coordn8, or whose package.json
+// depends on coordn8), so the NEXT `npx github:…` call re-fetches the newest commit. The rest
+// of the npm cache — other packages, _cacache, logs — is never touched. (v1.5.0 ran
+// `npm cache clean --force` here, which wiped the user's ENTIRE npm cache.) Never throws.
+function npmCacheDir() {
+  const env = process.env.npm_config_cache || process.env.NPM_CONFIG_CACHE;
+  if (env) return env;
+  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  const r = spawnSync(npm, ['config', 'get', 'cache'],
+    { stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000, encoding: 'utf8' });
+  const out = (r.stdout || '').trim().split(/\r?\n/).pop();
+  if (!r.error && r.status === 0 && out && out !== 'undefined' && out !== 'null') return out;
+  return path.join(require('os').homedir(), '.npm');
+}
+
+function isCoordn8NpxEntry(dir) {
+  if (fs.existsSync(path.join(dir, 'node_modules', 'coordn8'))) return true;
+  try {
+    const pj = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+    for (const field of ['dependencies', 'devDependencies', 'optionalDependencies']) {
+      const deps = pj && pj[field];
+      if (deps && typeof deps === 'object') {
+        for (const name of Object.keys(deps)) {
+          if (name === 'coordn8' || String(deps[name]).toLowerCase().indexOf('ompandey98/coordn8') !== -1) return true;
+        }
+      }
+    }
+  } catch (e) { /* no or unreadable package.json: not ours */ }
+  return false;
+}
+
+function clearCoordn8NpxCache() {
+  try {
+    const npx = path.join(npmCacheDir(), '_npx');
+    if (!fs.existsSync(npx) || fs.lstatSync(npx).isSymbolicLink()) return 0;
+    let n = 0;
+    for (const name of fs.readdirSync(npx)) {
+      const dir = path.join(npx, name);
+      const st = fs.lstatSync(dir);
+      if (st.isSymbolicLink() || !st.isDirectory() || !isCoordn8NpxEntry(dir)) continue;
+      if (fs.rmSync) fs.rmSync(dir, { recursive: true, force: true });
+      else fs.rmdirSync(dir, { recursive: true });
+      n += 1;
+    }
+    console.log(`[coordn8] force-update: removed ${n} cached Coordn8 cop${n === 1 ? 'y' : 'ies'} from ${npx} — nothing else touched`);
+    return n;
+  } catch (e) {
+    console.error('[coordn8] note: could not clear Coordn8\'s cached copy automatically. '
+      + `If a later run still shows an old version, run:  npx --yes ${NPX_SPEC}@latest version`);
+    return 0;
+  }
 }
 
 // A short, consistent "what to do next" reminder printed after every successful
@@ -94,26 +198,57 @@ function printNextSteps() {
   console.log('[coordn8] IMPORTANT: open a NEW session (Claude Code reads its command list at start) —');
   console.log('[coordn8] a window that was already open won\'t show /coordn8 until you restart it.');
   console.log('[coordn8] Then, at your repo root, invoke:  /coordn8');
+  console.log('[coordn8] Check the install any time with:  npx -y ' + NPX_SPEC + ' status');
 }
 
-// `init`: install (and always OVERWRITE) the adapter(s). It also clears the npx
-// cache up-front so this exact command, run again later, re-fetches the latest
-// from GitHub and overrides the current install — i.e. it auto-updates every
-// time with no extra flags. Errors are handled and reported, not dumped as a
-// stack trace, and never abort silently.
+// `init`: install (and always OVERWRITE the package-owned files with) the latest. The python
+// installer runs every step in order and, after a successful install, removes ONLY Coordn8's
+// own cached copy from the npx cache, so this exact command run again later re-fetches the
+// newest commit — it auto-updates every time with no extra flags. Without python, install.sh's
+// bash fallback installs the adapters (block-merging any user file) and the targeted npx-cache
+// cleanup runs here instead. Errors are reported, not dumped as a stack trace.
 function runInit(args) {
-  clearNpxCache();  // best-effort; keeps future `npx …` runs fresh
-  const status = runShStatus(args.length ? args : ['all']);
+  let status = runInstaller('init', args);
+  if (status === null) {
+    console.error('[coordn8] python3 (>= 3.8) not found — installing the adapters only via install.sh '
+      + '(dependencies, voices and MCP servers need python3).');
+    status = runShStatus(args.length ? args : ['all']);
+    if (status === 0) clearCoordn8NpxCache();
+  }
   if (status === 0) printNextSteps();
   else console.error('[coordn8] install did not complete cleanly (exit ' + status + '). See messages above.');
   process.exit(status);
 }
 
-// `update`/`upgrade`: same as init today (init already clears the cache and
-// overwrites). Kept as a distinct verb for muscle memory / discoverability.
+// `update`/`upgrade`: same as init (init always force-updates and overwrites package files).
+// Kept as a distinct verb for muscle memory / discoverability.
 function runUpdate(args) {
   console.log('[coordn8] forcing a refresh to the latest and reinstalling …');
   runInit(args);  // runInit exits the process
+}
+
+// `uninstall [--purge --yes]`: removes the package-owned files and the Coordn8 blocks/keys it
+// inserted (per ~/.coordn8/installed.json), nothing else. --purge lists ~/.coordn8 and deletes
+// it only with --yes.
+function runUninstall(args) {
+  let status = runInstaller('uninstall', args);
+  if (status === null) {
+    if (args.indexOf('--purge') !== -1) {
+      console.error('[coordn8] --purge needs python3 (it lists what it would delete before deleting); nothing deleted.');
+      process.exit(2);
+    }
+    status = runShStatus(['uninstall']);
+  }
+  process.exit(status);
+}
+
+function runStatus(args) {
+  const status = runInstaller('status', args);
+  if (status === null) {
+    console.error('[coordn8] status needs python3.');
+    process.exit(2);
+  }
+  process.exit(status);
 }
 
 function printBrain() {
@@ -124,9 +259,16 @@ function help() {
   console.log(`Coordn8 v${VERSION} — codebase to interactive page + narrated video (author: pandeom)
 
 Usage (no clone needed — runs straight from GitHub; add -y so npx never prompts):
-  npx -y github:ompandey98/coordn8 init [target]   Install (always overwrites w/ latest): claude|cursor|codex|kiro|generic|all
-  npx -y github:ompandey98/coordn8 update [target] Force-refresh to the latest (clears the npx cache) + reinstall
-  npx -y github:ompandey98/coordn8 uninstall              Remove installed adapters
+  npx -y github:ompandey98/coordn8 init [target]   Install EVERYTHING, always the latest: claude|cursor|codex|kiro|generic|all
+                                                   then dependencies, voices, MCP servers, references; sign-in offers
+                                                   last (20 s, default skip). Never waits on input, never overwrites a
+                                                   file of yours (backs it up and merges a Coordn8 block instead).
+                                                   Options: --no-deps --no-voices --no-mcp --no-refs --no-signin --yes
+                                                   --project-dir DIR
+  npx -y github:ompandey98/coordn8 update [target] Same as init (force-refreshes only Coordn8's cached copy)
+  npx -y github:ompandey98/coordn8 uninstall             Remove what Coordn8 installed (your data in ~/.coordn8 is kept;
+                                                         add --purge --yes to delete it — it lists everything first)
+  npx -y github:ompandey98/coordn8 status                What is installed (version, commit) and whether it is intact
   npx -y github:ompandey98/coordn8 print                 Print the raw engine brain (paste into any agent)
   npx -y github:ompandey98/coordn8 setup                 Auto-install missing tools (ffmpeg/chromium/TTS) to unlock the video — sudo-free where possible
   npx -y github:ompandey98/coordn8 detect                Detect environment capabilities, the tier, and the parallel budget
@@ -148,6 +290,17 @@ Usage (no clone needed — runs straight from GitHub; add -y so npx never prompt
   npx -y github:ompandey98/coordn8 check                 Verify adapters are byte-in-sync with PLAYBOOK.md
   npx -y github:ompandey98/coordn8 version               Print version
 
+Tools (each prints its own --help):
+  index <repo> · find <query>      Retrieval index over a project (path:line hits); per-folder maps
+  memory · recall · curate         Two-level memory: list/supersede entries; session recall; capture a preference
+  palette · diagram · distill · brand   Palette director, diagram-type selector, style distillation, brand profiles
+  voices [list|install|test] · cast <brief>   Local voices; cast the best one for a narrative
+  review prepare|collect <build>   Automatic frame review (contact sheets for the blind reviewer)
+  reflect record|wrap|retry-prompt Failure analysis and retry-with-the-record
+  refs · refs check                Refresh / check the dated public references
+  mcp [list|install|status] · federation match|connectors · explain   MCP servers; other skills; explain modes
+  bench · evals                    Benchmark fixtures; skill-vs-baseline evals
+
 Then open a FRESH session at your repo root and invoke Coordn8.`);
 }
 
@@ -162,7 +315,10 @@ switch (cmd) {
     runUpdate(rest);
     break;
   case 'uninstall':
-    runSh(['uninstall']);
+    runUninstall(rest);
+    break;
+  case 'status':
+    runStatus(rest);
     break;
   case 'print':
     printBrain();
@@ -218,6 +374,10 @@ switch (cmd) {
     help();
     break;
   default:
+    if (Object.prototype.hasOwnProperty.call(PY_COMMANDS, cmd)) {
+      runPyCommand(cmd, rest);
+      break;
+    }
     console.error(`[coordn8] unknown command: ${cmd}\n`);
     help();
     process.exit(1);
