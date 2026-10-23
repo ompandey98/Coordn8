@@ -22,6 +22,7 @@ Usage:
 """
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -123,6 +124,10 @@ def main() -> int:
                          if (build / "_build" / "prev" / "quality.json").exists()
                          else [])),
         ("tree_shape", GATES / "tree_shape.py", [str(flows)]),
+        # Diagram plan + complexity budget (2.0): both read _build/diagram_plan.json and SKIP when absent.
+        ("diagram_plan", GATES / "check_diagram_plan.py", [str(build / "_build")]),
+        ("diagram_budget", GATES / "check_diagram_budget.py", [str(build / "_build")]),
+        ("palette", GATES / "check_palette.py", [str(build / "_build" / "design_system.json")]),
         ("facts_trace", GATES / "facts_trace.py", [str(claims), "--repo", "."]),
         ("dom_smoke", GATES / "dom_smoke.py", [str(html)]),
         ("content_ban:html", GATES / "content_ban.py",
@@ -144,6 +149,19 @@ def main() -> int:
         # that is not covered — content's counterpart to visual_density. This is
         # what stops a pretty deliverable that silently dropped substance.
         ("content_coverage", GATES / "content_coverage.py", [str(requirements)]),
+        # ---- 2.0 writing + claims layer (each SKIPS when its input is absent; the
+        # language checker REPORTS on narration and never rewrites it)
+        ("language:page", GATES / "check_language.py", [str(html), "--profile", "description"]),
+        ("language:narration", GATES / "check_language.py", [str(narration), "--profile", "narration"]),
+        ("terms", GATES / "check_terms.py",
+         ["--page", str(html), "--voice", str(narration)]
+         + (["--captions", str(srt)] if srt.exists() else [])
+         + (["--glossary", str(build / "_build" / "glossary.json")]
+            if (build / "_build" / "glossary.json").exists() else [])),
+        ("truth", GATES / "check_truth.py", [str(html), str(narration), "--claims", str(claims)]),
+        ("page_content", GATES / "check_page_content.py", [str(html)]),
+        # Freedom doctrine: no gate may fail something only for being outside a catalog.
+        ("freedom", GATES / "check_freedom.py", []),
         ("beat_sync", GATES / "beat_sync.py", [str(mp4), str(beatmap)]),
         # Captions must carry the exact spoken words at sane times (PLAYBOOK 2.3a).
         # Derived from the beatmap, so this should pass trivially — it catches a
@@ -195,6 +213,18 @@ def main() -> int:
         # (PLAYBOOK final audit / verification claim).
         ("verify_manifest", GATES / "verify_manifest.py", [str(verification)]),
     ]
+    audio_plan = build / "_build" / "audio" / "audio_plan.json"
+    try:
+        _ap = json.loads(audio_plan.read_text(encoding="utf-8")) if audio_plan.is_file() else {}
+    except (OSError, ValueError):
+        _ap = {}
+    if _ap.get("enabled") and _ap.get("track"):  # music/effects are OFF by default: no row unless on
+        plan.insert(len(plan) - 1, ("audio", GATES / "check_audio.py",
+                                    [str(_ap["track"]), "--plan", str(audio_plan),
+                                     "--stems", str(audio_plan.parent / "stems")]))
+    if mp4.exists():  # C3: every video ships <slug>.claims.md beside it
+        plan.insert(len(plan) - 1, ("claims:video", GATES / "check_claims.py",
+                                    ["video", str(mp4), "--claims", str(claims)]))
 
     print(f"\nCoordn8 gate report — {build}\n" + "=" * 60)
     rows = []

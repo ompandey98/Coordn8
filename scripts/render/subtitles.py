@@ -21,6 +21,13 @@ Everything is derived from the beat map's `sentences[]` (idx/text/start/end); no
 new source of truth, so `subtitle_check.py` can prove the caption text equals the
 narration and the timings are sane.
 
+Caption marks (E1): display text may carry colour marks — `⟦good:…⟧ ⟦bad:…⟧ ⟦key:…⟧`
+(scripts/render/caption_marks.py). They NEVER reach the .srt (plain text). The .vtt keeps
+their meaning as WebVTT cue classes — `<c.key>hit rate</c>` — which a page styles with
+`::cue(.key)`; `--no-classes` writes plain .vtt, and `--kit design_system.json` embeds a
+STYLE block with the active kit's mark colours. Text without marks is emitted exactly as
+before.
+
 Data contract — beatmap.json (same as beat_sync.py):
   {"fps": 30,
    "sentences": [{"idx": 1, "text": "…", "start": 0.0, "end": 3.2}, …]}
@@ -39,6 +46,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import caption_marks  # noqa: E402
 from lib.common import (CAPTION_MAX_CHARS, CAPTION_MAX_CHARS_PER_LINE,  # noqa: E402
                         CAPTION_MAX_CUE_SECONDS, CAPTION_MAX_LINES, have,
                         load_json, run)
@@ -62,9 +71,10 @@ def _clean_text(text: str) -> str:
 
     We do NOT paraphrase or shorten — accuracy is the whole point. We only strip
     surrounding whitespace and collapse internal runs so a multi-line beatmap
-    entry renders as clean cue lines.
+    entry renders as clean cue lines. Caption marks are display markup, not words:
+    they are removed (identity when there are none).
     """
-    return " ".join(str(text).split())
+    return " ".join(caption_marks.strip(str(text)).split())
 
 
 def _pack_lines(words: list[str], max_line: int) -> list[str]:
@@ -156,19 +166,23 @@ def _ordered_cues(sentences: list[dict]) -> list[dict]:
     """
     ordered = []
     for i, s in enumerate(sentences):
-        text = _clean_text(s.get("text", ""))
+        raw = str(s.get("text", ""))
+        text = _clean_text(raw)
         if not text:
             continue
         start = float(s.get("start", 0.0))
         end = float(s.get("end", start))
         if end < start:
             end = start
-        ordered.append((s.get("idx", i + 1), text, start, end))
+        ordered.append((s.get("idx", i + 1), text, start, end, raw))
     ordered.sort(key=lambda r: r[2])
 
     cues = []
-    for idx, text, start, end in ordered:
-        cues.extend(_segment_sentence(idx, text, start, end))
+    for idx, text, start, end, raw in ordered:
+        seg = _segment_sentence(idx, text, start, end)
+        if caption_marks.has_marks(raw):
+            _attach_marked_lines(seg, caption_marks.tokens(raw))
+        cues.extend(seg)
     # de-overlap: a cue never runs past the next cue's start
     for a, b in zip(cues, cues[1:]):
         if a["end"] > b["start"]:
@@ -177,6 +191,55 @@ def _ordered_cues(sentences: list[dict]) -> list[dict]:
     for n, c in enumerate(cues, 1):
         c["seq"] = n
     return cues
+
+
+def _attach_marked_lines(cues: list[dict], toks: list) -> None:
+    """Give each cue a `marked` text whose words are wrapped in WebVTT class spans.
+
+    The cue's plain words are exactly the token words in order (both come from the
+    mark-stripped, whitespace-split sentence), so the mapping is a straight walk."""
+    k = 0
+    for c in cues:
+        out_lines = []
+        for line in c["text"].split("\n"):
+            parts, cur, buf = [], None, []
+            for w in line.split():
+                name, idx = (toks[k][2], toks[k][1]) if k < len(toks) else (None, None)
+                k += 1
+                key = (name, idx) if name else None
+                if key != cur and buf:
+                    parts.append(_wrap(buf, cur))
+                    buf = []
+                cur = key
+                buf.append(w)
+            if buf:
+                parts.append(_wrap(buf, cur))
+            out_lines.append(" ".join(parts))
+        c["marked"] = "\n".join(out_lines)
+
+
+def _wrap(words: list, key) -> str:
+    text = " ".join(words)
+    return f"<c.{key[0]}>{text}</c>" if key else text
+
+
+def _vtt_style_block(kit_path: Path) -> list[str]:
+    """`STYLE` block colouring each mark class with the active kit's role colour."""
+    kit, skin = caption_marks.load_kit(kit_path)
+    sp = caption_marks.resolve_style({"font_px": 28}, kit, skin)
+    rules = []
+    for name, m in sorted((sp.get("marks") or {}).items()):
+        if m.get("color"):
+            deco = ""
+            styles = m.get("styles") or []
+            if "underline" in styles or any("underline" in x for x in styles):
+                deco = " text-decoration: underline;"
+            elif "strike-through" in styles:
+                deco = " text-decoration: line-through;"
+            if any(x.startswith("weight-") for x in styles) or "box" in styles:
+                deco += " font-weight: bold;"
+            rules.append(f"::cue(.{name}) {{ color: {m['color']};{deco} }}")
+    return ["STYLE", *rules, ""] if rules else []
 
 
 def _load_cues(beatmap: Path) -> list[dict]:
@@ -201,13 +264,16 @@ def write_srt(beatmap: Path, out: Path) -> int:
     return 0
 
 
-def write_vtt(beatmap: Path, out: Path) -> int:
+def write_vtt(beatmap: Path, out: Path, classes: bool = True,
+              kit: Path | None = None) -> int:
     cues = _load_cues(beatmap)
     lines = ["WEBVTT", ""]
+    if classes and kit is not None and any(c.get("marked") for c in cues):
+        lines += _vtt_style_block(kit)
     for c in cues:
         lines.append(str(c["seq"]))
         lines.append(f'{_fmt_ts(c["start"], ".")} --> {_fmt_ts(c["end"], ".")}')
-        lines.append(c["text"])
+        lines.append(c["marked"] if (classes and c.get("marked")) else c["text"])
         lines.append("")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines).rstrip("\n") + "\n", encoding="utf-8")
@@ -273,6 +339,10 @@ def main() -> int:
     v = sub.add_parser("vtt")
     v.add_argument("beatmap")
     v.add_argument("--out", required=True)
+    v.add_argument("--no-classes", action="store_true",
+                   help="write caption marks as plain text (no <c.mark> cue classes)")
+    v.add_argument("--kit", default=None,
+                   help="kit JSON or design_system.json: embed a STYLE block with mark colours")
 
     m = sub.add_parser("mux")
     m.add_argument("mp4")
@@ -284,7 +354,9 @@ def main() -> int:
     if args.cmd == "srt":
         return write_srt(Path(args.beatmap), Path(args.out))
     if args.cmd == "vtt":
-        return write_vtt(Path(args.beatmap), Path(args.out))
+        return write_vtt(Path(args.beatmap), Path(args.out),
+                         classes=not args.no_classes,
+                         kit=Path(args.kit) if args.kit else None)
     if args.cmd == "mux":
         return mux_soft_subs(Path(args.mp4), Path(args.srt), Path(args.out),
                              args.lang)

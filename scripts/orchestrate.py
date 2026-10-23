@@ -191,6 +191,10 @@ def build_stages(build: Path) -> list[tuple[str, list[tuple[str, Path, list[str]
         ("subtitle_check", g("subtitle_check.py"),
          [str(srt), str(beatmap)] + (["--mp4", str(mp4)] if mp4.exists() else [])),
         ("media_probe", g("media_probe.py"), [str(mp4)]),
+        # automatic frame review: contact sheets + the blind brief for the frame-reviewer
+        # agent (SKIPPED when there is no video yet). The agent's reply is validated by
+        # `frame_review.py collect`, which writes _build/stage_v/verdicts.json for stage_v.
+        ("frame_review:prepare", HERE / "review" / "frame_review.py", ["prepare", str(build)]),
     ]
     judgement: list[tuple[str, Path, list[str]]] = [
         ("stage_v", g("stage_v.py"), ["check", str(b / "stage_v" / "verdicts.json")]),

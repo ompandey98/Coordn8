@@ -30,6 +30,13 @@
  *       (S6) becomes checkable — no geometry gate has any concept of direction.
  *   + NON-FINITE ALPHA IS FATAL.  A NaN alpha draws NOTHING, silently. In verify mode any
  *       non-finite alpha/coordinate THROWS at the draw call (S1 at the source, ~20 lines).
+ *   #7  THE ACTIVE KIT.  Colours, type sizes, radius and motion default to window.__C8_KIT__
+ *       (scripts/design/kit_export.py); the resolved colours are recorded in the trace.
+ *   #8  WORDS THAT THROW.  atLine(name) / atWord(name, word) read window.__C8_WORDS__ (the
+ *       aligner's output) and throw when the line or the word is not there.
+ *   #9  DETERMINISM.  C8.random(seed) is the only randomness (recorded in the trace); while a
+ *       frame is drawn, Math.random / Date.now / new Date() / performance.now THROW.
+ *       scripts/gates/check_determinism.py checks the same rule statically and by re-tracing.
  *
  * TWO EXECUTION MODES
  * -------------------
@@ -45,7 +52,7 @@
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.Coordn8 = api;
+  if (typeof window !== 'undefined') { window.Coordn8 = api; if (!window.C8) window.C8 = api; }
 })(this, function () {
 
   // ---------------------------------------------------------------------------
@@ -70,6 +77,289 @@
   function fail(msg) { throw new SceneError(msg); }
 
   function finite(n) { return typeof n === 'number' && Number.isFinite(n); }
+
+  const G = (typeof globalThis !== 'undefined') ? globalThis
+    : (typeof window !== 'undefined' ? window : {});
+
+  // ---------------------------------------------------------------------------
+  // ACTIVE STYLE KIT (A3). The same kit the page reads as --c8-* CSS vars, exported by
+  // scripts/design/kit_export.py as `window.__C8_KIT__` (or passed to setKit(), or per
+  // scene via `new Scene({kit})` / `buildTrace({kit})`). It is looked up LAZILY, so a kit
+  // script loaded after this file still applies. Every default falls back to the previous
+  // hard-coded value, so a scene with no kit renders exactly as before; switching kits is
+  // a data change, never a code edit. The resolved colours are RECORDED in the trace, so
+  // "the runtime read the kit" is checkable without a browser.
+  // ---------------------------------------------------------------------------
+  let KIT_SET = false, KIT_OVERRIDE = null;
+  function setKit(k) {
+    if (k === undefined) { KIT_SET = false; KIT_OVERRIDE = null; return; }
+    KIT_SET = true; KIT_OVERRIDE = k || null;
+  }
+  function globalKit() {
+    if (KIT_SET) return KIT_OVERRIDE;
+    return (G.window && G.window.__C8_KIT__) || G.__C8_KIT__ || null;
+  }
+  function lookup(obj, path, fallback) {
+    let v = obj;
+    for (const p of String(path).split('.')) { if (v == null) return fallback; v = v[p]; }
+    return v == null ? fallback : v;
+  }
+  function kitValue(path, fallback) { return lookup(globalKit(), path, fallback); }
+
+  // ---------------------------------------------------------------------------
+  // WORD TIMINGS (E2, runtime half). `window.__C8_WORDS__` is written by the aligner
+  // (scripts/render/align.py) in this shape:
+  //   {"lines":[{"name","text","start","end","words":[{"w","start","end","i"}]}],
+  //    "source":"engine|onset"}
+  // atLine(name) / atWord(name, word, occurrence=1) resolve against it and THROW — with the
+  // valid set listed — when the line or the word is not there. A narration edit that drops
+  // the word a visual was landing on becomes one loud error instead of a silent mistiming
+  // (the same reasoning as named beats, one level finer). The timing returned is the
+  // aligner's OWN measurement; nothing is estimated from character positions here.
+  // ---------------------------------------------------------------------------
+  let WORDS_SET = false, WORDS_OVERRIDE = null;
+  const WORDS_CACHE = (typeof WeakMap !== 'undefined') ? new WeakMap() : null;
+
+  function normWord(s) {
+    return String(s == null ? '' : s)
+      .replace(/[⟦⟧]/g, '')                 // caption marks ⟦ ⟧ never count
+      .toLowerCase()
+      .replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+  }
+
+  function indexWords(raw) {
+    if (raw == null) return null;
+    if (WORDS_CACHE && typeof raw === 'object' && WORDS_CACHE.has(raw)) return WORDS_CACHE.get(raw);
+    if (typeof raw !== 'object' || !Array.isArray(raw.lines)) {
+      fail('word timings must be {"lines":[{name,text,start,end,words:[{w,start,end,i}]}], "source"} ' +
+           '— the aligner (scripts/render/align.py) writes this shape');
+    }
+    const byName = new Map();
+    raw.lines.forEach((ln, li) => {
+      if (!ln || typeof ln.name !== 'string' || !ln.name) {
+        fail(`word-timing line ${li} has no name — atLine()/atWord() address lines BY NAME`);
+      }
+      if (byName.has(ln.name)) fail(`duplicate line name '${ln.name}' in the word timings`);
+      if (!finite(ln.start) || !finite(ln.end) || ln.end < ln.start) {
+        fail(`word-timing line '${ln.name}' has invalid start/end (${ln.start}, ${ln.end})`);
+      }
+      const words = Array.isArray(ln.words) ? ln.words : [];
+      const norm = words.map((w, wi) => {
+        if (!w || !finite(w.start) || !finite(w.end) || w.end < w.start) {
+          fail(`word ${wi} of line '${ln.name}' has non-finite or reversed timing ` +
+               `(${w && w.start}, ${w && w.end}) — a NaN word time is the D1 class one level down`);
+        }
+        if (w.start < ln.start - 0.25 || w.end > ln.end + 0.25) {
+          fail(`word '${w.w}' (${w.start}–${w.end}s) lies outside its line '${ln.name}' ` +
+               `(${ln.start}–${ln.end}s) — the alignment is corrupt for this line`);
+        }
+        return { w: String(w.w), key: normWord(w.w), start: w.start, end: w.end,
+                 i: Number.isInteger(w.i) ? w.i : wi };
+      });
+      byName.set(ln.name, { name: ln.name, text: String(ln.text || ''), start: ln.start,
+                            end: ln.end, words: norm });
+    });
+    const idx = { source: raw.source || null, byName, names: Array.from(byName.keys()) };
+    if (WORDS_CACHE && typeof raw === 'object') WORDS_CACHE.set(raw, idx);
+    return idx;
+  }
+
+  function setWords(w) {
+    if (w === undefined) { WORDS_SET = false; WORDS_OVERRIDE = null; return; }
+    WORDS_SET = true; WORDS_OVERRIDE = w || null;
+    if (w) indexWords(w);                               // validate NOW, not at first use
+  }
+  function globalWords() {
+    if (WORDS_SET) return WORDS_OVERRIDE;
+    return (G.window && G.window.__C8_WORDS__) || G.__C8_WORDS__ || null;
+  }
+
+  function resolveLine(idx, name, who) {
+    if (!idx) {
+      fail(`${who}('${name}'): no word timings are loaded. Load the aligner's output as ` +
+           `window.__C8_WORDS__ (or setWords()/buildTrace({words})) before addressing words.`);
+    }
+    if (typeof name !== 'string' || !idx.byName.has(name)) {
+      fail(`${who}: unknown line '${name}'. Lines in the word timings: ` +
+           `[${idx.names.join(', ') || 'none'}]. A renamed or deleted narration line must be ` +
+           `updated in the scene too — this error exists so that edit cannot mistime it silently.`);
+    }
+    return idx.byName.get(name);
+  }
+
+  function lineView(ln) {
+    return { name: ln.name, text: ln.text, start: ln.start, end: ln.end,
+             words: ln.words.map(w => ({ w: w.w, start: w.start, end: w.end, i: w.i })) };
+  }
+
+  function findWord(ln, word, occurrence, who) {
+    const occ = occurrence === undefined ? 1 : occurrence;
+    if (!Number.isInteger(occ) || occ < 1) fail(`${who}: occurrence must be an integer ≥ 1 (got ${occ})`);
+    const parts = String(word == null ? '' : word).split(/\s+/).map(normWord).filter(Boolean);
+    if (!parts.length) fail(`${who}('${ln.name}', ${JSON.stringify(word)}): empty word`);
+    const hits = [];
+    for (let i = 0; i + parts.length <= ln.words.length; i++) {
+      let ok = true;
+      for (let k = 0; k < parts.length; k++) if (ln.words[i + k].key !== parts[k]) { ok = false; break; }
+      if (ok) hits.push(i);
+    }
+    if (!hits.length) {
+      const inText = ln.text && normWord(ln.text).split(/[^\p{L}\p{N}]+/u).join(' ').includes(parts.join(' '));
+      const have = ln.words.map(w => w.w).join(' ');
+      fail(`${who}('${ln.name}', '${word}'): the word is NOT in that line` +
+           (inText ? ' (it appears in the line text but the aligner produced no timing for it)' : '') +
+           `. Words with timings: [${have.slice(0, 160)}${have.length > 160 ? '…' : ''}]. ` +
+           `A narration edit removed or changed it — re-anchor the visual on a word that is ` +
+           `actually spoken, or the frame will land on nothing.`);
+    }
+    if (occ > hits.length) {
+      fail(`${who}('${ln.name}', '${word}', ${occ}): only ${hits.length} occurrence(s) in that line`);
+    }
+    const i0 = hits[occ - 1], a = ln.words[i0], b = ln.words[i0 + parts.length - 1];
+    return { w: parts.length === 1 ? a.w : ln.words.slice(i0, i0 + parts.length).map(x => x.w).join(' '),
+             start: a.start, end: b.end, i: a.i, line: ln.name, occurrence: occ };
+  }
+
+  /** The aligned line (name, text, start, end, words). THROWS if the line is unknown. */
+  function atLine(name, words) {
+    return lineView(resolveLine(indexWords(words === undefined ? globalWords() : words), name, 'atLine'));
+  }
+
+  /**
+   * The aligned timing of `word` (or a multi-word phrase) in line `name`:
+   * {w, start, end, i, line, occurrence}. THROWS if the line or the word is not there.
+   */
+  function atWord(name, word, occurrence, words) {
+    const ln = resolveLine(indexWords(words === undefined ? globalWords() : words), name, 'atWord');
+    return findWord(ln, word, occurrence, 'atWord');
+  }
+
+  // ---------------------------------------------------------------------------
+  // SEEDED RANDOMNESS (E10/H3). C8.random(seed) is the ONLY randomness a scene may use:
+  // mulberry32 over a 32-bit seed (strings are FNV-1a hashed). The same seed gives the
+  // same sequence on every frame, every machine, every run; every seed used is recorded in
+  // the trace with how many draws it served, so a build's randomness is reproducible and
+  // auditable. A missing or non-finite seed THROWS — "random" without a seed is exactly the
+  // nondeterminism this exists to remove.
+  // ---------------------------------------------------------------------------
+  const RNG_LOG = new Map();
+
+  function seed32(seed) {
+    if (typeof seed === 'string') {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+      return h >>> 0;
+    }
+    if (!finite(seed)) fail(`random(seed) needs a finite number or a string seed (got ${seed})`);
+    return (Math.floor(seed) >>> 0);
+  }
+
+  function random(seed, label) {
+    if (seed === undefined || seed === null) {
+      fail('random() needs a seed — unseeded randomness makes a frame depend on the run, not on t');
+    }
+    let a = seed32(seed);
+    const key = `${typeof seed === 'string' ? JSON.stringify(seed) : seed}|${label || ''}`;
+    if (!RNG_LOG.has(key)) RNG_LOG.set(key, { seed, seed32: a, label: label || null, maxDraws: 0 });
+    const rec = RNG_LOG.get(key);
+    let draws = 0;
+    const next = function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      draws += 1;
+      if (draws > rec.maxDraws) rec.maxDraws = draws;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    next.seed = seed;
+    next.range = (lo, hi) => lo + (hi - lo) * next();
+    next.int = (lo, hi) => lo + Math.floor(next() * (hi - lo + 1));
+    next.pick = (arr) => {
+      if (!Array.isArray(arr) || !arr.length) fail('random.pick() needs a non-empty array');
+      return arr[Math.floor(next() * arr.length)];
+    };
+    return next;
+  }
+
+  // ---------------------------------------------------------------------------
+  // CLOCK GUARD (E10). While a frame is being drawn (Scene.begin .. Scene.end, and every
+  // buildTrace sample), Math.random, Date.now, `new Date()`/`Date()` and performance.now
+  // THROW. A frame must be a pure function of t: a clock read or an unseeded random makes
+  // the same t render differently on a re-render, which is how a crash-safe parallel render
+  // silently produces a jittering video. Every attempt is also LOGGED (so a scene that
+  // swallows the throw in a try/catch is still caught by the trace). `setClockGuard(false)`
+  // is the deliberate opt-out and is recorded in the trace.
+  // ---------------------------------------------------------------------------
+  let GUARD_ENABLED = true;
+  let GUARD_OWNER = null;                   // the Scene whose frame is open
+  let GUARD_SAVED = null;
+  let CURRENT = null;                       // {name, t, log} of the frame being drawn
+  const VIOLATIONS = [];
+
+  function setClockGuard(v) { GUARD_ENABLED = !!v; }
+
+  function clockViolation(call) {
+    const where = CURRENT ? ` at t=${CURRENT.t.toFixed(3)}s in scene '${CURRENT.name}'` : '';
+    const rec = { call, t: CURRENT ? CURRENT.t : null, scene: CURRENT ? CURRENT.name : null };
+    VIOLATIONS.push(rec);
+    if (CURRENT && CURRENT.log) CURRENT.log.push(rec);
+    throw new SceneError(
+      `nondeterministic call to ${call} during a frame draw${where}. A frame must be a pure ` +
+      `function of t: use C8.random(seed) for randomness and t / named beats / atWord() for ` +
+      `time. CSS animations, timers and requestAnimationFrame timestamps are banned in scenes ` +
+      `for the same reason.`);
+  }
+
+  // One frame is open at a time. A scene that called begin() and never end() (a crashed
+  // draw, an authoring slip) hands the guard to the next scene's begin(), and that
+  // scene's end() releases it — the guard can never be left installed after a trace.
+  function acquireGuard(owner) {
+    if (!GUARD_ENABLED) return false;
+    if (GUARD_OWNER && GUARD_OWNER !== owner) { GUARD_OWNER._guarded = false; GUARD_OWNER = owner; return true; }
+    if (!GUARD_OWNER) { installGuard(); GUARD_OWNER = owner; }
+    return true;
+  }
+  function releaseGuard(owner) {
+    if (GUARD_OWNER !== owner) return;
+    GUARD_OWNER = null;
+    removeGuard();
+  }
+
+  function installGuard() {
+    if (GUARD_SAVED) return;
+    const perf = G.performance || null;
+    GUARD_SAVED = {
+      random: Math.random, dateNow: Date.now, Date: G.Date, perf,
+      perfOwn: perf ? Object.prototype.hasOwnProperty.call(perf, 'now') : false,
+      perfNow: perf ? perf.now : null,
+    };
+    const RealDate = GUARD_SAVED.Date;
+    Math.random = function () { return clockViolation('Math.random()'); };
+    RealDate.now = function () { return clockViolation('Date.now()'); };
+    try {
+      G.Date = new Proxy(RealDate, {
+        construct(target, args, nt) {
+          if (!args.length) return clockViolation('new Date()');
+          return Reflect.construct(target, args, nt === G.Date ? target : nt);
+        },
+        apply() { return clockViolation('Date()'); },
+      });
+    } catch (e) { /* a host without Proxy keeps Date.now trapped at least */ }
+    if (perf) { try { perf.now = function () { return clockViolation('performance.now()'); }; } catch (e) { /* frozen */ } }
+  }
+
+  function removeGuard() {
+    const s = GUARD_SAVED; GUARD_SAVED = null;
+    if (!s) return;
+    Math.random = s.random;
+    s.Date.now = s.dateNow;
+    G.Date = s.Date;
+    if (s.perf) {
+      try { if (s.perfOwn) s.perf.now = s.perfNow; else delete s.perf.now; } catch (e) { /* frozen */ }
+    }
+  }
+
+  function num(v, fb) { return finite(v) ? v : fb; }
 
   // ---------------------------------------------------------------------------
   // SCRIPT / BEATS — named, resolved, and THROWING (package change #1)
@@ -166,6 +456,20 @@
       for (const ln of this.lines) if (t >= ln.start && t <= ln.end) return ln;
       return null;
     }
+
+    /**
+     * Build the script straight from the aligner's word timings, so line names and
+     * timings have ONE source. `subjects` optionally maps line name -> subjectId.
+     */
+    static fromWords(words, subjects) {
+      const idx = indexWords(words);
+      if (!idx || !idx.names.length) fail('Script.fromWords needs word timings with at least one line');
+      const subj = subjects || {};
+      return new Script(idx.names.map((n) => {
+        const ln = idx.byName.get(n);
+        return { name: ln.name, text: ln.text, start: ln.start, end: ln.end, subjectId: subj[ln.name] || null };
+      }));
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -196,6 +500,13 @@
       // never actually draws is the "the screenshot we prepared never appeared"
       // defect — invisible unless the promise is written down.
       this.declaredAssets = Array.isArray(opts.assets) ? opts.assets.slice() : [];
+      // Per-scene kit / word timings; `undefined` means "use the active global one".
+      this._kit = opts.kit;
+      this._words = opts.words;
+      if (this._words) indexWords(this._words);          // validate at construction
+      this._forms = new Map();                 // catalog/invented scene forms used (H1/H5)
+      this._violations = [];                   // clock-guard hits, even if swallowed
+      this._guarded = false;
       this.t = 0;
       this._boxes = [];
       this._connectors = [];
@@ -218,13 +529,112 @@
       this._sectionStack = [];
       this._containerStack = [];
       this._sectionsSeen = new Map();
+      // The frame is now being drawn: clock reads and unseeded randomness THROW until end().
+      this._guarded = acquireGuard(this);
+      CURRENT = { name: this.name, t, log: this._violations };
       if (this.ctx) { this.ctx.save(); this.ctx.clearRect(0, 0, this.width, this.height); }
       return this;
     }
 
     end() {
+      this._release();
       if (this.ctx) this.ctx.restore();
       return this.frame();
+    }
+
+    _release() {
+      if (this._guarded) { releaseGuard(this); this._guarded = false; }
+      if (CURRENT && CURRENT.log === this._violations) CURRENT = null;
+    }
+
+    /**
+     * Draw one frame safely: begin(t) → draw(this, t) → end(), with the clock guard
+     * released even when the draw throws. This is the entry point a browser
+     * `renderAt(t)` hook should call.
+     */
+    render(t, draw) {
+      if (typeof draw !== 'function') fail('render(t, draw) needs a draw(scene, t) function');
+      this.begin(t);
+      try { draw(this, t); } finally { this._release(); if (this.ctx) this.ctx.restore(); }
+      return this.frame();
+    }
+
+    // ---- active kit (A3) ---------------------------------------------------
+    /** The kit this scene reads: its own (opts.kit) or the active global one. */
+    get kit() { return this._kit !== undefined ? this._kit : globalKit(); }
+
+    /** A value from the active kit by dotted path, or `fallback`. */
+    kitValue(path, fallback) { return lookup(this.kit, path, fallback); }
+
+    /** The kit's motion curve (sampled lookup table), else ease-out-cubic. */
+    ease(x) {
+      const s = this.kitValue('motion.ease_samples', null);
+      const u = clamp01(x);
+      if (!Array.isArray(s) || s.length < 2) return easeOutCubic(u);
+      const f = u * (s.length - 1), i = Math.floor(f);
+      if (i >= s.length - 1) return num(s[s.length - 1], 1);
+      const a = num(s[i], 0), b = num(s[i + 1], 1);
+      return clamp01(a + (b - a) * (f - i));
+    }
+
+    /** The kit's stagger between grouped entrances, in seconds. */
+    stagger() { return num(this.kitValue('motion.stagger_s', 0.08), 0.08); }
+
+    // ---- seeded randomness (E10) -------------------------------------------
+    /** C8.random(seed) bound to this scene: same seed → same sequence, every frame. */
+    random(seed, label) { return random(seed, label); }
+
+    // ---- word timings (E2, runtime half) -----------------------------------
+    _wordIndex() { return indexWords(this._words !== undefined ? this._words : globalWords()); }
+    atLine(name) { return lineView(resolveLine(this._wordIndex(), name, 'atLine')); }
+    atWord(name, word, occurrence) {
+      return findWord(resolveLine(this._wordIndex(), name, 'atWord'), word, occurrence, 'atWord');
+    }
+
+    /** Entrance alpha keyed to the moment a WORD is spoken (throws if it is not there). */
+    wordAlpha(line, word, opts) {
+      const o = opts || {};
+      const w = this.atWord(line, word, o.occurrence);
+      const fadeIn = finite(o.fadeIn) ? o.fadeIn : num(this.kitValue('motion.fadeIn', 0.35), 0.35);
+      const lead = finite(o.lead) ? o.lead : num(this.kitValue('motion.lead', 0.12), 0.12);
+      let a = this.ease((this.t - (w.start - lead)) / Math.max(1e-6, fadeIn));
+      if (o.until !== undefined) {
+        const outStart = typeof o.until === 'string' ? this.beat(o.until).start
+          : this.atWord(o.until.line, o.until.word, o.until.occurrence).start;
+        const fadeOut = finite(o.fadeOut) ? o.fadeOut : num(this.kitValue('motion.fadeOut', 0.3), 0.3);
+        a = Math.min(a, 1 - this.ease((this.t - outStart) / Math.max(1e-6, fadeOut)));
+      }
+      return clamp01(a);
+    }
+
+    /** Progress 0..1 from the moment a word is spoken, over `dur` seconds (default: the word). */
+    wordProgress(line, word, opts) {
+      const o = opts || {};
+      const w = this.atWord(line, word, o.occurrence);
+      const lead = finite(o.lead) ? o.lead : 0;
+      const dur = finite(o.dur) ? o.dur : Math.max(0.05, w.end - w.start);
+      if (dur <= 0) return this.t >= w.start - lead ? 1 : 0;
+      return clamp01((this.t - (w.start - lead)) / dur);
+    }
+
+    // ---- scene forms (H1/H5) -----------------------------------------------
+    /**
+     * Record which scene form a section uses: a catalog entry ({catalog:'funnel'}) or an
+     * INVENTED one ({invented:'queue-lane', reason:'…'}). Recorded only — no gate ever
+     * fails a form for not being in the catalog (freedom doctrine).
+     */
+    declareForm(spec) {
+      const s = spec || {};
+      const name = s.invented || s.catalog;
+      if (!name) fail("declareForm needs {catalog:'<id>'} or {invented:'<name>', reason:'…'}");
+      if (s.invented && !s.reason) fail(`invented scene form '${s.invented}' needs a reason`);
+      const key = `${s.invented ? 'invented' : 'catalog'}:${name}:${s.section || this._currentSection() || ''}`;
+      if (!this._forms.has(key)) {
+        this._forms.set(key, { kind: s.invented ? 'invented' : 'catalog', name,
+                               section: s.section || this._currentSection() || null,
+                               reason: s.reason || null, overBudget: s.overBudget || null });
+      }
+      return this;
     }
 
     /** The recorded trace for the current frame. */
@@ -264,15 +674,17 @@
     beatAlpha(ref, opts) {
       const o = opts || {};
       const ln = this.beat(ref);
-      const fadeIn = finite(o.fadeIn) ? o.fadeIn : 0.35;
-      const lead = finite(o.lead) ? o.lead : 0.12;       // ~120ms anticipation (PLAYBOOK 2.3)
+      // Motion signature comes from the ACTIVE KIT when one is loaded (A3): its entrance
+      // duration, its anticipation lead and its easing curve. No kit => the previous values.
+      const fadeIn = finite(o.fadeIn) ? o.fadeIn : num(this.kitValue('motion.fadeIn', 0.35), 0.35);
+      const lead = finite(o.lead) ? o.lead : num(this.kitValue('motion.lead', 0.12), 0.12);  // ~120ms anticipation (PLAYBOOK 2.3)
       const holdUntil = o.until === undefined ? null : o.until;
       const start = ln.start - lead;
-      let a = easeOutCubic((this.t - start) / Math.max(1e-6, fadeIn));
+      let a = this.ease((this.t - start) / Math.max(1e-6, fadeIn));
       if (holdUntil !== null) {
         const out = this.beat(holdUntil);                // also throws if unknown
-        const fadeOut = finite(o.fadeOut) ? o.fadeOut : 0.3;
-        const outA = 1 - easeOutCubic((this.t - out.start) / Math.max(1e-6, fadeOut));
+        const fadeOut = finite(o.fadeOut) ? o.fadeOut : num(this.kitValue('motion.fadeOut', 0.3), 0.3);
+        const outA = 1 - this.ease((this.t - out.start) / Math.max(1e-6, fadeOut));
         a = Math.min(a, outA);
       }
       return clamp01(a);
@@ -329,15 +741,23 @@
       const box = this._record({
         kind: s.kind || 'card', id: s.id || null,
         x: s.x, y: s.y, w: s.w, h: s.h, alpha: s.alpha,
-        pad: finite(s.pad) ? s.pad : 18,
+        pad: finite(s.pad) ? s.pad : num(this.kitValue('card.pad', 18), 18),
+        fill: s.fill || this.kitValue('card.fill', 'rgba(255,255,255,0.06)'),
+        stroke: s.stroke || this.kitValue('card.stroke', null),
+        radius: finite(s.radius) ? s.radius : num(this.kitValue('card.radius', 14), 14),
       });
       if (s.id) this._nodes.set(s.id, { x: s.x, y: s.y, w: s.w, h: s.h });
       if (this.ctx && box.alpha > 0.001) {
         const c = this.ctx;
         c.save(); c.globalAlpha = box.alpha;
-        c.fillStyle = s.fill || 'rgba(255,255,255,0.06)';
-        if (c.roundRect) { c.beginPath(); c.roundRect(box.x, box.y, box.w, box.h, s.radius || 14); c.fill(); }
+        c.fillStyle = box.fill;
+        if (c.roundRect) { c.beginPath(); c.roundRect(box.x, box.y, box.w, box.h, box.radius); c.fill(); }
         else c.fillRect(box.x, box.y, box.w, box.h);
+        if (box.stroke) {
+          c.strokeStyle = box.stroke; c.lineWidth = num(this.kitValue('card.stroke_width', 1), 1);
+          if (c.roundRect) { c.beginPath(); c.roundRect(box.x, box.y, box.w, box.h, box.radius); c.stroke(); }
+          else c.strokeRect(box.x, box.y, box.w, box.h);
+        }
         c.restore();
       }
       if (typeof fn === 'function') {
@@ -354,7 +774,7 @@
      */
     text(spec) {
       const s = spec || {};
-      const size = finite(s.size) ? s.size : 28;
+      const size = finite(s.size) ? s.size : Math.max(MIN_LEGIBLE_PX, num(this.kitValue('text.sizes.body', 28), 28));
       const str = String(s.text === undefined ? '' : s.text);
       const parent = this._containerStack.length
         ? this._containerStack[this._containerStack.length - 1] : null;
@@ -366,7 +786,8 @@
 
       // Measure: real ctx when available, else a deterministic estimate so Node
       // trace mode produces the same *shape* of finding.
-      let w = this._measure(str, size);
+      const tw = s.weight || 500, tf = s.font || undefined;
+      let w = this._measure(str, size, tw, tf);
       const h = Math.ceil(size * 1.25);
       let x = finite(s.x) ? s.x : (parent ? parent.box.x + parent.box.pad : 0);
       const y = finite(s.y) ? s.y : (parent ? parent.box.y + parent.box.pad : 0);
@@ -387,13 +808,13 @@
             ? s.minSize
             : Math.min(size, MIN_LEGIBLE_PX);
           let trySize = size;
-          while (trySize > minSize && this._measure(str, trySize) > inner) trySize -= 1;
-          if (this._measure(str, trySize) > inner) {
-            display = this._ellipsize(str, trySize, inner);
+          while (trySize > minSize && this._measure(str, trySize, tw, tf) > inner) trySize -= 1;
+          if (this._measure(str, trySize, tw, tf) > inner) {
+            display = this._ellipsize(str, trySize, inner, tw, tf);
             truncated = true;
           }
           fitted = true;
-          w = Math.min(inner, this._measure(display, trySize));
+          w = Math.min(inner, this._measure(display, trySize, tw, tf));
           spec = Object.assign({}, s, { size: trySize });
         }
         // Keep it inside horizontally no matter what.
@@ -408,12 +829,15 @@
         kind: 'text', x, y, w, h, alpha: s.alpha,
         text: display, size: (spec && spec.size) || size,
         fitted, truncated, unbounded: !!s.unbounded,
+        color: s.color || this.kitValue('text.color', '#f2f4f8'),
+        font: s.font || this.kitValue('text.font', 'Inter, system-ui, sans-serif'),
+        weight: s.weight || 500,
       });
       if (this.ctx && box.alpha > 0.001) {
         const c = this.ctx;
         c.save(); c.globalAlpha = box.alpha;
-        c.fillStyle = s.color || '#f2f4f8';
-        c.font = `${s.weight || 500} ${box.size}px ${s.font || 'Inter, system-ui, sans-serif'}`;
+        c.fillStyle = box.color;
+        c.font = `${box.weight} ${box.size}px ${box.font}`;
         c.textBaseline = 'top';
         c.fillText(display, box.x, box.y);
         c.restore();
@@ -421,22 +845,37 @@
       return box;
     }
 
-    _measure(str, size) {
+    /**
+     * Width of `str` at `size`, measured with the SAME weight and family it will be drawn
+     * with (a bold or wide kit face measured as regular under-fits its container).
+     */
+    _measure(str, size, weight, font) {
+      const wt = weight || 500;
       if (this.ctx) {
         const c = this.ctx;
         c.save();
-        c.font = `500 ${size}px Inter, system-ui, sans-serif`;
+        c.font = `${wt} ${size}px ${font || this.kitValue('text.font', 'Inter, system-ui, sans-serif')}`;
         const m = c.measureText(str).width;
         c.restore();
         if (finite(m) && m > 0) return m;
       }
-      // Deterministic fallback (~0.54em average advance for UI sans at these sizes).
-      return str.length * size * 0.54;
+      // Deterministic fallback (~0.54em average advance for UI sans at these sizes; bold
+      // faces run wider).
+      return str.length * size * (Number(wt) >= 600 ? 0.57 : 0.54);
     }
 
-    _ellipsize(str, size, maxW) {
+    /** Public measure (what components use to lay text out before drawing it). */
+    measureText(str, size, weight, font) { return this._measure(String(str), size, weight, font); }
+
+    /** The width a chip with this label will take (same weight/family the chip draws with). */
+    chipWidth(label, size, font, padX) {
+      const wt = this.kitValue('chip.weight', 600);
+      return this._measure(String(label), size, wt, font) + 2 * (finite(padX) ? padX : 14);
+    }
+
+    _ellipsize(str, size, maxW, weight, font) {
       let s = str;
-      while (s.length > 1 && this._measure(s + '…', size) > maxW) s = s.slice(0, -1);
+      while (s.length > 1 && this._measure(s + '…', size, weight, font) > maxW) s = s.slice(0, -1);
       return s + '…';
     }
 
@@ -448,22 +887,27 @@
       if (s.alpha === undefined && this._containerStack.length) {
         s.alpha = this._containerStack[this._containerStack.length - 1].box.alpha;
       }
-      const size = finite(s.size) ? s.size : 20;
+      // No kit => the historical 20px default; a kit's label size is never under 28px.
+      const size = finite(s.size) ? s.size : num(this.kitValue('text.sizes.label', 20), 20);
       const label = String(s.text === undefined ? '' : s.text);
       const padX = finite(s.padX) ? s.padX : 14;
-      const w = finite(s.w) ? s.w : this._measure(label, size) + padX * 2;
+      const cweight = s.weight || this.kitValue('chip.weight', 600);
+      const w = finite(s.w) ? s.w : this._measure(label, size, cweight, s.font) + padX * 2;
       const h = finite(s.h) ? s.h : Math.ceil(size * 1.9);
       const box = this._record({
         kind: 'chip', x: s.x, y: s.y, w, h, alpha: s.alpha, text: label, size,
+        fill: s.fill || this.kitValue('chip.fill', 'rgba(120,170,255,0.16)'),
+        color: s.color || this.kitValue('chip.color', '#dce8ff'),
+        font: s.font || this.kitValue('text.font', 'Inter, system-ui, sans-serif'),
       });
       if (this.ctx && box.alpha > 0.001) {
         const c = this.ctx;
         c.save(); c.globalAlpha = box.alpha;
-        c.fillStyle = s.fill || 'rgba(120,170,255,0.16)';
+        c.fillStyle = box.fill;
         if (c.roundRect) { c.beginPath(); c.roundRect(box.x, box.y, w, h, h / 2); c.fill(); }
         else c.fillRect(box.x, box.y, w, h);
-        c.fillStyle = s.color || '#dce8ff';
-        c.font = `600 ${size}px ${s.font || 'Inter, system-ui, sans-serif'}`;
+        c.fillStyle = box.color;
+        c.font = `${cweight} ${size}px ${box.font}`;
         c.textBaseline = 'middle';
         c.fillText(label, box.x + padX, box.y + h / 2);
         c.restore();
@@ -478,14 +922,22 @@
       const box = this._record({
         kind: s.kind || 'node', id: s.id, x: s.x, y: s.y, w: s.w, h: s.h,
         alpha: s.alpha, text: s.text || null,
+        fill: s.fill || this.kitValue('node.fill', 'rgba(255,255,255,0.10)'),
+        stroke: s.stroke || this.kitValue('node.stroke', null),
+        radius: finite(s.radius) ? s.radius : num(this.kitValue('node.radius', 12), 12),
       });
       this._nodes.set(s.id, { x: s.x, y: s.y, w: s.w, h: s.h });
       if (this.ctx && box.alpha > 0.001) {
         const c = this.ctx;
         c.save(); c.globalAlpha = box.alpha;
-        c.fillStyle = s.fill || 'rgba(255,255,255,0.10)';
-        if (c.roundRect) { c.beginPath(); c.roundRect(s.x, s.y, s.w, s.h, s.radius || 12); c.fill(); }
+        c.fillStyle = box.fill;
+        if (c.roundRect) { c.beginPath(); c.roundRect(s.x, s.y, s.w, s.h, box.radius); c.fill(); }
         else c.fillRect(s.x, s.y, s.w, s.h);
+        if (box.stroke) {
+          c.strokeStyle = box.stroke; c.lineWidth = num(this.kitValue('node.stroke_width', 1.5), 1.5);
+          if (c.roundRect) { c.beginPath(); c.roundRect(s.x, s.y, s.w, s.h, box.radius); c.stroke(); }
+          else c.strokeRect(s.x, s.y, s.w, s.h);
+        }
         c.restore();
       }
       if (s.text) {
@@ -494,8 +946,9 @@
         // smaller: every scene that draws a node inherits this default, so a value
         // under the floor would put every diagram below the readable threshold at
         // once. The quality scorecard caught exactly that.
-        const labelSize = finite(s.textSize) ? s.textSize : 30;
-        try { this.text({ text: s.text, alpha: box.alpha, align: 'center',
+        const labelSize = finite(s.textSize) ? s.textSize
+          : Math.max(MIN_LEGIBLE_PX, num(this.kitValue('node.text_size', 30), 30));
+        try { this.text({ text: s.text, alpha: box.alpha, align: 'center', color: s.color,
                           size: labelSize, y: s.y + s.h / 2 - labelSize / 2 });
         } finally { this._containerStack.pop(); }
       }
@@ -534,20 +987,25 @@
         kind: 'connector', from: s.from, to: s.to, points,
         arrowAt: s.arrowAt || 'to', alpha,
         section: this._currentSection(),
+        color: s.color || this.kitValue('connector.color', 'rgba(160,200,255,0.75)'),
+        width: finite(s.width) ? s.width : num(this.kitValue('connector.width', 3), 3),
+        dash: Array.isArray(s.dash) ? s.dash : this.kitValue('connector.dash', []),
       };
       if (INSTRUMENT || !this.ctx) this._connectors.push(rec);
       if (this.ctx && alpha > 0.001) {
         const c = this.ctx;
         c.save(); c.globalAlpha = alpha;
-        c.strokeStyle = s.color || 'rgba(160,200,255,0.75)';
-        c.lineWidth = s.width || 3;
+        c.strokeStyle = rec.color;
+        c.lineWidth = rec.width;
+        if (c.setLineDash && Array.isArray(rec.dash)) c.setLineDash(rec.dash);
         c.beginPath(); c.moveTo(points[0].x, points[0].y);
         for (let i = 1; i < points.length; i++) c.lineTo(points[i].x, points[i].y);
         c.stroke();
         // Arrowhead at the declared end, so picture and declaration cannot disagree.
         const tip = rec.arrowAt === 'to' ? points[points.length - 1] : points[0];
         const prev = rec.arrowAt === 'to' ? points[points.length - 2] : points[1];
-        if (prev) drawArrow(c, prev, tip, s.width || 3);
+        if (c.setLineDash) c.setLineDash([]);
+        if (prev) drawArrow(c, prev, tip, rec.width);
         c.restore();
       }
       return rec;
@@ -626,6 +1084,106 @@
       }
       return rec;
     }
+
+    /**
+     * A drawn MARK — the non-text visual vocabulary scenes need (bars, arcs, rings,
+     * ticks, highlight outlines, a travelling token, trapezoids). Instrumented like every
+     * other primitive: recorded with its bounding box, alpha (fatal if non-finite), section
+     * and parent, so density and presence gates see it. `meaning` is REQUIRED: a mark that
+     * explains nothing is decoration, and decoration with no referent is banned (0.4a).
+     *
+     *   shape 'rect'  {x,y,w,h,radius}         'dot'   {cx,cy,r}
+     *         'line'  {points:[{x,y},…]}       'poly'  {points} (closed, filled)
+     *         'arc'   {cx,cy,r,a0,a1,width}    'cross'/'check' {x,y,w,h}
+     * `alpha` is visibility; `fillOpacity` is the data value (stepped ink) — never confused.
+     */
+    mark(spec) {
+      const s = spec || {};
+      const shape = s.shape || 'rect';
+      if (!s.meaning || typeof s.meaning !== 'string') {
+        fail(`mark('${shape}') needs a 'meaning' — what this visual explains. A mark with no ` +
+             `referent is decoration, and decoration is banned (0.4a doctrine 2).`);
+      }
+      let bb;
+      const pts = Array.isArray(s.points) ? s.points : null;
+      if (shape === 'line' || shape === 'poly') {
+        if (!pts || pts.length < 2) fail(`mark('${shape}') needs at least two points`);
+        for (const p of pts) if (!finite(p.x) || !finite(p.y)) fail(`mark('${shape}') has a non-finite point`);
+        const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+        const x0 = Math.min(...xs), y0 = Math.min(...ys);
+        bb = { x: x0, y: y0, w: Math.max(1, Math.max(...xs) - x0), h: Math.max(1, Math.max(...ys) - y0) };
+      } else if (shape === 'dot') {
+        if (!finite(s.cx) || !finite(s.cy) || !finite(s.r)) fail('mark(dot) needs finite cx, cy, r');
+        bb = { x: s.cx - s.r, y: s.cy - s.r, w: 2 * s.r, h: 2 * s.r };
+      } else if (shape === 'arc') {
+        for (const k of ['cx', 'cy', 'r', 'a0', 'a1']) if (!finite(s[k])) fail(`mark(arc) needs a finite ${k}`);
+        const n = 24, xs = [], ys = [];
+        for (let i = 0; i <= n; i++) {
+          const a = s.a0 + (s.a1 - s.a0) * i / n;
+          xs.push(s.cx + s.r * Math.cos(a)); ys.push(s.cy + s.r * Math.sin(a));
+        }
+        const pad = (finite(s.width) ? s.width : 4) / 2;
+        const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad;
+        bb = { x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0 };
+      } else {
+        bb = { x: s.x, y: s.y, w: s.w, h: s.h };
+      }
+      const box = this._record({
+        kind: 'mark', shape, meaning: s.meaning, id: s.id || null,
+        x: bb.x, y: bb.y, w: bb.w, h: bb.h, alpha: s.alpha,
+        fill: s.fill === undefined ? null : s.fill,
+        stroke: s.stroke === undefined ? null : s.stroke,
+        width: finite(s.width) ? s.width : null,
+        fillOpacity: finite(s.fillOpacity) ? clamp01(s.fillOpacity) : null,
+        dash: Array.isArray(s.dash) ? s.dash : null,
+        glow: !!s.glow,
+      });
+      if (pts) box.points = pts.map(p => ({ x: round3(p.x), y: round3(p.y) }));
+      if (shape === 'arc') Object.assign(box, { cx: s.cx, cy: s.cy, r: s.r, a0: round3(s.a0), a1: round3(s.a1) });
+      if (shape === 'dot') Object.assign(box, { cx: s.cx, cy: s.cy, r: s.r });
+      if (this.ctx && box.alpha > 0.001) this._paintMark(box, s);
+      return box;
+    }
+
+    _paintMark(box, s) {
+      const c = this.ctx;
+      c.save(); c.globalAlpha = box.alpha;
+      if (box.glow && box.stroke) { c.shadowColor = box.stroke; c.shadowBlur = 14; }
+      if (c.setLineDash) c.setLineDash(box.dash || []);
+      c.lineWidth = box.width || 3;
+      c.lineCap = 'round';
+      const fillIt = () => {
+        if (!box.fill) return;
+        c.save(); if (box.fillOpacity !== null) c.globalAlpha = box.alpha * box.fillOpacity;
+        c.fillStyle = box.fill; c.fill(); c.restore();
+      };
+      const strokeIt = () => { if (box.stroke) { c.strokeStyle = box.stroke; c.stroke(); } };
+      c.beginPath();
+      if (box.shape === 'line' || box.shape === 'poly') {
+        c.moveTo(box.points[0].x, box.points[0].y);
+        for (let i = 1; i < box.points.length; i++) c.lineTo(box.points[i].x, box.points[i].y);
+        if (box.shape === 'poly') { c.closePath(); fillIt(); }
+        strokeIt();
+      } else if (box.shape === 'dot') {
+        c.arc(box.cx, box.cy, box.r, 0, Math.PI * 2); fillIt(); strokeIt();
+      } else if (box.shape === 'arc') {
+        c.arc(s.cx, s.cy, s.r, s.a0, s.a1); strokeIt();
+      } else if (box.shape === 'cross' || box.shape === 'check') {
+        if (box.shape === 'cross') {
+          c.moveTo(box.x, box.y); c.lineTo(box.x + box.w, box.y + box.h);
+          c.moveTo(box.x + box.w, box.y); c.lineTo(box.x, box.y + box.h);
+        } else {
+          c.moveTo(box.x, box.y + box.h * 0.55); c.lineTo(box.x + box.w * 0.38, box.y + box.h);
+          c.lineTo(box.x + box.w, box.y);
+        }
+        strokeIt();
+      } else {
+        const r = finite(s.radius) ? s.radius : 0;
+        if (c.roundRect && r) c.roundRect(box.x, box.y, box.w, box.h, r); else c.rect(box.x, box.y, box.w, box.h);
+        fillIt(); strokeIt();
+      }
+      c.restore();
+    }
   }
 
   function center(b) { return { x: b.x + b.w / 2, y: b.y + b.h / 2 }; }
@@ -670,21 +1228,43 @@
   function buildTrace(opts) {
     const o = opts || {};
     if (typeof o.draw !== 'function') fail('buildTrace needs a draw(scene) function');
-    const script = o.script instanceof Script ? o.script : new Script(o.script || []);
+    const words = o.words !== undefined ? o.words : globalWords();
+    // No script given but word timings are: the aligner output IS the script (one source).
+    const script = o.script instanceof Script ? o.script
+      : ((o.script === undefined || o.script === null) && words ? Script.fromWords(words, o.subjects)
+        : new Script(o.script || []));
     const scene = new Scene({ name: o.name || 'scene', script, ctx: null,
                               width: o.width || 1920, height: o.height || 1080,
                               subsystem: o.subsystem || o.system || null,
-                              assets: o.assets || [] });
+                              assets: o.assets || [],
+                              kit: o.kit, words: o.words });
     const grid = finite(o.grid) ? o.grid : 5;               // samples/second
     const dur = finite(o.duration) ? o.duration : script.duration;
-    const frames = [];
-    const n = Math.floor(dur * grid);
-    for (let i = 0; i <= n; i++) {
-      const t = i / grid;
-      scene.begin(t);
-      o.draw(scene, t);
-      frames.push(scene.end());
+    const repeat = Number.isInteger(o.repeat) && o.repeat > 1 ? o.repeat : 1;
+    let times;
+    if (Array.isArray(o.times) && o.times.length) {
+      times = o.times.map(Number);
+      for (const t of times) if (!finite(t)) fail(`buildTrace times contains a non-finite t (${t})`);
+    } else {
+      times = [];
+      const n = Math.floor(dur * grid);
+      for (let i = 0; i <= n; i++) times.push(i / grid);
     }
+    RNG_LOG.clear();
+    VIOLATIONS.length = 0;
+    const frames = [];
+    const mismatches = [];
+    for (const t of times) {
+      let first = null;
+      for (let r = 0; r < repeat; r++) {
+        // render() releases the clock guard even when the draw throws.
+        const fr = scene.render(t, o.draw);
+        if (r === 0) { first = fr; frames.push(fr); }
+        else if (JSON.stringify(fr) !== JSON.stringify(first)) mismatches.push(round3(t));
+      }
+    }
+    const k = scene.kit;
+    const widx = scene._wordIndex();
     return {
       scene: scene.name,
       subsystem: scene.subsystem,
@@ -699,14 +1279,33 @@
       })),
       declaredSections: Array.from(new Set(
         frames.flatMap(f => f.sections.map(s => s.name)))),
+      // ---- provenance of every input that shapes a frame (A3 / E2 / E10 / H1) ----
+      kit: k ? { id: k.kit || k.id || null, name: k.name || null, mode: k.mode || null } : null,
+      words: widx ? { source: widx.source, lines: widx.names.length } : null,
+      random: Array.from(RNG_LOG.values()),
+      clockGuard: GUARD_ENABLED,
+      nondeterminism: scene._violations.slice(),
+      forms: Array.from(scene._forms.values()),
+      repeat: repeat > 1 ? { n: repeat, identical: mismatches.length === 0, mismatches } : null,
       frames,
     };
   }
+
+  const geometry = { center, edgePoints, boxEdge };
 
   return {
     Script, Scene, SceneError,
     setVerify, setInstrument, buildTrace,
     easeOutCubic, clamp01,
+    // A3 — active style kit
+    setKit, kitValue, get kit() { return globalKit(); },
+    // E2 — word timings that THROW
+    setWords, atLine, atWord, normWord, get words() { return globalWords(); },
+    // E10 — seeded randomness + the clock guard
+    random, setClockGuard, get clockGuard() { return GUARD_ENABLED; },
+    get violations() { return VIOLATIONS.slice(); },
+    geometry,
+    MIN_LEGIBLE_PX,
     get verify() { return VERIFY; },
     get instrument() { return INSTRUMENT; },
   };
@@ -822,9 +1421,108 @@ if (typeof module === 'object' && require.main === module) {
     ok('every recorded alpha is finite',
       tr.frames.every(f => f.boxes.every(b => Number.isFinite(b.alpha))), '');
 
+    // ---- A3: the ACTIVE KIT is read by default (window.__C8_KIT__), lazily ----
+    const probeKit = { kit: 'probe-kit', card: { fill: '#123456' }, text: { color: '#abcdef' },
+                       motion: { fadeIn: 0.9, lead: 0.0 } };
+    global.window = Object.assign(global.window || {}, { __C8_KIT__: probeKit });
+    const kt = C.buildTrace({ name: 'kit', script: lines, grid: 2, draw: (z) => {
+      z.section('k', (q) => q.card({ id: 'kc', x: 100, y: 300, w: 600, h: 200, alpha: q.beatAlpha('worked-example') },
+                                  (k2) => k2.text({ text: 'kit text' }))); } });
+    const kcard = kt.frames[kt.frames.length - 1].boxes.find(b => b.kind === 'card');
+    const ktext = kt.frames[kt.frames.length - 1].boxes.find(b => b.kind === 'text');
+    ok('runtime reads window.__C8_KIT__ by default (colour recorded in the trace)',
+      kcard && kcard.fill === '#123456' && ktext.color === '#abcdef' && kt.kit && kt.kit.id === 'probe-kit',
+      JSON.stringify({ kcard, kit: kt.kit }));
+    const sk = new C.Scene({ name: 'k2', script: s, ctx: null }); sk.begin(2.45);
+    ok('kit motion (fadeIn/lead) drives beatAlpha with no code edit',
+      Math.abs(sk.beatAlpha('worked-example') - C.easeOutCubic(0.45 / 0.9)) < 1e-9, String(sk.beatAlpha('worked-example')));
+    sk.end();
+    delete global.window.__C8_KIT__;
+
+    // ---- E2: atLine / atWord THROW when the line or word is not there ----
+    const W = { source: 'engine', lines: [
+      { name: 'intro', text: 'First line here.', start: 0, end: 2,
+        words: [{ w: 'First', start: 0.1, end: 0.5, i: 0 }, { w: 'line', start: 0.6, end: 1.0, i: 1 },
+                { w: 'here.', start: 1.1, end: 1.6, i: 2 }] }] };
+    ok('atWord returns the aligner timing (no estimation)', C.atWord('intro', 'here', 1, W).start === 1.1, '');
+    ok('atLine returns the aligned line', C.atLine('intro', W).words.length === 3, '');
+    throws('atWord of a word NOT in the line THROWS', () => C.atWord('intro', 'missing', 1, W), 'NOT in that line');
+    throws('atLine of an unknown line THROWS', () => C.atLine('nope', W), 'unknown line');
+    throws('atWord with no word timings loaded THROWS', () => C.atWord('intro', 'line', 1, null), 'no word timings');
+
+    // ---- E10: seeded PRNG reproduces; the clock guard throws during draw ----
+    const r1 = C.random(42), r2 = C.random(42), r3 = C.random(43);
+    const a1 = [r1(), r1(), r1()], a2 = [r2(), r2(), r2()];
+    ok('C8.random(seed) reproduces the same sequence', a1.join() === a2.join() && a1.join() !== [r3(), r3(), r3()].join(), '');
+    throws('random() with no seed THROWS', () => C.random(), 'needs a seed');
+    for (const [label, fn] of [['Math.random', () => Math.random()], ['Date.now', () => Date.now()],
+                               ['performance.now', () => performance.now()], ['new Date()', () => new Date()]]) {
+      throws(`${label} during a frame draw THROWS`,
+        () => C.buildTrace({ name: 'g', script: lines, grid: 1, draw: () => { fn(); } }), 'nondeterministic call');
+    }
+    ok('the clock guard is released after the trace', typeof Math.random() === 'number' &&
+      typeof Date.now() === 'number' && typeof performance.now() === 'number' && new Date(0).getTime() === 0, '');
+    const sw = C.buildTrace({ name: 'swallow', script: lines, grid: 1, draw: (z) => {
+      try { Math.random(); } catch (e) { /* swallowed on purpose */ }
+      z.chip({ text: 'x', x: 10, y: 400, alpha: 1 }); } });
+    ok('a SWALLOWED clock read is still recorded in the trace', sw.nondeterminism.length > 0, JSON.stringify(sw.nondeterminism));
+    const rp = C.buildTrace({ name: 'rep', script: lines, grid: 2, repeat: 2, draw: (z) => {
+      const r = z.random(7, 'jitter'); z.chip({ text: 'j', x: 100 + 50 * r(), y: 400, alpha: 1 }); } });
+    ok('the same t rendered twice gives an identical frame', rp.repeat && rp.repeat.identical === true, JSON.stringify(rp.repeat));
+    ok('every seed used is recorded in the trace', rp.random.length === 1 && rp.random[0].seed === 7 && rp.random[0].maxDraws === 1,
+      JSON.stringify(rp.random));
+    sc.begin(1.0);
+    throws('mark() without a meaning THROWS', () => sc.mark({ shape: 'rect', x: 0, y: 0, w: 5, h: 5, alpha: 1 }), 'needs a');
+    sc.end();
+
     console.log(`\nRESULT: ${pass} passed, ${failn} failed`);
     process.exit(failn ? 1 : 0);
   }
-  console.error('usage: node scene_runtime.js selftest');
+
+  if (cmd === 'trace') {
+    // node scene_runtime.js trace <scene.js> [--out f.json] [--grid N] [--kit kit.json|kit.js]
+    //      [--words words.json] [--at t1,t2] [--repeat N] [--no-guard]
+    // The scene module exports {draw, script|SCRIPT, name?, subsystem?, assets?, words?, grid?}.
+    const fs = require('fs');
+    const pathm = require('path');
+    const argv = process.argv.slice(3);
+    const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
+    const scenePath = argv.find((a, i) => !a.startsWith('--') && (i === 0 || !argv[i - 1].startsWith('--')));
+    if (!scenePath) { console.error('usage: node scene_runtime.js trace <scene.js> [--out f] [--kit f] [--words f]'); process.exit(2); }
+    const readJson = (f, what) => {
+      const txt = fs.readFileSync(f, 'utf8').trim();
+      if (txt.startsWith('{')) return JSON.parse(txt);
+      const m = txt.match(/__C8_(?:KIT|WORDS)__\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
+      if (!m) throw new Error(`${what} file ${f} is neither JSON nor 'window.__C8_…__ = {…};'`);
+      return JSON.parse(m[1]);
+    };
+    try {
+      if (argv.includes('--no-guard')) C.setClockGuard(false);
+      if (opt('--kit')) C.setKit(readJson(opt('--kit'), 'kit'));
+      const mod = require(pathm.resolve(scenePath));
+      const words = opt('--words') ? readJson(opt('--words'), 'words') : mod.words;
+      if (words) C.setWords(words);
+      const at = opt('--at') ? opt('--at').split(',').map(Number) : undefined;
+      const trace = C.buildTrace({
+        name: mod.name || pathm.basename(scenePath).replace(/\.[^.]+$/, ''),
+        script: mod.script || mod.SCRIPT, draw: mod.draw,
+        subsystem: mod.subsystem, assets: mod.assets, subjects: mod.subjects,
+        grid: opt('--grid') ? Number(opt('--grid')) : mod.grid,
+        duration: mod.duration, times: at,
+        repeat: opt('--repeat') ? Number(opt('--repeat')) : undefined,
+      });
+      const text = JSON.stringify(trace);
+      if (opt('--out')) { fs.mkdirSync(pathm.dirname(pathm.resolve(opt('--out'))), { recursive: true }); fs.writeFileSync(opt('--out'), text + '\n'); }
+      else process.stdout.write(text + '\n');
+      console.error(`[trace] ${trace.scene}: ${trace.frames.length} frames` +
+        (trace.kit ? `, kit ${trace.kit.id}` : '') + (trace.words ? `, words ${trace.words.lines} lines` : '') +
+        (trace.repeat ? `, repeat identical=${trace.repeat.identical}` : ''));
+      process.exit(0);
+    } catch (e) {
+      console.error(String(e && e.message || e));
+      process.exit(1);
+    }
+  }
+  console.error('usage: node scene_runtime.js selftest | trace <scene.js> [--out f] [--kit f] [--words f] [--at t,…] [--repeat N]');
   process.exit(2);
 }

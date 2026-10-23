@@ -63,6 +63,12 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Caption marks (⟦key:…⟧) live in the DISPLAY text only. They are stripped before the
+# spoken form is derived, so the voice engine never reads a bracket (E1). Identity on
+# text with no marks, so every pre-existing behaviour below is unchanged.
+from caption_marks import strip as strip_marks  # noqa: E402
+
 
 # Acronyms that are pronounced AS A WORD — never spelled out. Conservative on
 # purpose: only entries that are overwhelmingly said as words in normal speech.
@@ -148,7 +154,10 @@ def spoken_word(word: str, *, ssml: bool, force_spell: set[str],
 def to_speech(text: str, *, ssml: bool = False, spell: set[str] | None = None,
               word: set[str] | None = None) -> str:
     """Derive the SPOKEN form of a narration string. `text` is never mutated in
-    place — this returns a new string for the TTS engine to consume."""
+    place — this returns a new string for the TTS engine to consume.
+
+    Caption marks are removed FIRST: the spoken form never carries display markup."""
+    text = strip_marks(text)
     force_spell = {s.upper() for s in (spell or set())}
     force_word = {w.upper() for w in (word or set())}
 
