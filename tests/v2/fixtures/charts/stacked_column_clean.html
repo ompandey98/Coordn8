@@ -1,0 +1,26 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Builds per day</title></head><body>
+<figure data-chart="stacked-column" data-chart-id="builds-per-day">
+  <figcaption data-role="title">Builds per day: passed and failed</figcaption>
+  <svg viewBox="0 0 400 300" width="400" height="300">
+    <g data-stack="Mon" data-total="50">
+      <rect data-name="Mon-0" data-value="20" x="60" y="220" width="48" height="40"/>
+      <rect data-name="Mon-1" data-value="30" x="60" y="160" width="48" height="60"/>
+    </g>
+    <g data-stack="Tue" data-total="40">
+      <rect data-name="Tue-0" data-value="25" x="140" y="210" width="48" height="50"/>
+      <rect data-name="Tue-1" data-value="15" x="140" y="180" width="48" height="30"/>
+    </g>
+    <g data-stack="Wed" data-total="75">
+      <rect data-name="Wed-0" data-value="40" x="220" y="180" width="48" height="80"/>
+      <rect data-name="Wed-1" data-value="35" x="220" y="110" width="48" height="70"/>
+    </g>
+    <g data-stack="Thu" data-total="30">
+      <rect data-name="Thu-0" data-value="10" x="300" y="240" width="48" height="20"/>
+      <rect data-name="Thu-1" data-value="20" x="300" y="200" width="48" height="40"/>
+    </g>
+  </svg>
+  <ul data-role="legend"><li>passed</li><li>failed</li></ul>
+  <p>Busiest day: Wednesday with <span>75</span> builds.</p>
+</figure>
+</body></html>

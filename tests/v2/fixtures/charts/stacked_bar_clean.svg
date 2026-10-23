@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img">
+<title>Chart</title>
+<g data-chart="stacked-bar" data-chart-id="calls-by-client">
+  <g data-stack="Web" data-total="60">
+    <rect data-name="Web-read" data-value="30" x="140" y="40" width="90" height="36"/>
+    <rect data-name="Web-write" data-value="20" x="230" y="40" width="60" height="36"/>
+    <rect data-name="Web-admin" data-value="10" x="290" y="40" width="30" height="36"/>
+    <text x="326" y="63">60</text>
+    <text x="132" y="63" text-anchor="end">Web</text>
+  </g>
+  <g data-stack="Mobile" data-total="75">
+    <rect data-name="Mobile-read" data-value="15" x="140" y="100" width="45" height="36"/>
+    <rect data-name="Mobile-write" data-value="35" x="185" y="100" width="105" height="36"/>
+    <rect data-name="Mobile-admin" data-value="25" x="290" y="100" width="75" height="36"/>
+    <text x="371" y="123">75</text>
+    <text x="132" y="123" text-anchor="end">Mobile</text>
+  </g>
+  <g data-stack="API" data-total="60">
+    <rect data-name="API-read" data-value="40" x="140" y="160" width="120" height="36"/>
+    <rect data-name="API-write" data-value="5" x="260" y="160" width="15" height="36"/>
+    <rect data-name="API-admin" data-value="15" x="275" y="160" width="45" height="36"/>
+    <text x="326" y="183">60</text>
+    <text x="132" y="183" text-anchor="end">API</text>
+  </g>
+</g>
+</svg>

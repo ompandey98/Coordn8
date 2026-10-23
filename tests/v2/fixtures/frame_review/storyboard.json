@@ -1,0 +1,9 @@
+{"fps": 30, "frame": {"width": 320, "height": 180},
+ "scenes": [
+  {"id": "s1", "beat": "machinery", "sentence_ids": [1, 2], "engine": "html+gsap",
+   "primary_visual": "animated request token travelling router to cache with eased motion",
+   "elements": [{"id": "router", "kind": "component", "explains": "entry point that classifies every request", "ref": "router.py:40"},
+                {"id": "cache", "kind": "component", "explains": "slots that fill and evict as the token passes", "ref": "cache.py:88"}]},
+  {"id": "s2", "beat": "worked-example", "sentence_ids": [3, 4], "engine": "html",
+   "primary_visual": "engine block lights up then the answer flows back to the cache",
+   "elements": [{"id": "engine", "kind": "component", "explains": "the decision engine computes the answer", "ref": "engine.py:12"}]}]}

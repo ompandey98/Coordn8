@@ -2748,7 +2748,8 @@ def test_disk_gate_flags_accumulation():
         # After reclaiming, the gate is clean.
         import shutil as _sh
         _sh.rmtree(fr, ignore_errors=True)
-        r = run("scripts/gates/check_disk.py", [str(build)])
+        # --min-free-gb 0: this checks RECLAIMING, not how full the test machine's disk is
+        r = run("scripts/gates/check_disk.py", [str(build), "--min-free-gb", "0"])
         check("after reclaiming, the gate PASSES (exit 0)", r.returncode == 0,
               (r.stdout + r.stderr)[:200])
 
@@ -3237,6 +3238,28 @@ def test_host_integration_names_real_mechanisms():
             check(f"docs page covers: {needle}", needle in d, "")
 
 
+# ---------------------------------------------------------------------------
+COVERAGE_ENFORCED = True
+
+
+def test_v2_suites():
+    """Every Coordn8 2.0 suite under tests/v2 (run in parallel), folded into this
+    one count. Each v2 check keeps its exact name so tests/audit_v2.py and the
+    capability-coverage matrix can cite it as evidence."""
+    print("\n[v2: every tests/v2 suite, in parallel]")
+    sys.path.insert(0, str(ROOT / "tests" / "v2"))
+    import _runall  # noqa
+    # The coverage matrix runs here too once every capability is implemented
+    # (it reads the other suites' results).
+    skip = set() if COVERAGE_ENFORCED else {"coverage_matrix"}
+    allres = _runall.run_all(skip=skip)
+    for stem, res in sorted(allres.items()):
+        for n in res["passed"]:
+            check(f"[{stem}] {n}", True)
+        for f in res["failed"]:
+            check(f"[{stem}] {f['name']}", False, f.get("detail", ""))
+
+
 def main() -> int:
     print("Coordn8 test suite")
     print("=" * 50)
@@ -3289,6 +3312,7 @@ def main() -> int:
     test_host_integration_names_real_mechanisms()
     test_orchestrator_fail_early_and_adaptive()
     test_adaptive_pool_never_floods_or_stalls()
+    test_v2_suites()
     print("=" * 50)
     print(f"RESULT: {PASS} passed, {FAIL} failed")
     if FAILURES:

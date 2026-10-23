@@ -1,0 +1,4 @@
+{"ranking": [
+  {"label": "@BEST", "shows_what_is_said": "match", "reason": "the cache slot filling is the clearest picture of the sentence"},
+  {"label": "@WORST", "shows_what_is_said": "contradicts", "reason": "the arrow runs the wrong way, against the sentence"},
+  {"label": "@MID", "shows_what_is_said": "partial", "reason": "right idea but the label sits on the connector"}]}

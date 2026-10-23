@@ -1,0 +1,2 @@
+{"items": [{"id": "explainability", "status": "pass", "evidence": "[verified-live] the storyboard teaches the router clearly"},
+           {"id": "sync", "status": "pass", "evidence": "[code-traced] visuals land on the key word every time"}]}

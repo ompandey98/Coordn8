@@ -1,0 +1,17 @@
+{
+ "_note": "Fixture sentences for tests/v2/test_align.py. None of these was used to fit the fallback's duration model or weights.",
+ "say_slnc": [
+  "Every frame is drawn from the time alone.",
+  "The checker reads the log and writes a short report.",
+  "Follow the SOP before the merge."
+ ],
+ "kokoro": [
+  "Follow the SOP before you merge; the checks finish in about two seconds.",
+  "The parser reads the file once and builds a tree of every function it finds.",
+  "When two requests arrive together, the lock makes the second one wait its turn.",
+  "The index stores a short summary of each document, keyed by its checksum.",
+  "If the token has expired, the client asks for a new one and tries again.",
+  "The router sends each message to the queue that matches its topic."
+ ],
+ "synthetic": "The planner splits the build into small steps that run in parallel"
+}

@@ -1,0 +1,5 @@
+{"fps": 30, "source": "engine", "lines": [
+ {"name": "l4", "text": "The answer is written back.", "start": 4.6, "end": 5.8,
+  "words": [{"w": "The", "start": 4.6, "end": 4.75, "i": 0}, {"w": "answer", "start": 4.75, "end": 5.0, "i": 1},
+            {"w": "is", "start": 5.0, "end": 5.1, "i": 2}, {"w": "written", "start": 5.1, "end": 5.45, "i": 3},
+            {"w": "back.", "start": 5.45, "end": 5.8, "i": 4}]}]}

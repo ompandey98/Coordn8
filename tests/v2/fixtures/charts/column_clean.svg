@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img">
+<title>Chart</title>
+<g data-chart="column" data-chart-id="margin-by-quarter">
+  <line data-tick="y" data-value="-10" x1="60" x2="440" y1="340" y2="340"/>
+  <line data-tick="y" data-value="0" x1="60" x2="440" y1="300" y2="300"/>
+  <line data-tick="y" data-value="10" x1="60" x2="440" y1="260" y2="260"/>
+  <line data-tick="y" data-value="20" x1="60" x2="440" y1="220" y2="220"/>
+  <line data-tick="y" data-value="30" x1="60" x2="440" y1="180" y2="180"/>
+  <rect data-name="Q1" data-value="12" x="80" y="252" width="56" height="48"/>
+  <text x="108" y="246" text-anchor="middle">12</text>
+  <rect data-name="Q2" data-value="30" x="170" y="180" width="56" height="120"/>
+  <text x="198" y="174" text-anchor="middle">30</text>
+  <rect data-name="Q3" data-value="-8" x="260" y="300" width="56" height="32"/>
+  <text x="288" y="348" text-anchor="middle">-8</text>
+  <rect data-name="Q4" data-value="22" x="350" y="212" width="56" height="88"/>
+  <text x="378" y="206" text-anchor="middle">22</text>
+  <text data-role="title" data-unbound="the year is a heading, not data" x="20" y="20">Margin by quarter, 2025</text>
+</g>
+</svg>

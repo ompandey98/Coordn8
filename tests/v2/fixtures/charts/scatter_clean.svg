@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 380" width="520" height="380" role="img">
+<title>Chart</title>
+<g data-chart="scatter" data-chart-id="cost-vs-latency">
+  <circle data-name="p0" data-x="10" data-y="20" data-size="8" cx="100" cy="280" r="4"/>
+  <circle data-name="p1" data-x="25" data-y="60" data-size="18" cx="160" cy="160" r="6"/>
+  <circle data-name="p2" data-x="40" data-y="35" data-size="4.5" cx="220" cy="235" r="3"/>
+  <circle data-name="p3" data-x="55" data-y="80" data-size="12.5" cx="280" cy="100" r="5"/>
+  <circle data-name="p4" data-x="70" data-y="50" data-size="32" cx="340" cy="190" r="8"/>
+  <circle data-name="p5" data-x="85" data-y="90" data-size="2" cx="400" cy="70" r="2"/>
+  <circle data-name="p6" data-x="95" data-y="15" data-size="8" cx="440" cy="295" r="4"/>
+  <text data-tick="x" data-value="0" x="60" y="365" text-anchor="middle">0</text>
+  <text data-tick="y" data-value="0" x="40" y="344" text-anchor="end">0</text>
+  <text data-tick="x" data-value="50" x="260" y="365" text-anchor="middle">50</text>
+  <text data-tick="y" data-value="50" x="40" y="194" text-anchor="end">50</text>
+  <text data-tick="x" data-value="100" x="460" y="365" text-anchor="middle">100</text>
+  <text data-tick="y" data-value="100" x="40" y="44" text-anchor="end">100</text>
+</g>
+</svg>

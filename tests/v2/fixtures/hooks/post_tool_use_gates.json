@@ -1,0 +1,1 @@
+{"session_id": "__SESSION__", "transcript_path": "__TRANSCRIPT__", "cwd": "__CWD__", "permission_mode": "default", "hook_event_name": "PostToolUse", "tool_name": "Bash", "tool_input": {"command": "python3 scripts/run_gates.py Coordn8"}, "tool_response": {"stdout": "", "stderr": "", "interrupted": false, "isImage": false}, "tool_use_id": "toolu_01ABD"}

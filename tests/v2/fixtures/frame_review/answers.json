@@ -1,0 +1,10 @@
+{"match": {"shows_what_is_said": "match", "text_clipped_or_overflowing": "false", "text_crossing_a_line": "false",
+           "any_panel_unreadable_at_1to1": "false, smallest glyph 30px at 1:1", "large_dead_region": "false",
+           "ragged_alignment": "false", "direction_contradicts_sentence": "false",
+           "well_made_or_low_effort": "well-made: clear focal point and labels", "resembles_real_identifier_or_private_data": "false",
+           "what_used_to_be_here": "same"},
+ "contradicts": {"shows_what_is_said": "contradicts", "text_clipped_or_overflowing": "false", "text_crossing_a_line": "false",
+           "any_panel_unreadable_at_1to1": "false, smallest glyph 30px at 1:1", "large_dead_region": "false",
+           "ragged_alignment": "false", "direction_contradicts_sentence": "true: the flow runs away from the cache",
+           "well_made_or_low_effort": "well-made", "resembles_real_identifier_or_private_data": "false",
+           "what_used_to_be_here": "same"}}

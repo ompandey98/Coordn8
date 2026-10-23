@@ -1,0 +1,11 @@
+{"deliverable": "page", "claims": [],
+ "items": [
+  {"id": "facts_trace", "status": "pass", "evidence": "facts_trace.py: 40/40 refs resolve", "evidence_strength": "code-traced"},
+  {"id": "tree_shape", "status": "pass", "evidence": "tree_shape.py: 6 flows branchy", "evidence_strength": "code-traced"},
+  {"id": "dom_smoke", "status": "pass", "evidence": "dom_smoke.py: 6 tabs render", "evidence_strength": "verified-live"},
+  {"id": "content_ban", "status": "pass", "evidence": "content_ban.py: 0 hits", "evidence_strength": "code-traced"},
+  {"id": "visual_density", "status": "pass", "evidence": "visual_density.py on page_plan: ok", "evidence_strength": "code-traced"},
+  {"id": "shareability", "status": "pass", "evidence": "critic read cold: 0 hits", "evidence_strength": "verified-live"},
+  {"id": "explainability", "status": "pass", "evidence": "critic read cold: 0 hits", "evidence_strength": "verified-live"},
+  {"id": "adversarial", "status": "pass", "evidence": "20 sampled claims re-verified", "evidence_strength": "code-traced"}
+ ]}

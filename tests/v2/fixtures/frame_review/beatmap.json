@@ -1,0 +1,11 @@
+{"fps": 30,
+ "sentences": [
+  {"idx": 1, "name": "l1", "text": "The request arrives at the router.", "start": 0.0, "end": 1.4},
+  {"idx": 2, "name": "l2", "text": "It checks the ⟦key⟧cache⟦/key⟧ first.", "start": 1.6, "end": 2.9},
+  {"idx": 3, "name": "l3", "text": "A miss goes on to the engine.", "start": 3.1, "end": 4.4},
+  {"idx": 4, "name": "l4", "text": "The answer is written back.", "start": 4.6, "end": 5.8}
+ ],
+ "hits": [
+  {"name": "hit-miss", "t": 3.8},
+  {"name": "hit-written", "line": "l4", "word": "written"}
+ ]}

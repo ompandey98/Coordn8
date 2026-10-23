@@ -1,0 +1,29 @@
+{
+ "schema": 1,
+ "figures": [
+  {
+   "id": "fig-tide-ladder",
+   "behaviour": "waits that double per attempt",
+   "type": null,
+   "invented": {
+    "name": "tide-ladder",
+    "why": "the doubling must be seen as height; a timeline shows equal steps and a bar chart drops the order of attempts"
+   },
+   "rejected": [
+    {
+     "type": "timeline",
+     "why": "equal spacing hides that each wait doubles"
+    },
+    {
+     "type": "bar",
+     "why": "bars lose the climb from one attempt to the next"
+    }
+   ],
+   "nodes": 4,
+   "edges": 3,
+   "accents": 1,
+   "callouts": 1,
+   "audience_names": "plain"
+  }
+ ]
+}

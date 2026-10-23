@@ -1,0 +1,1 @@
+{"session_id": "__SESSION__", "transcript_path": "__TRANSCRIPT__", "cwd": "__CWD__", "permission_mode": "default", "hook_event_name": "Stop", "stop_hook_active": true, "last_assistant_message": "Done. Everything is verified.", "background_tasks": [], "session_crons": []}

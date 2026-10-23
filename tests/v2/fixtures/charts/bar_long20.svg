@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img">
+<title>Chart</title>
+<g data-chart="bar" data-chart-id="requests-by-region">
+  <text data-role="title" x="20" y="20">Requests by region</text>
+  <line data-tick="x" data-value="0" x1="120" x2="120" y1="30" y2="290" stroke="#ccc"/>
+  <text data-tick="x" data-value="0" x="120" y="306" text-anchor="middle">0</text>
+  <line data-tick="x" data-value="20" x1="220" x2="220" y1="30" y2="290" stroke="#ccc"/>
+  <text data-tick="x" data-value="20" x="220" y="306" text-anchor="middle">20</text>
+  <line data-tick="x" data-value="40" x1="320" x2="320" y1="30" y2="290" stroke="#ccc"/>
+  <text data-tick="x" data-value="40" x="320" y="306" text-anchor="middle">40</text>
+  <line data-tick="x" data-value="60" x1="420" x2="420" y1="30" y2="290" stroke="#ccc"/>
+  <text data-tick="x" data-value="60" x="420" y="306" text-anchor="middle">60</text>
+  <rect data-name="North" data-value="40" x="120" y="40" width="200" height="32" fill="#4a6fa5"/>
+  <text x="112" y="61" text-anchor="end">North</text>
+  <text x="326" y="61">40</text>
+  <rect data-name="South" data-value="25" x="120" y="90" width="125" height="32" fill="#4a6fa5"/>
+  <text x="112" y="111" text-anchor="end">South</text>
+  <text x="251" y="111">25</text>
+  <rect data-name="East" data-value="60" x="120" y="140" width="360" height="32" fill="#4a6fa5"/>
+  <text x="112" y="161" text-anchor="end">East</text>
+  <text x="486" y="161">60</text>
+  <rect data-name="West" data-value="10" x="120" y="190" width="50" height="32" fill="#4a6fa5"/>
+  <text x="112" y="211" text-anchor="end">West</text>
+  <text x="176" y="211">10</text>
+  <rect data-name="Central" data-value="35" x="120" y="240" width="175" height="32" fill="#4a6fa5"/>
+  <text x="112" y="261" text-anchor="end">Central</text>
+  <text x="301" y="261">35</text>
+</g>
+</svg>

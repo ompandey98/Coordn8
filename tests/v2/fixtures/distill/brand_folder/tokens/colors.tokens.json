@@ -1,0 +1,5 @@
+{"color": {"brand": {"primary": {"value": "#d9480f", "type": "color"}},
+           "background": {"base": {"value": "#fffaf3"}},
+           "text": {"default": {"value": "#211a14"}, "subtle": {"value": "#6b5e52"}},
+           "feedback": {"success": {"value": "#2b8a3e"}, "danger": {"value": "#c92a2a"}}},
+ "font": {"family": {"heading": {"value": "Fixture Serif, serif"}, "body": {"value": "Fixture Grotesk"}}}}

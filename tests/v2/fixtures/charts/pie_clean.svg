@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 400" width="440" height="400" role="img">
+<title>Chart</title>
+<g data-chart="pie" data-chart-id="traffic-share">
+  <path data-name="A" data-value="45" d="M220 200 L220 50 A150 150 0 0 1 266.35 342.66 Z"/>
+  <text x="308.89" y="185.92">45%</text>
+  <path data-name="B" data-value="25" d="M220 200 L266.35 342.66 A150 150 0 0 1 77.34 246.35 Z"/>
+  <text x="179.14" y="280.19">25%</text>
+  <path data-name="C" data-value="20" d="M220 200 L77.34 246.35 A150 150 0 0 1 131.83 78.65 Z"/>
+  <text x="134.4" y="172.19">20%</text>
+  <path data-name="D" data-value="10" d="M220 200 L131.83 78.65 A150 150 0 0 1 220 50 Z"/>
+  <text x="192.19" y="114.4">10%</text>
+</g>
+</svg>

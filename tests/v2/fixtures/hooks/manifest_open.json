@@ -1,0 +1,6 @@
+{"deliverable": "page", "claims": ["sync", "explainability"],
+ "items": [
+  {"id": "facts_trace", "status": "pass", "evidence": "facts_trace.py: 40/40 refs resolve", "evidence_strength": "code-traced"},
+  {"id": "tree_shape", "status": "fail", "evidence": "flow 3 is a linear chain", "risk": "unit 3 diagram needs forks"},
+  {"id": "dom_smoke", "status": "untested", "evidence": ""}
+ ]}

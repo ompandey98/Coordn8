@@ -1,0 +1,4 @@
+{"claims": [
+  {"id": "c1", "claim": "The hero frame shows the cache hit rate at ninety four percent", "ref": "cache.py:88"},
+  {"id": "c2", "claim": "Every arrow in scene two points from the engine back to the cache", "ref": "engine.py:12"},
+  {"id": "c3", "claim": "Layout is excellent and nothing overflows the safe area", "ref": "layout.json"}]}

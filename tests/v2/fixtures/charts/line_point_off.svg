@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img">
+<title>Chart</title>
+<g data-chart="line" data-chart-id="latency-trend">
+  <line data-tick="y" data-value="0" x1="70" x2="420" y1="320" y2="320"/>
+  <line data-tick="y" data-value="50" x1="70" x2="420" y1="195" y2="195"/>
+  <line data-tick="y" data-value="100" x1="70" x2="420" y1="70" y2="70"/>
+  <text data-tick="y" data-value="0" x="60" y="324" text-anchor="end">0</text>
+  <text data-tick="y" data-value="50" x="60" y="199" text-anchor="end">50</text>
+  <text data-tick="y" data-value="100" x="60" y="74" text-anchor="end">100</text>
+  <polyline data-name="series-A" data-values="10,40,35,70,55,90" points="80,295 140,220 200,232.5 260,133 320,182.5 380,95" fill="none"/>
+  <polyline data-name="series-B" data-values="5,15,30,25,45,50" points="80,307.5 140,282.5 200,245 260,257.5 320,207.5 380,195" fill="none"/>
+
+</g>
+</svg>

@@ -1,0 +1,2261 @@
+{
+ "schema": 1,
+ "note": "Every capability from the internal reference inventory. Capabilities only; source mapping lives in the local provenance file. verdict must end at parity or better; better needs better_evidence.",
+ "rows": [
+  {
+   "id": "diagram-01",
+   "group": "diagram",
+   "capability": "two-axis diagram type selection: behaviour first, then layout",
+   "requirements": [
+    "B1"
+   ],
+   "feature": "two-axis selection: behaviour scored from text signals + structural features (dominant + runner-up recorded), then layout type scored from suggestion rank + fit - unmet requirements",
+   "files": [
+    "scripts/design/pick_diagram.py",
+    "data/diagram_types.json"
+   ],
+   "evidence": [
+    "test_diagrams::fixture: request/response over time -> sequence",
+    "test_diagrams::fixture: one subject's phases -> state machine",
+    "test_diagrams::fixture: decision branches -> flowchart / decision tree",
+    "test_diagrams::fixture: many sources one sink -> fan-in / data flow",
+    "test_diagrams::fixture: 2x2 trade-off -> quadrant",
+    "test_diagrams::fixture: quantity split -> sankey / waterfall",
+    "test_diagrams::fixture: hierarchy -> tree",
+    "test_diagrams::fixture: layered controls -> layers",
+    "test_diagrams::fixture: 3 options x 4 attributes -> table (tie-breaker)",
+    "test_diagrams::fixture: change over time -> line / timeline",
+    "test_diagrams::fixture: dependency -> dependency graph",
+    "test_diagrams::fixture: trust boundary -> architecture with zones",
+    "test_diagrams::selection: every fixture plan records a dominant behaviour and a scored runner-up",
+    "test_diagrams::selection: every fixture plan records the evidence (signals / structural features) for its behaviour",
+    "test_diagrams::plans: every fixture lists >= 2 rejected options, each with a reason"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_diagrams::better: selection is mechanical \u2014 behaviour and type scores are recorded in every plan",
+    "test_diagrams::selection: deterministic \u2014 the same description yields an identical plan entry",
+    "test_diagrams::robust: each fixture maps to the same sensible type from its text alone AND from its structure alone",
+    "test_diagrams::robust: 16 further descriptions beyond the fixtures map to sensible types",
+    "test_diagrams::better: behaviours the reference routing table lacks are present (quantity split, comparison, change over time, hierarchy, dependency, proportion)"
+   ],
+   "why_better": "the reference leaves the two-axis choice to model judgement over 9 behaviour patterns; ours is a deterministic, scored, recorded choice over 36 behaviours that lands on the same sensible type from text alone or structure alone across 28 descriptions"
+  },
+  {
+   "id": "diagram-02",
+   "group": "diagram",
+   "capability": "diagram type catalog (>= 45 types) with 'not this type -> neighbour' pointers",
+   "requirements": [
+    "B1"
+   ],
+   "feature": "71-type catalog (>= 45) with use_when, not_this -> neighbour pointers (every type), budget, required fields, layout class, table_equivalent flag",
+   "files": [
+    "data/diagram_types.json"
+   ],
+   "evidence": [
+    "test_diagrams::catalog: at least 45 diagram types (>= 40 required)",
+    "test_diagrams::catalog: every not_this pointer resolves to a real, different type",
+    "test_diagrams::catalog: every not_this pointer says when the neighbour is better",
+    "test_diagrams::catalog: every type has use_when, fields, layout, table_equivalent and a 4-key budget",
+    "test_diagrams::catalog: domain-specific data-platform types are dropped or generalised"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_diagrams::better: every type (not only some) has a not-this pointer, and every type is reachable from a behaviour",
+    "test_diagrams::catalog negative: a seeded dangling not_this pointer is caught by the same check",
+    "test_diagrams::catalog: every scoring feature used by a behaviour or type is declared"
+   ],
+   "why_better": "the reference has not-this pointers on about a dozen of 45 types as prose; ours has machine-checked pointers on all 71 types, each type reachable from a behaviour, and a dangling pointer is caught"
+  },
+  {
+   "id": "diagram-03",
+   "group": "diagram",
+   "capability": "table tie-breaker: a 3-column table that says the same thing wins",
+   "requirements": [
+    "B1"
+   ],
+   "feature": "table tie-breaker: >=3 attributes per item with no relations/branches, or a table-equivalent type whose content fits 3 columns -> table, recorded with its reason",
+   "files": [
+    "scripts/design/pick_diagram.py",
+    "data/diagram_types.json"
+   ],
+   "evidence": [
+    "test_diagrams::tie-breaker: 3 options x 4 attributes chooses the table and says so",
+    "test_diagrams::tie-breaker: a table-equivalent pick whose content fits 3 columns becomes a table (and says so)",
+    "test_diagrams::tie-breaker negative: the same items with relations do not become a table",
+    "test_diagrams::plans: the table is always weighed \u2014 rejected with a reason when not chosen"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_diagrams::tie-breaker: 3 numeric attributes where the shape is the message is NOT forced into a table (and the reason is recorded)",
+    "test_diagrams::tie-breaker negative: the same items with relations do not become a table"
+   ],
+   "why_better": "the reference states the rule in one line for the model to apply; ours applies it mechanically, records it in the plan, always weighs the table with a reason, and has a tested exception when the shape of the values is the message"
+  },
+  {
+   "id": "diagram-04",
+   "group": "diagram",
+   "capability": "complexity budget: 9 nodes / 12 edges / 2 accents / 2 callouts, split into overview + detail",
+   "requirements": [
+    "B2"
+   ],
+   "feature": "complexity budget gate: 9 nodes / 12 edges / 2 accents / 2 callouts, per-type overrides, faithful zoned exemption, over budget -> 'split into overview + detail' with a computed split",
+   "files": [
+    "scripts/gates/check_diagram_budget.py",
+    "data/diagram_types.json"
+   ],
+   "evidence": [
+    "test_diagrams::budget: a 14-node flow is flagged REVIEW (exit 1)",
+    "test_diagrams::budget: the advice is 'split into overview + detail'",
+    "test_diagrams::budget: 9 nodes / 12 edges / 2 accents / 2 callouts passes (exit 0)",
+    "test_diagrams::budget: per-type override \u2014 a 7-lifeline sequence is flagged (cap 5)",
+    "test_diagrams::budget: per-type override \u2014 a 20-point scatter passes (cap 30)",
+    "test_diagrams::budget: 3 accents is flagged with accent advice (no split)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_diagrams::budget: the proposed split covers all 14 nodes once, each detail within the cap",
+    "test_diagrams::budget: the proposed split's overview fits the budget and links the groups",
+    "test_diagrams::budget: clusters follow connectivity (each detail of a chain is one connected run)",
+    "test_diagrams::budget: a counts-only figure gets a numeric split proposal"
+   ],
+   "why_better": "the reference only says 'split into overview + detail'; ours checks the budget mechanically and proposes the split itself \u2014 connectivity clusters each within the cap plus an overview that links them"
+  },
+  {
+   "id": "diagram-05",
+   "group": "diagram",
+   "capability": "connector rules: orthogonal elbows, label masks, spacing, attach points, no line behind an unrelated box",
+   "requirements": [
+    "B3",
+    "B4"
+   ],
+   "feature": "connector rules: orthogonal elbows, label masks 6-10 px, parallel >= 12 px, hops, attach points L*k/(N+1), no line behind an unrelated box, arrowhead on the border",
+   "files": [
+    "scripts/render/layout.js",
+    "scripts/render/layout_cli.js",
+    "scripts/gates/check_connectors.py"
+   ],
+   "evidence": [
+    "test_layout::7-node branching graph: connector gate PASS (all checks)",
+    "test_layout::attach points sit at L*k/(N+1) along each side",
+    "test_layout::7-node branching graph: every label has an opaque mask 6-10 px off its line",
+    "test_layout::seeded defect caught: two parallel segments 6 px apart",
+    "test_layout::seeded defect caught: crossing with no hop"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_layout::same graph laid out by the engine: line through an unrelated box ABSENT after",
+    "test_layout::engine re-routes that lane to a free one and records why",
+    "test_layout::seeded defect caught: arrowhead buried inside its target",
+    "test_layout::same graph in two separate node processes -> byte-identical SVG"
+   ],
+   "why_better": "the reference states the rules and checks hand-placed coordinates; here a layout engine computes geometry that obeys them, re-routes around boxes, adds hops, and an independent gate also checks arrowhead burial, mask presence/gap band and missing hops, which the reference verifier does not."
+  },
+  {
+   "id": "diagram-06",
+   "group": "diagram",
+   "capability": "accent on at most 2 elements",
+   "requirements": [
+    "A1",
+    "A2"
+   ],
+   "feature": "accent on at most 2 elements per frame, counted mechanically",
+   "files": [
+    "scripts/gates/check_palette.py",
+    "scripts/design/palette.py",
+    "scripts/design/design_system.py"
+   ],
+   "evidence": [
+    "test_palette::gate: a 3-accent frame is caught (and nothing else)",
+    "test_palette::gate: a clean scene passes (accent x2, role alphas, flattened tints, dark frame, ink series)",
+    "test_palette::gate: the HTML/SVG reader catches a 3-accent frame, an off-palette faint caption (as both off-palette and low contrast) and hue-only up/down bars"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_palette::gate: the parts of one focal group count as one accent element",
+    "test_palette::freedom: an invented palette (director-derived) passes the gate"
+   ],
+   "why_better": "The reference counts accents only inside a few chart-specific verifiers against its own two fixed accent hex values; this gate counts accent elements per frame in any trace or HTML/SVG, for whatever palette is active (catalog, brand or invented), and counts a multi-part focal group once."
+  },
+  {
+   "id": "diagram-07",
+   "group": "diagram",
+   "capability": "no-rainbow rule: meaning never by many hues",
+   "requirements": [
+    "A1",
+    "A2"
+   ],
+   "feature": "no-rainbow: series carried by one ink at stepped opacity; >4 hues in a frame flagged; extra brand colours not used",
+   "files": [
+    "scripts/gates/check_palette.py",
+    "scripts/design/palette.py"
+   ],
+   "evidence": [
+    "test_palette::gate: a frame with 5 hues on marks/fills is caught as rainbow; an ink stepped-opacity series is not",
+    "test_palette::director: chart series = one ink at stepped opacity; contrast strictly falls step by step in BOTH skins",
+    "test_palette::director: brand colours beyond accent + link are reported unused (no-rainbow rule)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_palette::gate: a frame with 5 hues on marks/fills is caught as rainbow; an ink stepped-opacity series is not",
+    "test_palette::gate: the source-of-truth legend roles are one labelled system, not a rainbow"
+   ],
+   "why_better": "The reference states the no-rainbow rule only in prose; here a frame with more than 4 distinct hues on marks/fills is caught mechanically (CIEDE2000 hue clusters), the declared legend roles are exempt as one labelled system, and the director emits the ink stepped-opacity series and drops extra brand colours with a reason."
+  },
+  {
+   "id": "diagram-08",
+   "group": "diagram",
+   "capability": "text contrast >= 4.5:1 in both light and dark skins",
+   "requirements": [
+    "A2"
+   ],
+   "feature": "every text role >= 4.5:1 on its paper in light and dark; in-scene text checked on what it sits on (large text 3:1)",
+   "files": [
+    "scripts/design/color.py",
+    "scripts/design/palette.py",
+    "scripts/gates/check_palette.py",
+    "data/palettes.json"
+   ],
+   "evidence": [
+    "test_palette::catalog: every text role >= 4.5:1 on paper in light AND dark, for every family",
+    "test_palette::director: every result's text roles are >= 4.5:1 in light AND dark",
+    "test_palette::gate: a low-contrast caption is caught (and nothing else)",
+    "test_palette::gate: a text role below 4.5:1 in the DARK skin is caught"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_palette::beat-reference: OKLCH derivation holds for anchors round the whole hue circle (every text role >= 4.5:1 both skins, distinct roles >= 10 CIEDE2000, accent chroma >= 0.12)",
+    "test_palette::beat-reference: an invented palette is GATED, not trusted \u2014 a supplied invented palette with pale ink is caught (role-contrast)",
+    "test_palette::gate: large text (>= 24px, or >= 18.66px bold) is judged at 3:1 and body text at 4.5:1"
+   ],
+   "why_better": "The reference verifies one fixed style-guide table; here every palette, including ones invented at run time, is derived in OKLCH with lightness nudged until it passes in both skins (proven over the whole hue circle), and the gate also checks composited text in real scenes and pages, including the large-text 3:1 rule."
+  },
+  {
+   "id": "diagram-09",
+   "group": "diagram",
+   "capability": "sign by fill weight (increase/decrease), not by hue alone",
+   "requirements": [
+    "A1",
+    "A2"
+   ],
+   "feature": "sign by fill weight / sign label, never by hue alone; legend says stronger/weaker, not darker",
+   "files": [
+    "scripts/gates/check_palette.py",
+    "scripts/design/palette.py"
+   ],
+   "evidence": [
+    "test_palette::gate: meaning by hue alone is caught (up/down bars differ only by hue)",
+    "test_palette::gate: the same bars pass once a signed label carries the direction (fill weight OR sign/label)",
+    "test_palette::director: legend wording says stronger/weaker, never darker"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_palette::gate: meaning by hue alone is caught (up/down bars differ only by hue)",
+    "test_palette::gate: a legend that names the ramp by lightness ('darker is larger') is caught",
+    "test_palette::gate: the HTML/SVG reader catches a 3-accent frame, an off-palette faint caption (as both off-palette and low contrast) and hue-only up/down bars"
+   ],
+   "why_better": "The reference checks sign treatment only inside its waterfall verifier; this gate detects positive-vs-negative marks that differ only by hue in any frame of any trace or HTML/SVG (fill weight, shape, dash, icon or signed label must differ), and also flags lightness-worded legends that invert between skins."
+  },
+  {
+   "id": "diagram-10",
+   "group": "diagram",
+   "capability": "data-* honesty checkers per chart family + robust scale fit",
+   "requirements": [
+    "B5"
+   ],
+   "feature": "check_chart_honesty.py: one data-* contract for bar, column, stacked-bar, stacked-column, line, scatter, area, pie and donut in SVG or HTML; per-family geometry recomputed from the declared data on a robust scale (median of per-mark ratios + MAD rejection; median pairwise slope + MAD of residuals + inlier refit); every printed number bound to a data-* value or a recomputed pie share; baseline, stack contiguity/total, area closing, pie sweep/centre/radius/contiguity, tick placement, transform handling; invented families never failed for being unknown",
+   "files": [
+    "scripts/gates/check_chart_honesty.py",
+    "tests/v2/test_charts_redraw.py",
+    "tests/v2/fixtures/charts"
+   ],
+   "evidence": [
+    "test_charts_redraw::chart: a bar drawn 20 % too long is caught",
+    "test_charts_redraw::chart: one outlier bar does not move the fitted scale \u2014 the four honest bars still pass",
+    "test_charts_redraw::chart: a printed number with no data-* value behind it is flagged (missing -> flagged)",
+    "test_charts_redraw::chart: a pie slice whose angle is wrong (8 deg too wide) is caught on that slice only",
+    "test_charts_redraw::chart: a line point 12 px off is caught on that point only; the other eleven points pass"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_charts_redraw::chart: the bad bar is the FIRST mark (the one an anchor-based fit would trust) \u2014 only it is flagged",
+    "test_charts_redraw::chart: robust fit isolates a 20 % long bar among only THREE marks (median of ratios)",
+    "test_charts_redraw::chart: two marks that disagree are reported as an ambiguous scale (fail closed, never a pass)",
+    "test_charts_redraw::chart: every number printed in every clean fixture is also in a data-* attribute",
+    "test_charts_redraw::chart: a pie percentage label that disagrees with the share recomputed from the data is flagged",
+    "test_charts_redraw::chart: an area that closes above zero (truncated baseline) is caught",
+    "test_charts_redraw::chart: a translate() on an ancestor is resolved \u2014 the shifted clean chart still passes",
+    "test_charts_redraw::chart: an invented chart family is not failed for being unknown (PASS, with a note)"
+   ],
+   "why_better": "The reference fits each chart type's scale either from one anchor bar or by leave-one-out Theil-Sen needing four marks, and has no checker for plain bar, column, line, pie, stacked or area charts; this gate covers nine families with one contract, fits robustly from three marks (median ratio + MAD), so a bad first bar is isolated instead of condemning its honest peers, and also binds every printed number to the data."
+  },
+  {
+   "id": "diagram-11",
+   "group": "diagram",
+   "capability": "brand onboarding and saved brand profiles",
+   "requirements": [
+    "A5"
+   ],
+   "feature": "brand.py: brand from stated colours / one public page (stdlib urllib) / local folder -> roles with confidence, both-skin palette completed, contrast + separation checked, failing colours lightness-adjusted and reported, diff vs design_system, write only with --apply, profiles saved/loaded byte-identically under COORDN8_HOME/profiles",
+   "files": [
+    "scripts/design/brand.py",
+    "tests/v2/test_distill_brand.py",
+    "tests/v2/fixtures/distill/brand_page.html",
+    "tests/v2/fixtures/distill/brand_folder"
+   ],
+   "evidence": [
+    "test_distill_brand::save -> load -> serialise is byte-identical (round-trip)",
+    "test_distill_brand::failing brand colour (#ffff00 text on white) is adjusted to >= 4.5:1 and the adjustment reported",
+    "test_distill_brand::apply is refused without --apply: exit 1, 'refused', design system byte-identical",
+    "test_distill_brand::profiles are written only under COORDN8_HOME/profiles (no other new file in the sandbox homes)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_distill_brand::brand palette passes the palette gate in both skins (check_palette exit 0)",
+    "test_distill_brand::the adjustment changes only OKLCH lightness (hue kept within 2 degrees)",
+    "test_distill_brand::URL intake fetches exactly ONE page: the linked stylesheet is not requested (and says so)",
+    "test_distill_brand::a path-like slug ('../evil') is rejected and nothing is written outside the profile library",
+    "test_distill_brand::unreachable/offline URL -> SKIPPED (exit 2) with the reason, nothing saved"
+   ],
+   "why_better": "Every brand colour is checked mechanically (WCAG 4.5:1 for all 12 roles and CIEDE2000 separation, both skins, by the palette gate) and a failing one is corrected by the smallest OKLCH lightness change with a before/after report, where the reference relied on judgement for ink/muted only; profiles round-trip byte-identically and URL intake provably reads one page."
+  },
+  {
+   "id": "diagram-12",
+   "group": "diagram",
+   "capability": "redraw, never convert, from other diagram formats + fidelity ledger",
+   "requirements": [
+    "B6"
+   ],
+   "feature": "redraw.py: Mermaid (flowchart, sequence, state, class subset; Markdown fences), draw.io (uncompressed and deflate+base64 pages, multi-page) and Excalidraw parsed as inert text into one graph, laid out by the deterministic layout engine to SVG; a JSON fidelity ledger lists every source node/container/edge/label/other once as kept/merged/renamed/dropped with reasons, is validated (counts balance, no reasonless loss) and cross-checked against the produced layout; drop/merge/rename edits require reasons; `redraw.py check` validates any ledger",
+   "files": [
+    "scripts/design/redraw.py",
+    "tests/v2/test_charts_redraw.py",
+    "tests/v2/fixtures/redraw"
+   ],
+   "evidence": [
+    "test_charts_redraw::redraw: mermaid flowchart fixture redraws to SVG through the deterministic layout engine",
+    "test_charts_redraw::redraw: draw.io deflate-compressed fixture redraws to SVG through the deterministic layout engine",
+    "test_charts_redraw::redraw: Excalidraw fixture redraws to SVG through the deterministic layout engine",
+    "test_charts_redraw::redraw: draw.io uncompressed ledger \u2014 kept + merged + renamed + dropped == source count, per kind and in total",
+    "test_charts_redraw::redraw: a dropped element without a reason fails the ledger check (exit 1, named)",
+    "test_charts_redraw::redraw: same input twice -> byte-identical SVG and ledger (every format)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_charts_redraw::redraw: the drawn elements in each ledger are exactly the elements in the layout the engine produced",
+    "test_charts_redraw::redraw: draw.io compressed and uncompressed encodings decode to the same graph and byte-identical SVG",
+    "test_charts_redraw::redraw: a ledger that silently loses an element (counts no longer balance) fails the check",
+    "test_charts_redraw::redraw: an edit that drops an element without a reason is refused (exit 3) and nothing is written",
+    "test_charts_redraw::redraw: the connector gate passes on every redrawn layout",
+    "test_charts_redraw::redraw: mermaid class fixture redraws to SVG through the deterministic layout engine"
+   ],
+   "why_better": "The reference extracts the source and leaves the redraw and its fidelity ledger to prose written by the model; here the redraw itself is deterministic (same input, byte-identical SVG), and the ledger is machine-checked to account for every source element with a reason, then cross-checked against the layout actually produced, so silent loss fails mechanically; class diagrams are added."
+  },
+  {
+   "id": "diagram-13",
+   "group": "diagram",
+   "capability": "separate detail dial and audience dial",
+   "requirements": [
+    "C5"
+   ],
+   "feature": "separate detail dial (how many nodes: low halves, medium = type budget, high = all) and audience dial (what they are called: plain / mixed / field)",
+   "files": [
+    "scripts/design/pick_diagram.py"
+   ],
+   "evidence": [
+    "test_diagrams::dials: low detail halves the nodes (10 -> 5)",
+    "test_diagrams::dials: low detail never renames a kept node",
+    "test_diagrams::dials: audience changes names without dropping any node",
+    "test_diagrams::dials: plan entry records detail and audience_names"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_diagrams::dials: the two dials are independent (low+field keeps the same nodes as low+plain)",
+    "test_diagrams::dials: detail keeps the most important node first",
+    "test_diagrams::dials: low detail records what it cut"
+   ],
+   "why_better": "the reference describes the two dials in prose for a human redraw; ours implements both, proves they are independent, ranks cuts by importance/degree and records every cut in the plan"
+  },
+  {
+   "id": "diagram-14",
+   "group": "diagram",
+   "capability": "topological paint order",
+   "requirements": [
+    "B3"
+   ],
+   "feature": "topological paint order of the containment graph (groups outer-to-inner, then edges, labels, nodes)",
+   "files": [
+    "scripts/render/layout.js",
+    "scripts/gates/check_connectors.py"
+   ],
+   "evidence": [
+    "test_layout::topological paint order: a parent group before its child group, a group before its children (declared child-first)",
+    "test_layout::paint order runs background -> groups -> edges -> labels -> nodes",
+    "test_layout::SVG elements are emitted in paint order"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_layout::seeded defect caught: a group painted after its children",
+    "test_layout::a containment cycle is refused with a clear error"
+   ],
+   "why_better": "the reference relies on the author drawing in the right order; here the order is computed by a topological sort (cycles refused), emitted into the SVG, and checked by the gate."
+  },
+  {
+   "id": "explain-01",
+   "group": "explain",
+   "capability": "read the code first before explaining",
+   "requirements": [
+    "C3",
+    "I2"
+   ],
+   "feature": "read the code first: readers query the project index then read assigned paths end to end (Read/Glob/Grep only); every claim needs a resolvable path:line or an explicit inferred mark; with --code every named step must exist in the code in run order and examples must come from the code",
+   "files": [
+    "scripts/gates/check_explain.py",
+    "scripts/gates/facts_trace.py",
+    "agents/coordn8-reader.md",
+    "scripts/index/query.py"
+   ],
+   "evidence": [
+    "test_explain::explain: function positive (job first, 3 parts in run order, boilerplate skipped) passes",
+    "test_explain::explain: with --code, steps out of run order and names not in the code are flagged",
+    "test_explain::explain: with --code, an invented example is flagged and an example from the code passes",
+    "test_claims_content::C3 facts_trace: a claim with neither a resolvable path:line nor inferred:true FAILS (verdict FAIL, exit 1, rule C3.no_line_no_knowledge)",
+    "test_claims_content::C3 facts_trace: inferred claims with no line PASS and are counted and listed (inferred=2, read=1)",
+    "test_agents::reader tools are a subset of Read, Glob, Grep"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: with --code, steps out of run order and names not in the code are flagged",
+    "test_explain::explain: with --code, an invented example is flagged and an example from the code passes",
+    "test_claims_content::C3 facts_trace: a claim with neither a resolvable path:line nor inferred:true FAILS (verdict FAIL, exit 1, rule C3.no_line_no_knowledge)"
+   ],
+   "why_better": "the reference states the rule in prose; here a gate fails any claim with no line and flags named steps or examples that are not in the code"
+  },
+  {
+   "id": "explain-02",
+   "group": "explain",
+   "capability": "'no line -> you don't know it' rule",
+   "requirements": [
+    "C3"
+   ],
+   "feature": "facts_trace fails a claim with neither a resolvable path:line nor inferred:true; inferred claims counted",
+   "files": [
+    "scripts/gates/facts_trace.py"
+   ],
+   "evidence": [
+    "test_claims_content::C3 facts_trace: a claim with neither a resolvable path:line nor inferred:true FAILS (verdict FAIL, exit 1, rule C3.no_line_no_knowledge)",
+    "test_claims_content::C3 facts_trace: inferred claims with no line PASS and are counted and listed (inferred=2, read=1)",
+    "test_claims_content::C3 facts_trace: v1.5.0-format claims files get the same verdict as the v1.5.0 copy (v1.5.0 release zip): exit code, status, unresolved count and flagged ids on 4 fixtures"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_claims_content::C3 facts_trace: a claim with neither a resolvable path:line nor inferred:true FAILS (verdict FAIL, exit 1, rule C3.no_line_no_knowledge)",
+    "test_claims_content::C5/C3 diagram mode: a drawn node with no path:line and no inferred mark is refused, nothing written"
+   ],
+   "why_better": "the rule is enforced mechanically (gate verdict FAIL, refused diagram nodes, refused sidecar) instead of being an instruction to the model"
+  },
+  {
+   "id": "explain-03",
+   "group": "explain",
+   "capability": "claims table with read / inferred marking",
+   "requirements": [
+    "C3"
+   ],
+   "feature": "claims ledger ends every page; <slug>.claims.md for every video; check_claims proves ledger == manifest",
+   "files": [
+    "scripts/render/build_page.py",
+    "scripts/gates/check_claims.py",
+    "templates/page/components/claims.html"
+   ],
+   "evidence": [
+    "test_claims_content::C3 page: the page ENDS with the claims ledger (last section of <main> holds it, nothing teaching follows)",
+    "test_claims_content::C3 check_claims verify: the built page's ledger rows, tally and #c8-claims JSON equal claims.json",
+    "test_claims_content::C3 video: check_claims emit writes <slug>.claims.md (claim | path:line | read/inferred, with the tally)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_claims_content::C3 check_claims verify: a ledger mismatch is caught (changed text, flipped read/inferred, moved line, missing row)",
+    "test_claims_content::C3 check_claims verify: a page whose ledger is NOT the last section is caught (rule C3.ledger_last)",
+    "test_claims_content::C3 video: a video without <slug>.claims.md is flagged; with it (and matching the manifest) it passes",
+    "test_claims_content::C3 video: an edited claims.md that no longer matches the manifest is caught"
+   ],
+   "why_better": "the ledger's position, rows, tally and embedded JSON are verified against the manifest, and a missing or edited video sidecar is caught"
+  },
+  {
+   "id": "explain-04",
+   "group": "explain",
+   "capability": "scope stop condition: trace the topic end to end, not the whole codebase",
+   "requirements": [
+    "C5"
+   ],
+   "feature": "--scope topic: files reachable from the topic's entry symbols via imports; the rest reported skipped; whole codebase only with --scope all",
+   "files": [
+    "scripts/design/modes.py"
+   ],
+   "evidence": [
+    "test_claims_content::C5 scope: --topic traces from the topic's entry symbols through every in-repo import (refunds -> policy -> limits) and reports the rest as skipped",
+    "test_claims_content::C5 scope: --entry names the symbol directly; JS relative imports are followed too",
+    "test_claims_content::C5 scope: the whole codebase only with --scope all; an unmatched topic puts nothing in scope and says why"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_claims_content::C5 scope: --topic traces from the topic's entry symbols through every in-repo import (refunds -> policy -> limits) and reports the rest as skipped"
+   ],
+   "why_better": "the stop condition is computed (entry symbols + import closure, skipped files listed) rather than left to judgement"
+  },
+  {
+   "id": "explain-05",
+   "group": "explain",
+   "capability": "modes: page / diagram / video (+ chat answer)",
+   "requirements": [
+    "C5"
+   ],
+   "feature": "modes page / diagram (one figure, hover path:line) / video (claims sidecar) / answer (chat only)",
+   "files": [
+    "scripts/design/modes.py"
+   ],
+   "evidence": [
+    "test_claims_content::C5 diagram mode: exactly one figure plus its claims (the ledger ends the page and matches the claims file, every path:line resolves in the repo)",
+    "test_claims_content::C5 diagram mode: hovering a node shows its path:line (an SVG <title> on every node carries it)",
+    "test_claims_content::C5 answer mode: chat only \u2014 writes zero files (repo tree byte-identical, writes == [])",
+    "test_claims_content::C5 answer mode: refuses an --out-dir rather than write anything",
+    "test_claims_content::C5 page and video modes: the page ends with its ledger; the video mode writes <slug>.claims.md"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_claims_content::C5 dials: low detail halves the nodes (8 -> 4) and renames none (every kept node has its high-detail name)",
+    "test_claims_content::C5 dials: the audience dial changes what nodes are called, never how many are kept"
+   ],
+   "why_better": "adds separate detail and audience dials proven not to interfere, and answer mode is proven to write nothing"
+  },
+  {
+   "id": "explain-06",
+   "group": "explain",
+   "capability": "no files written into the user's repo by default outside the tool's own folder",
+   "requirements": [
+    "C5",
+    "J2"
+   ],
+   "feature": "write guard: nothing outside <repo>/Coordn8/, symlinks resolved; answer mode writes nothing",
+   "files": [
+    "scripts/design/modes.py"
+   ],
+   "evidence": [
+    "test_claims_content::C5 answer mode: chat only \u2014 writes zero files (repo tree byte-identical, writes == [])",
+    "test_claims_content::C5 write guard: page, diagram and video modes wrote nothing outside <repo>/Coordn8/ (repo diff + every reported path)",
+    "test_claims_content::C5 write guard: an --out-dir outside Coordn8/, or a symlink inside it that points out, is refused (exit 3, nothing written)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_claims_content::C5 write guard: an --out-dir outside Coordn8/, or a symlink inside it that points out, is refused (exit 3, nothing written)"
+   ],
+   "why_better": "every write is resolved and refused outside the tool's folder, including through a symlink, and proven with a repo diff"
+  },
+  {
+   "id": "explain-07",
+   "group": "explain",
+   "capability": "writing rules: short, one idea, active voice, one term per concept",
+   "requirements": [
+    "D1",
+    "D2"
+   ],
+   "feature": "writing rules: short, one idea, active, one term \u2014 checked mechanically on page prose, captions and narration (narration report-only)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::length (description): positive fixture passes",
+    "test_language::length (description): negative fixture caught",
+    "test_language::active_voice (description): positive fixture passes",
+    "test_language::active_voice (description): negative fixture caught",
+    "test_language::paragraph_length (description): positive fixture passes",
+    "test_language::paragraph_length (description): negative fixture caught",
+    "test_language::narration: one term per concept reported as a note (worker vs processor in the voice)",
+    "test_language::worker vs processor for one glossary entry is flagged (exit 1)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_language::narration: input is byte-identical after the check",
+    "test_language::narration never fails: a long, passive, multi-idea voice line gives exit 0 with notes only"
+   ],
+   "why_better": "the reference states the rules in prose; here they are measured per profile, and the voice is reported on, never rewritten"
+  },
+  {
+   "id": "page-ideas-01",
+   "group": "page-ideas",
+   "capability": "conclusion first",
+   "requirements": [
+    "C4"
+   ],
+   "feature": "C4.conclusion_first",
+   "files": [
+    "scripts/gates/check_page_content.py"
+   ],
+   "evidence": [
+    "test_claims_content::C4: a mechanism-first opening is flagged ('First, the handler loads \u2026 then calls \u2026')",
+    "test_claims_content::C4: a conclusion-first opening passes",
+    "test_claims_content::C4: markdown input works (mechanism-first opening, attribute bullets, effect-at-stage in a numbered list)"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "page-ideas-02",
+   "group": "page-ideas",
+   "capability": "outside-in ordering",
+   "requirements": [
+    "C4"
+   ],
+   "feature": "C4.outside_in",
+   "files": [
+    "scripts/gates/check_page_content.py"
+   ],
+   "evidence": [
+    "test_claims_content::C4: outside-in: a first section named after an internal helper is flagged"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "page-ideas-03",
+   "group": "page-ideas",
+   "capability": "What / Why / How with How folded",
+   "requirements": [
+    "C1"
+   ],
+   "feature": "What / Why / How per section with How folded in a native <details>; one-line summary per section; print unfolds How",
+   "files": [
+    "templates/page/components/section.html",
+    "templates/page/page.css",
+    "scripts/render/build_page.py"
+   ],
+   "evidence": [
+    "test_page::a one-line summary is rendered for every section",
+    "test_page::What and Why are shown open; How is folded in a closed native <details>",
+    "test_page::a11y gate: print media unfolds every How block, shows every step, hides navigation, prints chip targets"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_page::a11y gate: print media unfolds every How block, shows every step, hides navigation, prints chip targets"
+   ],
+   "why_better": "the folded How is also unfolded for print (measured in print media), so nothing is lost on paper"
+  },
+  {
+   "id": "page-ideas-04",
+   "group": "page-ideas",
+   "capability": "scroll-spy table of contents + progress bar",
+   "requirements": [
+    "C1"
+   ],
+   "feature": "scroll-tracked sidebar contents (IntersectionObserver, 800 ms click hold, last section at page bottom, aria-current) plus a reading progress bar",
+   "files": [
+    "templates/page/page.js",
+    "templates/page/components/toc.html",
+    "templates/page/shell.html",
+    "scripts/gates/check_page_a11y.py"
+   ],
+   "evidence": [
+    "test_page::sidebar contents: one link per section, including the claims ledger, in page order",
+    "test_page::dom_smoke passes on the fixture page (rendered DOM; sections, aria-current, tooltips, stepper ready)",
+    "test_page::a11y gate: after scrolling, the contents link of the section in view has aria-current=true; the last section at the page bottom; a click holds 800 ms then follows the scroll"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_page::a11y gate: after scrolling, the contents link of the section in view has aria-current=true; the last section at the page bottom; a click holds 800 ms then follows the scroll",
+    "test_page::a11y gate catches a page whose contents tracking is gone (no aria-current)",
+    "test_page::a11y gate: Tab reaches every control in DOM order with no backwards jump on screen"
+   ],
+   "why_better": "the active link is exposed to assistive tech with aria-current and the tracking, hold and bottom rule are measured in a real browser, with a seeded no-script page caught"
+  },
+  {
+   "id": "page-ideas-05",
+   "group": "page-ideas",
+   "capability": "glossary tooltips",
+   "requirements": [
+    "C2"
+   ],
+   "feature": "glossary tooltips on the first use of each term (word boundary, case preserved, skips code/headings/links)",
+   "files": [
+    "scripts/render/build_page.py",
+    "templates/page/components/term.html",
+    "templates/page/page.js",
+    "templates/page/page.css"
+   ],
+   "evidence": [
+    "test_page::glossary: the first use of each term is marked exactly once on the page",
+    "test_page::glossary: 'cache' is not matched inside 'cached' (the earlier 'cached' stays plain text)",
+    "test_page::glossary: case-insensitive match keeps the original case of the text ('Cache' stays 'Cache')",
+    "test_page::glossary: terms inside code, headings, links and data-no-gloss are not marked",
+    "test_page::glossary: section scope marks a term once per section, page scope once per page",
+    "test_page::glossary tooltip: a button whose aria-describedby points at a role=tooltip holding the definition"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_page::C2: keyboard focus opens the tooltip",
+    "test_page::C2: Escape closes the open tooltip",
+    "test_page::C2: mouse hover opens the tooltip and leaving closes it",
+    "test_page::C2: an emulated touch tap (hasTouch) opens the tooltip; a tap elsewhere closes it",
+    "test_page::C2: accessible name is the term and the description is exactly the definition (browser accessibility tree)",
+    "test_page::C2: near the bottom edge the tooltip flips above the term and stays on screen",
+    "test_page::C2: at 320 px every tooltip is clamped inside the viewport",
+    "test_page::a11y gate: text contrast >= 4.5:1 (3:1 large) in the dark skin, computed styles",
+    "test_page::a11y gate: the theme button flips between the kit's light and dark skins and starts from the OS setting"
+   ],
+   "why_better": "tooltips are real buttons with aria-describedby that open on keyboard focus, hover and touch tap, close on Escape, flip and clamp on screen, and the page has a dark skin \u2014 proven in a real browser and the accessibility tree"
+  },
+  {
+   "id": "page-ideas-06",
+   "group": "page-ideas",
+   "capability": "delete-the-how-word test",
+   "requirements": [
+    "C4"
+   ],
+   "feature": "C4.how_word (delete-the-how-word test)",
+   "files": [
+    "scripts/gates/check_page_content.py"
+   ],
+   "evidence": [
+    "test_claims_content::C4: delete-the-how-word test catches 'basically' and 'this is how'"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "page-ideas-07",
+   "group": "page-ideas",
+   "capability": "effect-at-stage rule",
+   "requirements": [
+    "C4"
+   ],
+   "feature": "C4.effect_at_stage",
+   "files": [
+    "scripts/gates/check_page_content.py"
+   ],
+   "evidence": [
+    "test_claims_content::C4: effect-at-stage catches a non-final stage that describes the final result ('eventually \u2026'); the last stage may state it",
+    "test_claims_content::C4: markdown input works (mechanism-first opening, attribute bullets, effect-at-stage in a numbered list)"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "page-ideas-08",
+   "group": "page-ideas",
+   "capability": "honest affordance: if it looks clickable, it is",
+   "requirements": [
+    "C1"
+   ],
+   "feature": "honest affordance: anything that looks clickable is a working control",
+   "files": [
+    "scripts/gates/check_page_a11y.py",
+    "templates/page/page.css",
+    "templates/page/page.js"
+   ],
+   "evidence": [
+    "test_page::a11y gate: everything that looks clickable is a control, and every control responds",
+    "test_page::without a source base a chip is plain code, not a link-looking control"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_page::a11y gate: everything that looks clickable is a control, and every control responds",
+    "test_page::a11y gate catches a clickable-looking element that is not a control",
+    "test_page::a11y gate catches a button that does nothing when clicked"
+   ],
+   "why_better": "a gate clicks every visible control and fails one that changes nothing or a lookalike that is not a control; seeded defects of both kinds are caught"
+  },
+  {
+   "id": "page-ideas-09",
+   "group": "page-ideas",
+   "capability": "three or more attributes -> a table",
+   "requirements": [
+    "C4"
+   ],
+   "feature": "C4.attributes_table",
+   "files": [
+    "scripts/gates/check_page_content.py"
+   ],
+   "evidence": [
+    "test_claims_content::C4: a 3-attribute bullet list (>= 2 items) is flagged as a table",
+    "test_claims_content::C4: the same attributes as a table pass, and the good page has no leads at all (exit 0)"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "video-01",
+   "group": "video",
+   "capability": "semantic colour roles with fixed meanings + per-caption mark caps",
+   "requirements": [
+    "E1"
+   ],
+   "feature": "semantic colour roles with fixed meanings (paper, ink, muted, accent, link, positive, negative, warning + 4 legend roles) in every palette; the gate flags a role painted for a different meaning. Per-caption mark caps are NOT in this stream.",
+   "files": [
+    "scripts/design/design_system.py",
+    "scripts/design/palette.py",
+    "scripts/gates/check_palette.py",
+    "data/palettes.json",
+    "scripts/render/caption_marks.py",
+    "scripts/render/captions.js",
+    "scripts/gates/check_caption_marks.py",
+    "scripts/render/pronounce.py",
+    "scripts/render/subtitles.py",
+    "scripts/gates/subtitle_check.py"
+   ],
+   "evidence": [
+    "test_palette::catalog: every family defines all 12 semantic roles in light and dark",
+    "test_palette::gate: a role painted for a different meaning is caught (a 'loss' label in the positive colour)",
+    "test_palette::gate: two roles of distinct meaning closer than 10 CIEDE2000 are caught (role-separation)",
+    "test_captions::marked display text resolves good/bad/key to positive/negative/accent roles of the active kit",
+    "test_captions::each mark is coloured with the active kit's own role colour (base skin)",
+    "test_captions::each mark carries a non-colour cue from the kit (meaning never by hue alone)",
+    "test_captions::three marks in one caption are flagged by check_caption_marks (exit 1)",
+    "test_captions::two marks in one caption pass check_caption_marks (exit 0)",
+    "test_captions::three marks spread over separate captions of one sentence pass (the cap is per caption)",
+    "test_captions::spoken form contains no mark syntax",
+    "test_captions::.srt text built from marked narration contains no mark syntax and reads SOP",
+    "test_captions::subtitle_check passes the .srt of marked narration (it compares unmarked text)",
+    "test_captions::.vtt keeps marks as WebVTT cue classes (<c.key>SOP</c>) and never as raw syntax",
+    "test_captions::subtitle_check passes the .vtt with cue classes",
+    "test_captions::captions.js colours marked words with the active kit's role colour",
+    "test_captions::captions.js draws at most 2 marks per caption; the third is drawn plain with a finding"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_palette::catalog: roles of distinct meaning >= 10 CIEDE2000 apart in every family, both skins",
+    "test_palette::gate: roles in different groups may share a colour (data-field = positive is allowed)",
+    "test_captions::three marks in one caption are flagged by check_caption_marks (exit 1)",
+    "test_captions::three marks spread over separate captions of one sentence pass (the cap is per caption)",
+    "test_captions::an unknown mark name is flagged (it cannot be coloured)",
+    "test_captions::a mark mapping to a role the design system does not declare is flagged",
+    "test_captions::mark syntax in the narration spoken form is flagged",
+    "test_captions::the same term marked good in one caption and bad in another is flagged (one colour, one meaning)",
+    "test_captions::malformed (nested / unclosed) markup is reported and never survives into plain text",
+    "test_captions::captions.js draws at most 2 marks per caption; the third is drawn plain with a finding",
+    "test_captions::subtitle_check flags raw mark syntax that leaked into a caption (exit 1)",
+    "test_captions::a Palette Director skin replaces the kit colours for marks (one design system per build)"
+   ],
+   "why_better": "the reference maps bracket glyphs to fixed colours with no cap, no gate and unclosed brackets passing through as text; here marks resolve to the active design system's roles with a non-colour cue, the 2-per-caption cap is enforced at render and by a gate, malformed or role-less marks, marks in the spoken form, leaked markup in captions and a term changing meaning are all flagged"
+  },
+  {
+   "id": "video-02",
+   "group": "video",
+   "capability": "style kits split into theme / stage / props / charts",
+   "requirements": [
+    "A3"
+   ],
+   "feature": "10 original style kits as data, each split into theme / stage / props / charts plus motion, transitions, caption style and do/don't; picked, blended or invented by outcome rules and exported from ONE active kit to both the page (CSS vars) and the scene runtime (window.__C8_KIT__)",
+   "files": [
+    "data/style_kits/README.md",
+    "scripts/design/pick_kit.py",
+    "scripts/design/kit_export.py",
+    "tests/v2/test_kits.py"
+   ],
+   "evidence": [
+    "test_kits::at least 8 style kits ship in data/style_kits",
+    "test_kits::every kit has theme, stage, props, charts, motion, transitions, caption_style, do and dont",
+    "test_kits::every pair of kits differs in palette",
+    "test_kits::every pair of kits differs in type",
+    "test_kits::every pair of kits differs in motion",
+    "test_kits::every pair of kits differs in transitions",
+    "test_kits::switching kits changes the exported CSS vars for palette, type, motion and transitions",
+    "test_kits::switching kits changes the runtime JSON for palette, type, motion and transitions"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_kits::every shipped kit passes the outcome rules",
+    "test_kits::caption marks good/bad/key are distinguishable without colour in every kit",
+    "test_kits::page CSS vars and runtime JSON agree on paper, type, ease, timing, caption size and transitions",
+    "test_kits::the existing scene runtime reads kit motion through beatAlpha and different kits change the frame",
+    "test_kits::a real browser applies the light skin by default, the dark skin under a dark OS, and data-theme pins it",
+    "test_kits::switching the active kit in design_system.json changes both exports for palette, type, motion and transitions",
+    "test_kits::a hand-defined new kit with invented names everywhere passes the outcome rules",
+    "test_kits::a blend records both parents and a reason",
+    "test_kits::an invalid invented kit (27 px caption, 3.9:1 text) is rejected for both reasons",
+    "test_kits::CSS export zeroes motion under prefers-reduced-motion"
+   ],
+   "why_better": "the reference kits are per-look code modules with hard-coded colours and no mechanical checks; these kits are data judged by outcome rules (contrast in both skins incl. caption-over-scrim worst case, marks that differ beyond hue, valid non-linear easing), can be blended or invented, and one active kit provably drives both the page and the video runtime, verified in a real browser and in the existing scene runtime"
+  },
+  {
+   "id": "video-03",
+   "group": "video",
+   "capability": "scene catalog: content shape -> scene component",
+   "requirements": [
+    "E7"
+   ],
+   "feature": "scene catalog: content shape -> scene component (27 starting points, invented forms allowed)",
+   "files": [
+    "data/scene_types.json",
+    "scripts/render/scene_components.js",
+    "scripts/render/scene_runtime.js"
+   ],
+   "evidence": [
+    "test_scenes::all 26 content shapes the requirement names have a catalog entry",
+    "test_scenes::every catalog entry maps to an existing component function in scene_components.js",
+    "test_scenes::all 27 component fixtures pass S1-S8 and C1-C8 on the real gates"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_scenes::each component enforces exactly the required_props its catalog entry lists",
+    "test_scenes::all 27 component fixtures pass S1-S8 and C1-C8 on the real gates",
+    "test_scenes::every component fixture still passes S1-S8, C1-C8 and density under a light style kit",
+    "test_scenes::over budget THROWS with the split-into-overview-and-detail fix",
+    "test_scenes::an invented scene form (not in the catalog) passes every gate: S1-S8, C1-C8, density and determinism"
+   ],
+   "why_better": "every component is instrumented and proven against the real semantic/invariant/density gates under two kits, enforces its own budget, and an invented form passes the same gates; the reference catalog had no mechanical checks."
+  },
+  {
+   "id": "video-04",
+   "group": "video",
+   "capability": "subtitle-locked word timing that throws on a missing word",
+   "requirements": [
+    "E2"
+   ],
+   "feature": "subtitle-locked word timing that throws \u2014 alignment half: words.json (window.__C8_WORDS__) with every display word timed; the Python consumer mirroring atWord/atLine throws on a missing line, word, occurrence or phrase; the advisory gate catches a missing or non-monotonic word",
+   "files": [
+    "scripts/render/align.py",
+    "scripts/gates/check_word_timing.py",
+    "tests/v2/test_align.py",
+    "tests/v2/fixtures/align/sentences.json",
+    "tests/v2/fixtures/align/words_sample.json",
+    "scripts/render/scene_runtime.js",
+    "scripts/render/scene_components.js"
+   ],
+   "evidence": [
+    "test_align::consumer: removing a word from a line in words.json makes the lookup of that word THROW",
+    "test_align::consumer: an unknown line, a word from another line, a missing occurrence and a broken phrase all THROW",
+    "test_align::words.json loads in the exact format {lines:[{name,text,start,end,words:[{w,start,end,i}]}],source,fps}",
+    "test_align::--js emits `window.__C8_WORDS__ = {...};` carrying the same data (and the consumer loads it)",
+    "test_align::gate catches a NON-MONOTONIC word timing (REVIEW, names the word)",
+    "test_align::gate catches a MISSING word (REVIEW, names it)",
+    "test_scenes::removing a word from a line makes the scene THROW at atWord (no silent mistiming)",
+    "test_scenes::a line missing from the word timings makes atWord/atLine THROW with the valid line names",
+    "test_scenes::atWord returns the aligner's own word timing (start and end), never an estimate"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_align::consumer: at_word returns the timed start of a word in its line (case and edge punctuation ignored)",
+    "test_align::consumer: a phrase returns its first word; the n-th occurrence is addressable",
+    "test_align::kokoro: the engine's own timings are used (source engine) and the spelled 'S O P' is ONE display word 'SOP' with its own span",
+    "test_scenes::atWord returns the aligner's own word timing (start and end), never an estimate",
+    "test_scenes::asking for an occurrence beyond the count THROWS",
+    "test_scenes::a multi-word phrase resolves from its first word's start to its last word's end",
+    "test_scenes::a word that is in the line text but has no timing is named as an alignment gap",
+    "test_scenes::word timings with a non-finite time are rejected when loaded"
+   ],
+   "why_better": "lines are addressed by NAME not index, timing is the aligner's measured word time instead of a character-position estimate, and phrases, occurrences and alignment gaps are handled and named."
+  },
+  {
+   "id": "video-05",
+   "group": "video",
+   "capability": "hit treatment: pre-darken, hold, burst, asserted within 2 frames",
+   "requirements": [
+    "E3"
+   ],
+   "feature": "hit treatment: 0.75 s pre-darken to 94 %, 3-frame hold, release on the key word (atWord, throws when missing) or a measured downbeat, burst (glow, 1.12\u21921 scale, ring); Python and JS share one pure-function-of-frame timeline",
+   "files": [
+    "scripts/render/hits.py",
+    "scripts/render/hits.js"
+   ],
+   "evidence": [
+    "test_audio::hit: pre-darken starts 0.75 s +- 2 frames before the key word (first darkened frame)",
+    "test_audio::hit: the release lands on the key word +- 2 frames (first burst frame; darkness lifting, glow at peak)",
+    "test_audio::hit: the last 3 frames before the release are held on one scene frame at full darkness",
+    "test_audio::hit: hits.js (resolving the key word through the runtime's atWord) gives the same frames and states as hits.py on every frame",
+    "test_audio::hit: hits.js hitAtWord THROWS when the key word is not in the line",
+    "test_audio::hit: release='downbeat' snaps the release onto the measured bar line (+-2 frames of the true one) and keeps the word when no bar line is near"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_audio::hit: hits.js (resolving the key word through the runtime's atWord) gives the same frames and states as hits.py on every frame",
+    "test_audio::hit: hits.js hitAtWord THROWS when the key word is not in the line",
+    "test_audio::hit: release='downbeat' snaps the release onto the measured bar line (+-2 frames of the true one) and keeps the word when no bar line is near"
+   ],
+   "why_better": "the hit is keyed to the measured word through a lookup that throws on a narration edit, with an optional snap to a measured downbeat, and both halves are proven frame-identical."
+  },
+  {
+   "id": "video-06",
+   "group": "video",
+   "capability": "beat grid from measured downbeats",
+   "requirements": [
+    "E3"
+   ],
+   "feature": "beat grid from two downbeats measured in the audio (onset + strongest sag-then-surge, 10 ms refinement), bar = span / whole bars; JS mirror",
+   "files": [
+    "scripts/render/hits.py",
+    "scripts/render/hits.js",
+    "scripts/render/audio.py"
+   ],
+   "evidence": [
+    "test_audio::beat grid: hits.js predicts the same beats as hits.py",
+    "test_audio::beat grid: two downbeats MEASURED from the audio predict every later beat within +-2 frames",
+    "test_audio::beat grid: negative \u2014 a grid with the wrong whole number of bars misses later beats by > 2 frames"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_audio::beat grid: two downbeats MEASURED from the audio predict every later beat within +-2 frames",
+    "test_audio::beat grid: negative \u2014 a grid with the wrong whole number of bars misses later beats by > 2 frames",
+    "test_audio::build: an effect keyed to a word lands on that word's measured start, and a bar line lands on the key word"
+   ],
+   "why_better": "the grid's accuracy is asserted on every later beat (with a negative control), and the generated music can put a bar line exactly on the key word."
+  },
+  {
+   "id": "video-07",
+   "group": "video",
+   "capability": "procedural music + synthesized sound effects",
+   "requirements": [
+    "E4"
+   ],
+   "feature": "procedural music (exactly-tuned plucked strings, bell, bass, drums, reverb; sections light/groove/bright/tense/break/end + invented) and 16 synthesized effects + invented recipes, all seeded",
+   "files": [
+    "scripts/render/audio.py",
+    "data/sfx.json"
+   ],
+   "evidence": [
+    "test_audio::music: the same seed renders a byte-identical WAV",
+    "test_audio::music: a different seed renders different bytes (the seed is really used)",
+    "test_audio::music: the five section styles (light, groove, tense, break, end) all render audible and differ",
+    "test_audio::music: plucked strings are exactly in tune (string rendered at its own rate; within 2 cents up to MIDI 91)",
+    "test_audio::music: tuning beats the integer-period string (which is > 10 cents off at high notes)",
+    "test_audio::music: an invented section renders and is recorded as invented (styles are a menu, not a fence)",
+    "test_audio::music: align_downbeat_to puts a bar line exactly on the given time",
+    "test_audio::sfx: at least 12 effects are listed in data/sfx.json and every one renders (audible, peak <= -0.9 dBFS)",
+    "test_audio::sfx: every pair of effects is spectrally distinct (profile distance >= 3 dB)",
+    "test_audio::sfx: the distinctness measure flags a duplicate (the same effect re-rendered with another seed < 1 dB)",
+    "test_audio::sfx: the same seed renders identical effect bytes",
+    "test_audio::sfx: an invented recipe effect renders (no catalog membership required)",
+    "test_audio::pure-Python backend: music and effects render without numpy, deterministically, and sound like the numpy render (profile distance < 3 dB)",
+    "test_audio::nothing is downloaded: the audio, hit and audio-QA code has no network calls (music and effects are synthesized)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_audio::music: the same seed renders a byte-identical WAV",
+    "test_audio::music: tuning beats the integer-period string (which is > 10 cents off at high notes)",
+    "test_audio::sfx: every pair of effects is spectrally distinct (profile distance >= 3 dB)",
+    "test_audio::pure-Python backend: music and effects render without numpy, deterministically, and sound like the numpy render (profile distance < 3 dB)"
+   ],
+   "why_better": "byte-identical seeded output, strings tuned within 2 cents instead of tens of cents, effect distinctness measured, and a no-numpy fallback."
+  },
+  {
+   "id": "video-08",
+   "group": "video",
+   "capability": "voice ducking",
+   "requirements": [
+    "E4"
+   ],
+   "feature": "ducking keyed by the narration's RMS envelope, relative to its own level, with 80 ms look-ahead; duck measured in dB",
+   "files": [
+    "scripts/render/audio.py"
+   ],
+   "evidence": [
+    "test_audio::ducking: the report's measured duck under the voice is >= 8 dB",
+    "test_audio::ducking: measured from the written stems, the music under the voice is >= 8 dB lower than the same passage with no ducking",
+    "test_audio::ducking: passages with no voice are left (almost) untouched (< 2 dB) \u2014 the duck is keyed by the voice"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_audio::ducking: measured from the written stems, the music under the voice is >= 8 dB lower than the same passage with no ducking",
+    "test_audio::ducking: passages with no voice are left (almost) untouched (< 2 dB) \u2014 the duck is keyed by the voice"
+   ],
+   "why_better": "the duck is measured and asserted on the written stems rather than printed, and it is level-independent with look-ahead."
+  },
+  {
+   "id": "video-09",
+   "group": "video",
+   "capability": "-16 LUFS loudness normalisation + stems",
+   "requirements": [
+    "E4",
+    "E5"
+   ],
+   "feature": "two-pass loudnorm (-16 LUFS / -1 dBTP / LRA 11) with the measured JSON, stem-preserving true-peak limiter, independent ebur128 re-measure; voice/music/sfx stems whose sum is measured against the mix; OFF by default",
+   "files": [
+    "scripts/render/audio.py"
+   ],
+   "evidence": [
+    "test_audio::loudness: the mixed fixture measures -16 +- 1 LUFS integrated (ebur128 on the written file)",
+    "test_audio::loudness: the mixed fixture's true peak is <= -1 dBTP (measured, 4x oversampled)",
+    "test_audio::loudness: two-pass loudnorm \u2014 pass 2 used the pass-1 MEASURED JSON and stayed linear",
+    "test_audio::stems: voice, music and effects stems are written and their sum matches the mix within -40 dB",
+    "test_audio::loudness: a peaky input is limited before loudnorm (one gain envelope on every stem) and still lands at <= -1 dBTP with the stems summing to the mix",
+    "test_audio::audio is OFF by default: a default build writes no music or effect track and returns the narration as the track",
+    "test_audio::audio switches: a storyboard flag turns music on; the storyboard can switch off what the design system turned on; a design-system effects list turns effects on",
+    "test_audio::audio on via the storyboard: music and effects stems are written and the mix is the track",
+    "test_audio::build: an effect keyed to a word lands on that word's measured start, and a bar line lands on the key word",
+    "test_audio::build: an effect keyed to a word that is not in the line RAISES (no silent misplacement)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_audio::loudness: two-pass loudnorm \u2014 pass 2 used the pass-1 MEASURED JSON and stayed linear",
+    "test_audio::stems: voice, music and effects stems are written and their sum matches the mix within -40 dB",
+    "test_audio::loudness: a peaky input is limited before loudnorm (one gain envelope on every stem) and still lands at <= -1 dBTP with the stems summing to the mix"
+   ],
+   "why_better": "loudness is measured on the written file, normalisation stays linear so stems sum exactly to the mix, even when limiting is needed."
+  },
+  {
+   "id": "video-10",
+   "group": "video",
+   "capability": "sound-effect audibility QA",
+   "requirements": [
+    "E5"
+   ],
+   "feature": "audio QA gate: loudness, true peak, clipping, effect audibility against the bed's masked threshold (from stems), silence gaps inside lines, glossary spoken forms, delivery stats",
+   "files": [
+    "scripts/gates/check_audio.py"
+   ],
+   "evidence": [
+    "test_audio::check_audio: a clean mixed fixture passes loudness, true peak, clipping, effects, gaps and spoken forms",
+    "test_audio::freedom: an invented effect placed in the mix is judged only on its outcome (audible over the bed) and passes",
+    "test_audio::check_audio: flags a clipped fixture",
+    "test_audio::check_audio: flags a 1.5 s silence inside a line",
+    "test_audio::check_audio: a deliberately marked 1.5 s pause is excused, and a 0.5 s pause passes",
+    "test_audio::check_audio: delivery stats (pitch range in semitones, pauses) separate a monotone read from an inflected one with a pause (informational, never pass/fail)",
+    "test_audio::check_audio: flags an inaudible effect buried under the bed (and passes the audible one)",
+    "test_audio::check_audio: flags a mix far off the loudness target and one whose true peak is over the ceiling",
+    "test_audio::check_audio: the glossary spot check flags a term handed to the voice as a bare word (SOP), lists a spelled one with its time for listening (API), and leaves a word-acronym alone (JSON)",
+    "test_audio::check_audio CLI: exit 1 on review (clipped), 0 on a clean mix, 2 when the mix is missing"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_audio::check_audio: flags an inaudible effect buried under the bed (and passes the audible one)",
+    "test_audio::check_audio: the glossary spot check flags a term handed to the voice as a bare word (SOP), lists a spelled one with its time for listening (API), and leaves a word-acronym alone (JSON)",
+    "test_audio::check_audio: a deliberately marked 1.5 s pause is excused, and a 0.5 s pause passes"
+   ],
+   "why_better": "audibility uses per-band masking from the actual stems instead of a broadband level, and the gate covers voice gaps and spoken forms too."
+  },
+  {
+   "id": "video-11",
+   "group": "video",
+   "capability": "contact-sheet QA around cuts and hits",
+   "requirements": [
+    "E6"
+   ],
+   "feature": "contact-sheet QA around cuts and hits, wired to the blind Stage V reviewer as an automatic skill",
+   "files": [
+    "scripts/render/contact_sheet.py",
+    "scripts/review/frame_review.py",
+    "scripts/review/blind_brief.py",
+    "scripts/review/__init__.py",
+    "skills/coordn8-frame-review/SKILL.md"
+   ],
+   "evidence": [
+    "test_frame_review::plan: one scene per storyboard scene (s1, s2)",
+    "test_frame_review::plan: every spoken line sampled 85-90% through the line",
+    "test_frame_review::plan: line frames are the exact beat-map-derived indices (37, 82, 127, 170)",
+    "test_frame_review::plan: 4 frames before each cut (scene s1 cuts at 3.1s -> f89; s2 at end -> f176)",
+    "test_frame_review::plan: -16/-3/+2 frames around each hit (t-anchored and word-anchored)",
+    "test_frame_review::plan: a hit on a word that is no longer in its line is an error, never a guess",
+    "test_frame_review::plan: the reviewer sees the display sentence (caption markup stripped)",
+    "test_frame_review::blind guard: a builder claim planted in a brief is detected as a leak",
+    "test_frame_review::blind guard: a claim that IS a spoken sentence is not a false leak",
+    "test_frame_review::skill: SKILL.md parses with frontmatter name coordn8-frame-review and a description",
+    "test_frame_review::skill: body names the coordn8-frame-reviewer agent and says the step is automatic",
+    "test_frame_review::skill: body runs prepare -> blind dispatch -> verdicts -> stage_v check, blocks on contradicts, and has the degraded no-subagent path",
+    "test_frame_review::prepare: exits 0 and reports PASS",
+    "test_frame_review::prepare: one contact sheet per scene",
+    "test_frame_review::prepare: manifest times match the beat map (lines 85-90%, cut-4, hit -16/-3/+2)",
+    "test_frame_review::prepare: every sheet cell shows exactly the frame it is labelled with (decoded from pixels)",
+    "test_frame_review::prepare: zero frame files left on disk \u2014 only the sheets were written",
+    "test_frame_review::blind brief: contains every exact spoken sentence",
+    "test_frame_review::blind brief: none of the seeded builder claims (claims, verification, storyboard) appear",
+    "test_frame_review::blind brief: names the reviewer agent, the sheets and the Limits block",
+    "test_frame_review::template: one verdict slot per spoken line, pre-filled with the exact sentence",
+    "test_frame_review::status: before verdicts the review is PENDING (open item, never a pass)",
+    "test_frame_review::collect: all-match verdicts -> PASS (exit 0) and stage_v.json written",
+    "test_frame_review::collect: writes _build/stage_v/verdicts.json that stage_v.py check passes (orchestrate stage 5 input)",
+    "test_frame_review::status: after a clean review -> PASS",
+    "test_frame_review::collect: one `contradicts` verdict -> BLOCK (non-zero exit)",
+    "test_frame_review::collect: the reviewer's fenced-JSON reply is accepted verbatim",
+    "test_frame_review::collect: the reviewer agent's native reply (frame + sentence, no slot ids) maps to every slot",
+    "test_frame_review::collect: a reviewer refusal (stale artefact) is never a pass",
+    "test_frame_review::collect: a spoken line with no verdict slot answered -> FAIL naming the slot",
+    "test_frame_review::collect: a verdict for a paraphrased (not the exact) sentence -> FAIL",
+    "test_frame_review::collect: an unanswered schema field is NOT verified (REVIEW, non-zero)",
+    "test_frame_review::freshness: a sheet older than a scene source is refused (STALE)",
+    "test_frame_review::freshness: prepare refuses a video older than a scene source (re-render first)",
+    "test_frame_review::freshness: a sheet modified after prepare (hash mismatch) is refused",
+    "test_frame_review::prev cut: lines are paired by name with the previous cut's own timing",
+    "test_frame_review::prev cut: the previous cut's frame sits beside the new one (pixels prove which video)",
+    "test_frame_review::prev cut: the brief asks 'what used to be here?' with the BEFORE cells",
+    "test_frame_review::prev cut: still zero frame files left on disk",
+    "test_frame_review::clean: removes the sheets, leaving zero images in the build",
+    "test_frame_review::rank: prepare_variants writes a blind brief of anonymised candidates with the sentence",
+    "test_frame_review::rank: rank() returns [] while the blind reviewer has not ranked (never a fake order)",
+    "test_frame_review::rank: maps blind labels back to variants; a contradicting treatment sinks to last",
+    "test_frame_review::rank: review/ranked.json keeps the best plus the alternates with the reviewer's reasons",
+    "test_frame_review::rank: a ranking that skips a candidate is rejected",
+    "test_frame_review::hermetic: the temp tree (video, sheets, everything) is gone after the suite"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_frame_review::plan: a hit on a word that is no longer in its line is an error, never a guess",
+    "test_frame_review::prepare: every sheet cell shows exactly the frame it is labelled with (decoded from pixels)",
+    "test_frame_review::prepare: zero frame files left on disk \u2014 only the sheets were written",
+    "test_frame_review::blind brief: contains every exact spoken sentence",
+    "test_frame_review::blind brief: none of the seeded builder claims (claims, verification, storyboard) appear",
+    "test_frame_review::freshness: a sheet older than a scene source is refused (STALE)",
+    "test_frame_review::freshness: prepare refuses a video older than a scene source (re-render first)",
+    "test_frame_review::freshness: a sheet modified after prepare (hash mismatch) is refused",
+    "test_frame_review::prev cut: the previous cut's frame sits beside the new one (pixels prove which video)",
+    "test_frame_review::prev cut: still zero frame files left on disk"
+   ],
+   "why_better": "Frames are chosen from beat-map times (adds 85-90% per spoken line), pixel-proven to be the exact frame, streamed through memory with zero frame files, freshness- and hash-checked, paired with the previous cut, and validated by stage_v with a blind brief that is scanned for leaked builder claims."
+  },
+  {
+   "id": "video-12",
+   "group": "video",
+   "capability": "style distillation: k-means palette + separate accent pass",
+   "requirements": [
+    "A4"
+   ],
+   "feature": "distill.py: reference video/image/folder -> cut points, motion per second, contact sheet, OKLab k-means k=8 palette + separate OKLCH accent pass, type-size estimates -> validated draft style kit",
+   "files": [
+    "scripts/design/distill.py",
+    "tests/v2/test_distill_brand.py"
+   ],
+   "evidence": [
+    "test_distill_brand::fixture video -> draft kit written, status PASS",
+    "test_distill_brand::accent differs from the background family by >= 20 CIEDE2000 (recomputed independently)",
+    "test_distill_brand::separate accent pass finds the small vermilion block that area-ranking buries",
+    "test_distill_brand::contact sheet PNG written: 4-column grid, one cell per keyframe, palette strip"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_distill_brand::same input twice -> byte-identical kit JSON",
+    "test_distill_brand::without numpy the pure-Python path gives the byte-identical kit",
+    "test_distill_brand::CIEDE2000 de-duplication merges near-identical clusters (\u0394E < 5) and keeps distinct ones",
+    "test_distill_brand::grey-only reference: accent is synthesised (said so) and still >= 20 CIEDE2000 from the background",
+    "test_distill_brand::draft kit passes the kit outcome rules (pick_kit.validate_kit)",
+    "test_distill_brand::draft kit palette passes the palette gate (check_palette exit 0)",
+    "test_distill_brand::type sizes estimated: title ~91 px and body ~46 px at 1080p (+-20%), title > body"
+   ],
+   "why_better": "Deterministic seeded k-means++ in OKLab with CIEDE2000 de-dup, an accent guaranteed >= 20 CIEDE2000 from the background family, measured type sizes, a numpy-optional path proven byte-identical, and output as a kit that passes the kit rules and palette gate instead of a report for manual reading."
+  },
+  {
+   "id": "video-13",
+   "group": "video",
+   "capability": "seeded randomness",
+   "requirements": [
+    "E10",
+    "H3"
+   ],
+   "feature": "SEED PART ONLY: derive_seed (SHA-256 of project slug + build count), Draw(seed) using only Random.random() with every draw logged, replay(); scene-runtime seeded rand (E10) is a later stream",
+   "files": [
+    "scripts/design/seed.py",
+    "scripts/render/scene_runtime.js",
+    "scripts/gates/check_determinism.py"
+   ],
+   "evidence": [
+    "test_divergence::derive_seed is a SHA-256 of (project slug, build count), not Python's hash()",
+    "test_divergence::derive_seed is identical across processes with different PYTHONHASHSEED",
+    "test_divergence::draws use only random(): the index stream for seed 4471 is pinned (version-stable)",
+    "test_divergence::same seed reproduces the same draws in a fresh process (two CLI runs + in-process all equal)",
+    "test_divergence::different builds of one project get different seeds (builds 1..20 all distinct)",
+    "test_scenes::C8.random(seed) reproduces the same sequence in separate processes, and a different seed differs",
+    "test_scenes::every seed a scene uses is recorded in its trace (network layout seed)",
+    "test_scenes::a scene using Math.random is caught STATICALLY (file and line named)",
+    "test_scenes::a scene using Math.random is caught DYNAMICALLY (the clock guard throws during the draw)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_divergence::same seed gives the same draws on a second local Python version (3.11+ vs this 3.9)",
+    "test_divergence::recorded draws replay exactly from the seed (replay() returns no mismatch)",
+    "test_divergence::a hand-edited draw does not replay (model-picked 'randomness' is caught)",
+    "test_scenes::runtime guard asserted: Math.random during a frame draw THROWS",
+    "test_scenes::randomness read at module load (outside the draw) is caught by the two-process trace comparison",
+    "test_scenes::a CSS-animated page is caught in headless Chrome (running animations / same t renders differently)",
+    "test_scenes::the same scene traced in two separate runs gives a byte-identical trace"
+   ],
+   "why_better": "mulberry32 replaces a sin-hash, every seed is recorded in the trace, the clock is trapped during the draw, and the rule is enforced by a static + two-process dynamic gate instead of a written convention."
+  },
+  {
+   "id": "video-14",
+   "group": "video",
+   "capability": "first-second anchor",
+   "requirements": [
+    "E9"
+   ],
+   "feature": "first-second anchor: transitions.js anchorAlpha/anchorState make the title or persistent object fully visible from frame 0 (a late entrance is pulled forward and noted); check_continuity measures the first 1.0 s from a scene_runtime trace and flags an empty one",
+   "files": [
+    "scripts/render/transitions.js",
+    "scripts/gates/check_continuity.py"
+   ],
+   "evidence": [
+    "test_captions::first-second anchor: fully visible at frame 0 by default",
+    "test_captions::first-second anchor: a late entrance is pulled forward so the anchor is visible by 1.0 s (and noted)",
+    "test_captions::check_continuity flags an empty first second, measured from a scene_runtime trace (exit 1)",
+    "test_captions::an anchor built with anchorState/anchorAlpha passes the first-second check even when authored late"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_captions::check_continuity flags an empty first second, measured from a scene_runtime trace (exit 1)",
+    "test_captions::an unmeasurable first second is reported as NOT measured, never passed silently"
+   ],
+   "why_better": "the reference keeps an opening title bar visible at frame 0 by convention only; here a helper guarantees it and a gate measures the first second from the instrumentation trace, reporting an unmeasurable opening as NOT measured instead of passing it"
+  },
+  {
+   "id": "video-15",
+   "group": "video",
+   "capability": "same-element morph transitions",
+   "requirements": [
+    "E9"
+   ],
+   "feature": "same-element morph: elements sharing an id across consecutive scenes interpolate position/size/colour/alpha (exact endpoints, deterministic, kit easing/duration); dissolve, cut-on-beat, push, wipe, dip, zoom from the kit vocabulary; reveal lands on the beat; check_continuity flags a cut over a shared element",
+   "files": [
+    "scripts/render/transitions.js",
+    "scripts/gates/check_continuity.py"
+   ],
+   "evidence": [
+    "test_captions::same-element morph: mid-transition position lies strictly between the two scenes",
+    "test_captions::same-element morph: size and colour interpolate too (not a cut)",
+    "test_captions::same-element morph: p=0 reproduces scene A and p=1 reproduces scene B exactly (no jump at either end)",
+    "test_captions::same-element morph is identical for the same t (deterministic)",
+    "test_captions::morph: unmatched outgoing elements fade out and unmatched incoming ones fade in",
+    "test_captions::morph duration and easing come from the active kit's vocabulary",
+    "test_captions::every kit's transition vocabulary classifies into known kinds and offers a morph",
+    "test_captions::dissolve cross-fades both scenes as a pure function of t",
+    "test_captions::cut-on-beat: the cut lands exactly on the beat frame (scene A before, scene B on the beat)",
+    "test_captions::push moves the outgoing scene off and brings the incoming one in along the kit's direction"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_captions::same-element morph: p=0 reproduces scene A and p=1 reproduces scene B exactly (no jump at either end)",
+    "test_captions::a transition's reveal lands on the beat (start = beat - reveal x duration; ~90% of the move at the beat)",
+    "test_captions::check_continuity flags a cut between scenes sharing an element id (exit 1)",
+    "test_captions::a deliberate cut with a stated cut_reason is a note, not a finding",
+    "test_captions::a transition outside the kit vocabulary is a note only \u2014 never a failure"
+   ],
+   "why_better": "the reference morphs formula tokens by matching symbols and checked 'last frame of A = first frame of B' by hand; here any scene element morphs by id with the exact-endpoint property tested, the reveal is solved from the real easing curve to land on the beat, and a gate flags a cut over a persisting element (a stated cut_reason or an off-catalog transition is only a note)"
+  },
+  {
+   "id": "video-16",
+   "group": "video",
+   "capability": "narration voice from a local engine (replaces a hosted speech service)",
+   "requirements": [
+    "V1",
+    "V2"
+   ],
+   "feature": "narration from a local open-source engine (neural \u2192 fast neural \u2192 OS voice) picked by a run-time quality probe, cast per narrative, spoken form always applied; nothing sent to a hosted service",
+   "files": [
+    "scripts/voice/engines.py",
+    "scripts/voice/render.py",
+    "scripts/voice/cast.py",
+    "scripts/voice/voices.py",
+    "data/voices.json"
+   ],
+   "evidence": [
+    "test_voice::render: fixture narration line renders on the top engine to a valid 24 kHz mono wav",
+    "test_voice::probe: ranks by quality prior gated by success -> best is the top installed engine",
+    "test_voice::fallback: disabling the top engine (COORDN8_VOICE_DISABLE) renders cleanly on the next engine"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_voice::cast: anti-repetition changes the pick when the history repeats it 3 times",
+    "test_voice::cast: a stated preference naming a voice wins absolutely and its quote is recorded",
+    "test_voice::fallback: a top engine that fails at run time falls back to the next and records why",
+    "test_voice::spoken form: the voice is fed 'S O P' while the returned display text stays 'SOP'",
+    "test_voice::V4 QA: flags a synthetic clipped wav (negative)"
+   ],
+   "why_better": "runs locally instead of one fixed hosted voice, casts per narrative with written reasons and anti-repetition, falls back when an engine is missing or broken, feeds the spelled spoken form, and checks its own audio"
+  },
+  {
+   "id": "video-17",
+   "group": "video",
+   "capability": "word timings from local alignment (replaces a hosted transcription service)",
+   "requirements": [
+    "E2"
+   ],
+   "feature": "word timings computed on this machine: the local voice engine's own phoneme-derived timings mapped to display words (spelled initialisms and spoken numbers collapse to one display word), else a signal fallback (energy/spectral-flux onsets, silence-aware regions, syllable+letter duration model, joint onset placement); no hosted transcription, sockets blocked in the test",
+   "files": [
+    "scripts/render/align.py",
+    "scripts/gates/check_word_timing.py",
+    "tests/v2/test_align.py"
+   ],
+   "evidence": [
+    "test_align::engine spoken-form tokens 'S','O','P' map to the ONE display word 'SOP' (start of S, end of P)",
+    "test_align::engine spoken-form 'forty','two' map to the one display word '42'",
+    "test_align::nothing is sent anywhere: the aligner runs to completion with every socket call blocked",
+    "test_align::nothing is sent anywhere: align.py and check_word_timing.py import no network or process modules",
+    "test_align::fallback (numpy): a timing for every display word, monotonic, inside the line, none over 2 s",
+    "test_align::fallback (pure Python, numpy disabled): the same contract holds on every line",
+    "test_align::say fixture ([[slnc 300]] between words, truth measured at sample level): every fallback word start within \u00b180 ms",
+    "test_align::kokoro natural speech: fallback median start error <= 80 ms vs the engine's own timings (mean/p90/max recorded \u2014 NOT every word is within 80 ms)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_align::onsets are used: on jittered word lengths the joint solver beats syllable-proportional spreading and greedy snapping, mean error <= 40 ms",
+    "test_align::engine timing that starts inside a long silence is moved to the silence end (and counted)",
+    "test_align::say fixture ([[slnc 300]] between words, truth measured at sample level): every fallback word start within \u00b180 ms",
+    "test_align::kokoro natural speech: fallback median start error <= 80 ms vs the engine's own timings (mean/p90/max recorded \u2014 NOT every word is within 80 ms)"
+   ],
+   "why_better": "the reference's word-level times came from a hosted transcription service and were refined by character interpolation; these are produced locally with a measured accuracy (say fixture: max 38.5 ms; natural neural speech: median ~43-58 ms) and the engine timings are cross-checked against the audio (silence correction, implausible-span report)"
+  },
+  {
+   "id": "video-18",
+   "group": "video",
+   "capability": "cover / thumbnail image rendered locally (replaces a hosted image generator)",
+   "requirements": [
+    "E9"
+   ],
+   "feature": "cover / thumbnail rendered locally: a real scene frame at a chosen settled t in headless Chromium plus a kit-styled title (marks coloured by role) at 1280x720 and 1080x1920; title fit, safe area, line count, floor and WCAG contrast measured; PNG size read from the file; non-file network requests blocked; honest skip with the unlock command when no browser",
+   "files": [
+    "scripts/render/cover.py"
+   ],
+   "evidence": [
+    "test_captions::cover.py writes a 1280x720 cover PNG (pixel size read from the file header)",
+    "test_captions::cover.py writes a 1080x1920 cover PNG (pixel size read from the file header)",
+    "test_captions::cover title measured in the browser: inside the safe area, <= 2 lines, at or above its floor, >= 4.5:1 over its scrim",
+    "test_captions::the cover's marked title word is painted in the kit accent",
+    "test_captions::cover rendering is local: every non-file request (the scene's own fetch) was blocked",
+    "test_captions::with no browser, cover.py skips honestly with a reason and the unlock command, writing nothing",
+    "test_captions::cover.py contains no network endpoint or hosted image service (renders a frame locally)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_captions::cover title measured in the browser: inside the safe area, <= 2 lines, at or above its floor, >= 4.5:1 over its scrim",
+    "test_captions::cover rendering is local: every non-file request (the scene's own fetch) was blocked",
+    "test_captions::with no browser, cover.py skips honestly with a reason and the unlock command, writing nothing"
+   ],
+   "why_better": "replaces the reference's hosted text-to-image cover with a local render of the video's own frame, and adds measured title-fit/safe-area/contrast checks, file-header size verification and a network block the reference's 'look at it' step does not have"
+  },
+  {
+   "id": "video-19",
+   "group": "video",
+   "capability": "current-docs lookup via a local open-source fetch tool (replaces a hosted web reader)",
+   "requirements": [
+    "J7",
+    "J8"
+   ],
+   "feature": "current-docs lookup via a local open-source fetch server registered automatically, plus install-time refresh of public reference docs",
+   "files": [
+    "data/mcp_servers.json",
+    "scripts/mcp/install_mcp.py",
+    "scripts/refs/refresh.py",
+    "scripts/refs/check.py",
+    "data/refs_sources.json"
+   ],
+   "evidence": [
+    "test_mcp::stub CLI: every no-sign-in server registered with the exact `claude mcp add --scope user` argv",
+    "test_mcp::catalog covers browser automation, fetch for current docs, filesystem and a 3-D app bridge",
+    "test_mcp::no hosted-AI service anywhere in servers or sign-in offers (test denylist)",
+    "test_deps_refs::live: the public Claude Code docs index refreshes into a sandboxed home with a fetch date (or skipped offline with the reason)",
+    "test_deps_refs::check passes (exit 0) when every ref is within its max age and prints an 'as of <date>' stamp per ref"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_mcp::NEGATIVE: the installer refuses a hosted-AI entry even when the catalog lists it; the rest install",
+    "test_mcp::every server pins the version that was checked in its command",
+    "test_deps_refs::--offline makes no request, keeps every copy and marks it stale"
+   ],
+   "why_better": "docs are fetched by a pinned, licence-checked local open-source server instead of a hosted reader, and the installer refuses any hosted reader even if one is added to the catalog"
+  },
+  {
+   "id": "controlled-english-01",
+   "group": "controlled-english",
+   "capability": "sentence length caps: 20 words (procedure) / 25 (description)",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "sentence length caps: 20 (procedure) / 25 (description) (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::length (procedure): positive fixture passes",
+    "test_language::length (procedure): negative fixture caught",
+    "test_language::length (description): positive fixture passes",
+    "test_language::length (description): negative fixture caught",
+    "test_language::paragraph_length (description): positive fixture passes",
+    "test_language::paragraph_length (description): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-02",
+   "group": "controlled-english",
+   "capability": "one instruction per sentence",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "one instruction per sentence (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::one_instruction (procedure): positive fixture passes",
+    "test_language::one_instruction (procedure): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-03",
+   "group": "controlled-english",
+   "capability": "imperative for procedures",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "imperative for procedures (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::imperative (procedure): positive fixture passes",
+    "test_language::imperative (procedure): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-04",
+   "group": "controlled-english",
+   "capability": "condition before command",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "condition before command (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::condition_first (procedure): positive fixture passes",
+    "test_language::condition_first (procedure): negative fixture caught",
+    "test_language::condition_first (warning): positive fixture passes",
+    "test_language::condition_first (warning): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-05",
+   "group": "controlled-english",
+   "capability": "noun clusters of at most 3",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "noun clusters of at most 3 (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::noun_cluster (description): positive fixture passes",
+    "test_language::noun_cluster (description): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-06",
+   "group": "controlled-english",
+   "capability": "active voice",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "active voice (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::active_voice (description): positive fixture passes",
+    "test_language::active_voice (description): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-07",
+   "group": "controlled-english",
+   "capability": "no semicolons",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "no semicolons (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::no_semicolon (description): positive fixture passes",
+    "test_language::no_semicolon (description): negative fixture caught",
+    "test_language::no_semicolon (procedure): positive fixture passes",
+    "test_language::no_semicolon (procedure): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-08",
+   "group": "controlled-english",
+   "capability": "no Latin abbreviations",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "no Latin abbreviations (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::no_latin_abbreviation (procedure): positive fixture passes",
+    "test_language::no_latin_abbreviation (procedure): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-09",
+   "group": "controlled-english",
+   "capability": "counting rules (hyphenated word and parenthesis count as 1)",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "counting rules (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::counting: a hyphenated word counts as one word and a parenthesis counts as one word",
+    "test_language::counting: a code span and a [[path:line]] chip count as one word each",
+    "test_language::counting: a step that is 20 words only by the counting rules passes the 20-word limit"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-10",
+   "group": "controlled-english",
+   "capability": "at most 6 sentences per paragraph",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "at most 6 sentences per paragraph (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::paragraph_length (description): positive fixture passes",
+    "test_language::paragraph_length (description): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "controlled-english-11",
+   "group": "controlled-english",
+   "capability": "WARNING / CAUTION form",
+   "requirements": [
+    "D1"
+   ],
+   "feature": "WARNING / CAUTION form (measured rule, positive + negative fixture)",
+   "files": [
+    "scripts/gates/check_language.py",
+    "data/language_rules.json"
+   ],
+   "evidence": [
+    "test_language::signal_word (warning): positive fixture passes",
+    "test_language::signal_word (warning): negative fixture caught",
+    "test_language::states_risk (warning): positive fixture passes",
+    "test_language::states_risk (warning): negative fixture caught",
+    "test_language::condition_first (warning): positive fixture passes",
+    "test_language::condition_first (warning): negative fixture caught"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "plain-explain-01",
+   "group": "plain-explain",
+   "capability": "lead with the answer",
+   "requirements": [
+    "C4",
+    "I4"
+   ],
+   "feature": "lead with the answer: throat-clearing openers flagged; purpose before mechanism; business audiences open on impact/decision",
+   "files": [
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::explain: business audience without impact first and without a decision is flagged",
+    "test_explain::explain: a mechanism-first opening is flagged (purpose before mechanism)",
+    "test_explain::explain: a purpose-first opening passes",
+    "test_explain::explain: a throat-clearing opener is flagged (lead with the answer)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: business audience without impact first and without a decision is flagged",
+    "test_explain::explain: a throat-clearing opener is flagged (lead with the answer)"
+   ],
+   "why_better": "the reference states the rule in prose; here the opening sentence is checked mechanically, with a business-audience variant"
+  },
+  {
+   "id": "plain-explain-02",
+   "group": "plain-explain",
+   "capability": "read the person: stand down for experts",
+   "requirements": [
+    "I5"
+   ],
+   "feature": "read the person: stand down for experts in their own field, simple about other fields",
+   "files": [
+    "data/audiences.json",
+    "scripts/design/audience.py",
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::audience: an expert in the subject's own field stands down and keeps the field's terms",
+    "test_explain::audience: an expert in another field is simple about the subject, normal about their own (no stand-down)",
+    "test_explain::explain: expert audience: a lay paraphrase of a field term is flagged (talking down)",
+    "test_explain::explain: expert audience: the field's own terms, undefined, pass"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: expert audience: a lay paraphrase of a field term is flagged (talking down)",
+    "test_explain::explain: --expert-field alone switches on the talking-down check"
+   ],
+   "why_better": "expertise is detected from the brief and talking down is flagged from a per-field term/paraphrase list instead of being left to judgement"
+  },
+  {
+   "id": "plain-explain-03",
+   "group": "plain-explain",
+   "capability": "explanation shapes for error / function / architecture",
+   "requirements": [
+    "I2"
+   ],
+   "feature": "explanation shapes for error / function / architecture (plus concept, term, how-it-works, design-question, decision-brief, and invented shapes)",
+   "files": [
+    "data/explain_shapes.json",
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::explain: error positive (quote -> translate -> cause -> change) passes",
+    "test_explain::explain: error negative (no quote, no translation, no cause) is flagged",
+    "test_explain::explain: two likely causes without how to tell them apart is flagged",
+    "test_explain::explain: function positive (job first, 3 parts in run order, boilerplate skipped) passes",
+    "test_explain::explain: function negative (too many parts, nothing said about what was skipped) is flagged",
+    "test_explain::explain: architecture positive (one upload traced end to end, pieces named by what they do) passes",
+    "test_explain::explain: architecture negative (no single path, a second path, pieces only named) is flagged"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: a pasted multi-line log is flagged (quote the one line that carries the meaning)",
+    "test_explain::explain: with --code, steps out of run order and names not in the code are flagged",
+    "test_explain::explain: a caller-invented shape with its own parts is accepted and judged"
+   ],
+   "why_better": "each shape's ordered parts are checked on the text, and with --code the steps must use real names in the code's run order"
+  },
+  {
+   "id": "plain-explain-04",
+   "group": "plain-explain",
+   "capability": "fenced analogy, one example",
+   "requirements": [
+    "I3"
+   ],
+   "feature": "fenced analogy within two sentences; one example per point; the code is the example",
+   "files": [
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::explain: analogy without its limit is flagged",
+    "test_explain::explain: analogy with its limit (same sentence or within two sentences) passes",
+    "test_explain::explain: two examples for one point are flagged",
+    "test_explain::explain: one example passes"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: with --code, an invented example is flagged and an example from the code passes"
+   ],
+   "why_better": "unfenced analogies and second examples are detected by pattern, and an invented example is flagged when the code is available"
+  },
+  {
+   "id": "plain-explain-05",
+   "group": "plain-explain",
+   "capability": "name jargon and define it in the same breath",
+   "requirements": [
+    "D2",
+    "I3"
+   ],
+   "feature": "name jargon and define it in the same breath (field terms and acronyms) for non-expert audiences",
+   "files": [
+    "data/audiences.json",
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::explain: non-expert audience: undefined jargon (a field term, an acronym) is flagged",
+    "test_explain::explain: non-expert audience: jargon defined in the same breath passes"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: non-expert audience: undefined jargon (a field term, an acronym) is flagged"
+   ],
+   "why_better": "first use of each catalog term and acronym is located and checked for a same-sentence definition; experts are exempt for their own field"
+  },
+  {
+   "id": "plain-explain-06",
+   "group": "plain-explain",
+   "capability": "length follows the question",
+   "requirements": [
+    "I2"
+   ],
+   "feature": "length follows the question: a one-term question gets a short, heading-free answer",
+   "files": [
+    "data/explain_shapes.json",
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::explain: length follows the question (a one-term question with a long, headed answer is flagged; two sentences pass)",
+    "test_explain::explain: shape auto-detects from the question"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: length follows the question (a one-term question with a long, headed answer is flagged; two sentences pass)"
+   ],
+   "why_better": "a word and heading budget is measured against the question type instead of being advice"
+  },
+  {
+   "id": "plain-explain-07",
+   "group": "plain-explain",
+   "capability": "caveat only when skipping it costs something real",
+   "requirements": [
+    "I4"
+   ],
+   "feature": "caveat only when skipping it costs money, data, security or an irreversible decision",
+   "files": [
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::explain: a caveat with no real cost is flagged as unneeded",
+    "test_explain::explain: a caveat whose skipping costs something real (data, irreversible) passes"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: a caveat with no real cost is flagged as unneeded"
+   ],
+   "why_better": "every caveat is checked for a cost word in the same or next sentence"
+  },
+  {
+   "id": "plain-explain-08",
+   "group": "plain-explain",
+   "capability": "end where they can act",
+   "requirements": [
+    "I4"
+   ],
+   "feature": "end where they can act: every page section and the narration's last beat",
+   "files": [
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::explain: ending on a summary is flagged",
+    "test_explain::explain: ending on what the reader can now do passes",
+    "test_explain::explain: every page section is checked for an actionable ending",
+    "test_explain::explain: narration is judged on its last beat"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: every page section is checked for an actionable ending"
+   ],
+   "why_better": "the ending of every section is checked, and a summary ending is named as such"
+  },
+  {
+   "id": "plain-explain-09",
+   "group": "plain-explain",
+   "capability": "say what was skipped",
+   "requirements": [
+    "I4"
+   ],
+   "feature": "say what was skipped (function boilerplate; any --cut content named item by item)",
+   "files": [
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::explain: function negative (too many parts, nothing said about what was skipped) is flagged",
+    "test_explain::explain: content was cut but nothing says so -> flagged",
+    "test_explain::explain: a skipped statement that names the cut items passes",
+    "test_explain::explain: a skipped statement that leaves a cut item unnamed is flagged"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: a skipped statement that leaves a cut item unnamed is flagged"
+   ],
+   "why_better": "the checker knows what was cut and requires each cut item to be named, not just a generic 'skipped'"
+  },
+  {
+   "id": "audience-01",
+   "group": "audience",
+   "capability": "audience framing: role -> what they care about -> frame around",
+   "requirements": [
+    "I1"
+   ],
+   "feature": "audience framing: 15 roles x 6 levels -> they care about -> frame around, inferred from the brief, never defaulted to age 5, asked when unclear",
+   "files": [
+    "data/audiences.json",
+    "scripts/design/audience.py"
+   ],
+   "evidence": [
+    "test_explain::audiences: at least 12 roles, including every role the requirement names",
+    "test_explain::audiences: every role carries every field (care, frame, register, entry, depth, analogy sources, avoid, business_lead, expert_fields)",
+    "test_explain::audience: new-grad onboarding brief -> newcomer, reason names the signal",
+    "test_explain::audience: VP funding review brief -> executive (business lead), reason names the signal",
+    "test_explain::audience: external OSS brief -> external-developer, reason names the signal",
+    "test_explain::audience: auditor brief -> auditor, reason names the signal",
+    "test_explain::audience: kids' science club (ages 8-11) -> child level, reason cites the ages",
+    "test_explain::audience: an unclear brief returns a plain Phase-0 question and a low-confidence guess, never child",
+    "test_explain::audience: no brief without a child signal is ever inferred as child (role sweep)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::audience: an unclear brief returns a plain Phase-0 question and a low-confidence guess, never child",
+    "test_explain::audience: 'explain like I'm five' and its abbreviation are read as keep-it-simple, never as a five-year-old",
+    "test_explain::audience: each catalog role is picked back from a brief naming it (round trip)",
+    "test_explain::audience: no brief without a child signal is ever inferred as child (role sweep)"
+   ],
+   "why_better": "the audience is inferred with a stated reason and confidence, asks when unsure, and is proven never to fall back to a child"
+  },
+  {
+   "id": "audience-02",
+   "group": "audience",
+   "capability": "purpose before mechanism",
+   "requirements": [
+    "I1",
+    "C4"
+   ],
+   "feature": "purpose before mechanism (opening sentence; function job first; concept what first)",
+   "files": [
+    "scripts/gates/check_explain.py",
+    "data/explain_shapes.json"
+   ],
+   "evidence": [
+    "test_explain::explain: function positive (job first, 3 parts in run order, boilerplate skipped) passes",
+    "test_explain::explain: concept positive (what -> fenced analogy -> details -> so what) passes",
+    "test_explain::explain: a mechanism-first opening is flagged (purpose before mechanism)",
+    "test_explain::explain: a purpose-first opening passes"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: a mechanism-first opening is flagged (purpose before mechanism)"
+   ],
+   "why_better": "a mechanism-first opening is flagged mechanically"
+  },
+  {
+   "id": "audience-03",
+   "group": "audience",
+   "capability": "'mostly accurate but understood' trade-off, flagged",
+   "requirements": [
+    "I3"
+   ],
+   "feature": "'mostly accurate but understood' trade-off, always flagged with whether the precise version is stated",
+   "files": [
+    "data/audiences.json",
+    "scripts/gates/check_explain.py"
+   ],
+   "evidence": [
+    "test_explain::audiences: the doctrine forbids defaulting to a child and reads 'explain like I'm five' as keep-it-simple",
+    "test_explain::explain: a simplification marker is reported as a trade-off"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_explain::explain: a simplification marker is reported as a trade-off"
+   ],
+   "why_better": "every simplification marker is reported as a trade-off for a reader to confirm, instead of being allowed silently"
+  },
+  {
+   "id": "audience-04",
+   "group": "audience",
+   "capability": "skill-vs-baseline evals with assertions and A/B mode",
+   "requirements": [
+    "G3"
+   ],
+   "feature": "skill-vs-baseline evals: 9 eval files with code-counted assertions, with/without/both/ab modes via claude -p (--plugin-dir vs a fresh isolated config), >=3 repeats, pass rate, spread, stdev, flipped assertions, stability flag, canary contamination check, JSON report + markdown section",
+   "files": [
+    "bench/evals/run_evals.py",
+    "bench/evals/audience-manager-decision.json",
+    "bench/evals/shape-error-log.json",
+    "bench/evals/shape-function-file.json",
+    "bench/evals/fenced-analogy.json",
+    "bench/evals/end-where-they-can-act.json",
+    "bench/evals/stand-down-for-experts.json",
+    "bench/evals/claims-path-line.json",
+    "bench/evals/plain-language.json",
+    "bench/evals/palette-reasons.json",
+    "tests/v2/test_evals.py"
+   ],
+   "evidence": [
+    "test_evals::every eval file parses as JSON",
+    "test_evals::at least 8 eval files",
+    "test_evals::every eval validates (prompt, id, plain-words describe, valid regexes)",
+    "test_evals::every eval has at least 2 assertions and every assertion is a counted kind",
+    "test_evals::no assertion kind asks a model to grade (only code-counted kinds exist)",
+    "test_evals::evals cover audience framing, shapes, fenced analogy, act, experts, claims, plain language, palette",
+    "test_evals::no eval prompt contains a canary phrase (else the baseline check means nothing)",
+    "test_evals::eval ids are unique and match their file names",
+    "test_evals::validator refuses a model-judged kind, a single assertion and a canary in the prompt",
+    "test_evals::--validate-only exits ERROR on an invalid eval file and ignores report.json",
+    "test_evals::--validate-only passes on the shipped evals",
+    "test_evals::builtin fixture is a small CLI with an entry file, config and counter",
+    "test_evals::path:line resolves for a real file and line, fails for a missing file or a line past the end",
+    "test_evals::error shape: a good answer passes every counted assertion",
+    "test_evals::error shape: a fix-before-the-quote answer fails the ordering assertion only",
+    "test_evals::a path:line pointing past the end or at a missing file does not count as resolved",
+    "test_evals::claims: five resolving path:line refs in five list items pass",
+    "test_evals::claims: invented files are counted as unresolved (seeded defect caught)",
+    "test_evals::experts: an answer in the field's own terms passes",
+    "test_evals::experts: talking down is caught",
+    "test_evals::palette: a structured answer with 4 colours, roles and reasons passes",
+    "test_evals::palette: a JSON answer in the text is recovered when no structured output is returned",
+    "test_evals::palette: bad hex, a thin reason and a repeated colour are each caught",
+    "test_evals::plain language: good text passes all, seeded inflated word fails exactly one assertion",
+    "test_evals::plain language: a 40-word sentence fails the longest-sentence bound",
+    "test_evals::fenced analogy: an analogy with its limit stated passes",
+    "test_evals::fenced analogy: an unfenced analogy with two examples fails both bounds",
+    "test_evals::act: ending on a sign-off instead of an action is caught",
+    "test_evals::stub run: both modes x 3 repeats = 6 CLI calls and a report",
+    "test_evals::pass rate is the mean of per-repeat pass rates (with = 1.0, without = (1+0.75+1)/3)",
+    "test_evals::spread is max - min across repeats (with 0.0, without 0.25)",
+    "test_evals::stability flag: identical repeats are stable; a 0.25 spread over the 0.2 threshold is unstable",
+    "test_evals::the assertion that flipped between repeats is named",
+    "test_evals::delta (with - without) is reported per eval and overall",
+    "test_evals::overall: 11/12 baseline assertions, pass rate by repeat [1, 0.75, 1], marked unstable",
+    "test_evals::an unstable eval makes the run exit REVIEW (1)",
+    "test_evals::a markdown section with the per-eval table is written beside the report",
+    "test_evals::report records counted grading and the stability threshold",
+    "test_evals::the baseline invocation never includes --plugin-dir (from the stub's argv log)",
+    "test_evals::the skill invocation passes --plugin-dir <package> and claude -p with JSON output",
+    "test_evals::every run uses an isolated, fresh, empty config dir (never the real ~/.claude) and a temp HOME",
+    "test_evals::the same prompt is sent to both modes, on stdin",
+    "test_evals::child env drops the parent session vars and unrelated vars, keeps provider auth, blocks .pyc writes",
+    "test_evals::bench/fixtures/01-cli absent -> each run gets its own temp copy of the builtin CLI fixture",
+    "test_evals::temp work and config dirs are removed after the runs",
+    "test_evals::report rows carry the isolation proof for every baseline run",
+    "test_evals::the stability threshold is configurable (0.25 spread is stable at 0.3)",
+    "test_evals::canary: a baseline answer containing a skill-only phrase is marked CONTAMINATED",
+    "test_evals::canary: a contaminated baseline makes the run exit REVIEW (1)",
+    "test_evals::skill engagement in the skill runs is detected from the Skill tool call",
+    "test_evals::canary: a baseline whose CLI init lists the plugin is contaminated even with a clean answer",
+    "test_evals::repeats default to 3",
+    "test_evals::--repeats 2 is refused for a report (exit ERROR, no CLI call, no report)",
+    "test_evals::--repeats 1 --no-report runs as a smoke test and writes no report",
+    "test_evals::a timed-out repeat or unparsable output makes the eval 'incomplete', never stable",
+    "test_evals::structured output (--json-schema) is graded: with 100%, without 0% (no palette)",
+    "test_evals::--json-schema is passed identically to both modes",
+    "test_evals::bench/fixtures/01-cli is copied when present, minus any agent config dir",
+    "test_evals::A/B mode compares two plugin dirs (a 100%, b 75%, delta +25 pts)",
+    "test_evals::no claude CLI -> exit SKIPPED (2) with the reason",
+    "test_evals::build_command never emits --plugin-dir for the baseline, even when handed one",
+    "test_evals::no reference project names in the eval files, runner or this test"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_evals::every eval has at least 2 assertions and every assertion is a counted kind",
+    "test_evals::no assertion kind asks a model to grade (only code-counted kinds exist)",
+    "test_evals::path:line resolves for a real file and line, fails for a missing file or a line past the end",
+    "test_evals::claims: invented files are counted as unresolved (seeded defect caught)",
+    "test_evals::spread is max - min across repeats (with 0.0, without 0.25)",
+    "test_evals::stability flag: identical repeats are stable; a 0.25 spread over the 0.2 threshold is unstable",
+    "test_evals::the baseline invocation never includes --plugin-dir (from the stub's argv log)",
+    "test_evals::every run uses an isolated, fresh, empty config dir (never the real ~/.claude) and a temp HOME",
+    "test_evals::canary: a baseline answer containing a skill-only phrase is marked CONTAMINATED",
+    "test_evals::canary: a contaminated baseline makes the run exit REVIEW (1)",
+    "test_evals::canary: a baseline whose CLI init lists the plugin is contaminated even with a clean answer",
+    "test_evals::--repeats 2 is refused for a report (exit ERROR, no CLI call, no report)",
+    "test_evals::a timed-out repeat or unparsable output makes the eval 'incomplete', never stable",
+    "test_evals::A/B mode compares two plugin dirs (a 100%, b 75%, delta +25 pts)"
+   ],
+   "why_better": "assertions are counted by code (path:line resolved against the fixture, JSON structure, regex/sentence stats) instead of a model judge, the baseline is proven skill-free per run (no --plugin-dir, fresh empty config, canary + init listing), and results carry >=3 repeats with spread and a stability flag."
+  },
+  {
+   "id": "creativity-01",
+   "group": "creativity",
+   "capability": "named idea techniques matched to problem type",
+   "requirements": [
+    "H2"
+   ],
+   "feature": "17 named idea techniques (how_to, good_for problem types, worked mini-example, failure modes) in data/idea_techniques.json; seed.py draws techniques matched to the problem type from a recorded seed",
+   "files": [
+    "data/idea_techniques.json",
+    "scripts/design/seed.py"
+   ],
+   "evidence": [
+    "test_divergence::catalog lists >= 9 techniques including the nine named ones",
+    "test_divergence::catalog carries every reference technique (>= 15) plus its own additions",
+    "test_divergence::every technique has how_to steps, good_for problem types, a worked mini-example and failure modes",
+    "test_divergence::every problem type (design, narrative spine, explanation, visual metaphor, structure, naming, ...) is served by >= 3 techniques, so 3 different techniques can always be drawn",
+    "test_divergence::technique draws are matched to the problem type (every drawn technique lists it in good_for)",
+    "test_divergence::draw_set(problem, 3) always yields 3 different techniques, each with its stimulus if it takes one"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_divergence::technique draws are matched to the problem type (every drawn technique lists it in good_for)",
+    "test_divergence::recorded draws replay exactly from the seed (replay() returns no mismatch)",
+    "test_divergence::a hand-edited draw does not replay (model-picked 'randomness' is caught)",
+    "test_divergence::recorded draws that do not replay from the seed are flagged (fabricated randomness)"
+   ],
+   "why_better": "the reference lets the model pick a technique and its own 'random' stimulus; here the technique and stimulus are drawn from the problem-matched set by a seeded generator and every draw replays, so a model-picked draw is caught"
+  },
+  {
+   "id": "creativity-02",
+   "group": "creativity",
+   "capability": "rejection test: could the user have thought of this alone?",
+   "requirements": [
+    "H2"
+   ],
+   "feature": "rejection tests (user-could-think-of-it, known-default, surprising-not-useful) applied by a SEPARATE critic agent; every option judged, every rejection names its test and why",
+   "files": [
+    "data/idea_techniques.json",
+    "scripts/design/divergence.py"
+   ],
+   "evidence": [
+    "test_divergence::the catalog's critic tests are exactly the three rejection tests",
+    "test_divergence::a rejection that names no test is flagged",
+    "test_divergence::an option the critic never judged is flagged",
+    "test_divergence::generator_agent == critic_agent is rejected (the critic must be a separate agent)"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_divergence::generator_agent == critic_agent is rejected (the critic must be a separate agent)",
+    "test_divergence::a per-decision critic_agent equal to the generator is also rejected",
+    "test_divergence::a missing critic_agent is rejected",
+    "test_divergence::a rejection that names no test is flagged",
+    "test_divergence::an option the critic never judged is flagged"
+   ],
+   "why_better": "the reference self-judges in the same pass; the validator rejects a record whose critic is the generator and requires a named test and reason for every rejection"
+  },
+  {
+   "id": "creativity-03",
+   "group": "creativity",
+   "capability": "never lower the bar to reach a count",
+   "requirements": [
+    "H2"
+   ],
+   "feature": "never lower the bar: an all-rejected decision fails and demands another generation round; a rejected idea re-admitted in a later round is flagged; the writer refuses such a decision",
+   "files": [
+    "scripts/design/divergence.py",
+    "data/idea_techniques.json"
+   ],
+   "evidence": [
+    "test_divergence::an all-rejected decision fails and demands another generation round (bar not lowered)",
+    "test_divergence::an all-rejected decision cannot be rescued by choosing a rejected option",
+    "test_divergence::re-admitting an idea the critic rejected in an earlier round is flagged as lowering the bar",
+    "test_divergence::a genuine new round after an all-rejected round passes (new ideas, nothing re-admitted)",
+    "test_divergence::add refuses an all-rejected decision (exit 1) and leaves divergence.json byte-identical",
+    "test_divergence::catalog rules say never lower the bar, separate critic, pivotal decisions only (no 'when in doubt, inject')"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_divergence::an all-rejected decision fails and demands another generation round (bar not lowered)",
+    "test_divergence::re-admitting an idea the critic rejected in an earlier round is flagged as lowering the bar",
+    "test_divergence::add refuses an all-rejected decision (exit 1) and leaves divergence.json byte-identical"
+   ],
+   "why_better": "the reference states the rule in prose; here it is mechanical \u2014 the gate cannot pass a set with no survivor or with a re-admitted rejected idea"
+  },
+  {
+   "id": "host-01",
+   "group": "host",
+   "capability": "use claude.ai connectors when present in the session",
+   "requirements": [
+    "F7"
+   ],
+   "feature": "connectors (claude.ai and MCP) present in the session are detected read-only and mapped to pipeline stages; never required; sign-in ones offered last",
+   "files": [
+    "scripts/federation.py",
+    "data/host_capabilities.json"
+   ],
+   "evidence": [
+    "test_host::F7: connectors CLI runs on a fixture MCP config",
+    "test_host::F7: user-scope, local-scope, project and plugin MCP servers are all found",
+    "test_host::F7: claude.ai connectors recognised from session tool names and MCP list",
+    "test_host::F7: stage suggestions map tools to stages",
+    "test_host::F7: by_stage lists the design tools",
+    "test_host::F7: nothing is ever required",
+    "test_host::F7: sign-in-only tools are offered last, never auto-installed",
+    "test_host::F7: connector detection reads only inside the given roots",
+    "test_host::F7: connector detection writes nothing",
+    "test_host::F7: with no MCP config at all it still answers, every stage left to the built-in",
+    "test_host::F7: an unrelated server name maps to no stage"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "host-02",
+   "group": "host",
+   "capability": "use /design and /design-sync when present",
+   "requirements": [
+    "F7"
+   ],
+   "feature": "/design and /design-sync recognised from the session command list or an installed command file and suggested for the design stage; never required",
+   "files": [
+    "scripts/federation.py"
+   ],
+   "evidence": [
+    "test_supervisor_merges::host-02: /design and /design-sync in the session command list are suggested for the design stage",
+    "test_supervisor_merges::host-02: an unrelated command (/review) is not offered as a design tool",
+    "test_supervisor_merges::host-02: with neither present, nothing is suggested and the design stage uses the built-in tools",
+    "test_supervisor_merges::host-02: an installed /design command file is recognised"
+   ],
+   "verdict": "parity",
+   "better_evidence": [],
+   "why_better": ""
+  },
+  {
+   "id": "host-03",
+   "group": "host",
+   "capability": "generate 2-3 variations and compare",
+   "requirements": [
+    "H4"
+   ],
+   "feature": "2-3 cheap variant treatments (trace + one contact sheet each) for a pivotal moment, ranked by the blind frame reviewer; best passing ships, others kept as alternates",
+   "files": [
+    "scripts/design/variants.py",
+    "scripts/review/frame_review.py"
+   ],
+   "evidence": [
+    "test_freedom::invented fixture: check_invariants PASSES on the invented scene",
+    "test_freedom::variants make: three treatments created, each = one trace + one contact sheet (svg, and png for the reviewer)",
+    "test_freedom::variants make: every treatment ran the outcome gates (semantics, invariants, density) on its trace",
+    "test_freedom::variants: the blind brief holds only the candidate sheets and the exact sentence \u2014 no idea, technique or v1/v2/v3 name",
+    "test_freedom::variants rank before any reviewer answer is SKIPPED with the instruction \u2014 a ranking is never made up",
+    "test_freedom::variants rank through the blind reviewer API: ranked.json holds a ranked order with the reviewer's reason for every treatment",
+    "test_freedom::variants: the best passing treatment ships and the other two are kept on disk as alternates",
+    "test_freedom::variants: a candidate the reviewer says contradicts its sentence never ships",
+    "test_freedom::variants rank accepts any reviewer exposing rank(variants_dir) -> ranked list",
+    "test_freedom::variants: a ranking without reasons is refused (REVIEW, nothing ships)",
+    "test_freedom::variants: two near-identical treatments are reported (one idea twice is not two treatments)",
+    "test_freedom::variants: a treatment that fails its outcome gates is flagged and can never ship",
+    "test_freedom::variants: even ranked first, a gate-failing treatment does not ship \u2014 the best PASSING one does",
+    "test_freedom::variants status lists each pivotal decision with its shipped treatment and alternates"
+   ],
+   "verdict": "better",
+   "better_evidence": [
+    "test_freedom::variants: two near-identical treatments are reported (one idea twice is not two treatments)",
+    "test_freedom::variants: even ranked first, a gate-failing treatment does not ship \u2014 the best PASSING one does",
+    "test_freedom::variants: the blind brief holds only the candidate sheets and the exact sentence \u2014 no idea, technique or v1/v2/v3 name",
+    "test_freedom::variants: a ranking without reasons is refused (REVIEW, nothing ships)",
+    "test_freedom::variants rank before any reviewer answer is SKIPPED with the instruction \u2014 a ranking is never made up"
+   ],
+   "why_better": "the reference compares variations by model judgement alone; here every treatment must pass the outcome gates, near-duplicates are measured on the traces, the reviewer is blind to the builder's notes, and a winner is refused rather than declared when fewer than two pass"
+  }
+ ]
+}

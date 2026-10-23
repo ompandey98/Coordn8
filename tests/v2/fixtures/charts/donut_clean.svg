@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img">
+<title>Chart</title>
+<g data-chart="donut" data-chart-id="check-results" data-total="10.5" data-cx="200" data-cy="200">
+  <circle data-role="hole" cx="200" cy="200" r="80" fill="#fff"/>
+  <path data-name="ok" data-value="6" d="M200 60 A140 140 0 1 1 139.26 326.14 L165.29 272.08 A80 80 0 1 0 200 120 Z"/>
+  <path data-name="warn" data-value="3" d="M139.26 326.14 A140 140 0 0 1 90.54 112.71 L137.45 150.12 A80 80 0 0 0 165.29 272.08 Z"/>
+  <path data-name="fail" data-value="1.5" d="M90.54 112.71 A140 140 0 0 1 200 60 L200 120 A80 80 0 0 0 137.45 150.12 Z"/>
+  <text x="200" y="200" text-anchor="middle">10.5</text>
+</g>
+</svg>
