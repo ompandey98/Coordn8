@@ -1,0 +1,92 @@
+<!-- c8:part check -->
+<div class="c8-selfcheck" id="{{id}}" data-c8-widget="self_check" role="group" aria-labelledby="{{id}}-title">
+  <p class="c8-check-kicker">Check yourself</p>
+  <p class="c8-selfcheck-title" id="{{id}}-title"><strong>{{title}}</strong></p>
+  <ol class="c8-selfcheck-list">
+{{{questions}}}
+  </ol>
+  <p class="c8-selfcheck-score" data-c8-selfcheck-score aria-live="polite" hidden data-c8-js-only>{{count}} questions; none answered yet.</p>
+</div>
+<!-- c8:part question -->
+    <li class="c8-q" data-c8-q data-answer="{{answer}}">
+      <fieldset class="c8-q-set">
+        <legend class="c8-q-text" id="{{qid}}-text">{{{q}}}</legend>
+        <div class="c8-q-options" role="group" aria-labelledby="{{qid}}-text" hidden data-c8-js-only>
+{{{options}}}
+        </div>
+      </fieldset>
+      <p class="c8-q-feedback" data-c8-q-feedback aria-live="polite"></p>
+      <details class="c8-q-answer" data-c8-q-answer>
+        <summary>Answer and why</summary>
+        <p><strong>{{{answer_text}}}</strong></p>
+        {{{explain}}}
+      </details>
+    </li>
+<!-- c8:part option -->
+          <button type="button" class="c8-btn c8-q-option" data-c8-option="{{index}}" aria-pressed="false">{{{text}}}</button>
+<!-- c8:part css -->
+/* C6 three-question self-check: choose an answer, get it explained; the answer is also a native disclosure */
+.c8-selfcheck {
+  border: 1px solid var(--c8p-line); border-radius: var(--c8p-radius); background: var(--c8p-surface);
+  padding: .9rem 1rem 1rem; margin: 1rem 0;
+}
+.c8-selfcheck .c8-check-kicker {
+  margin: 0 0 .35rem; font-size: var(--c8p-small); color: var(--c8-muted);
+  text-transform: uppercase; letter-spacing: .06em; font-weight: var(--c8-weight-strong, 650);
+}
+.c8-selfcheck-title { margin: 0 0 .5rem; }
+.c8-selfcheck-list { margin: 0; padding-left: 1.4rem; }
+.c8-q { margin: 0 0 1rem; }
+.c8-q-set { border: 0; margin: 0; padding: 0; min-width: 0; }
+.c8-q-text { padding: 0; margin: 0 0 .45rem; font-weight: var(--c8-weight-strong, 650); }
+.c8-q-options { display: flex; flex-wrap: wrap; gap: .45rem; }
+.c8-q-options[hidden] { display: none; }
+.c8-q-option { text-align: left; }
+.c8-q-option[data-verdict="right"] { border-color: var(--c8-deterministic); border-width: 2px; }
+.c8-q-option[data-verdict="wrong"] { border-style: dashed; }
+.c8-q-feedback { margin: .45rem 0 0; }
+.c8-q-feedback:empty { display: none; }
+.c8-q-answer { margin-top: .4rem; }
+.c8-q-answer > summary { cursor: pointer; }
+.c8-selfcheck-score { margin: .2rem 0 0; font-size: var(--c8p-small); color: var(--c8-muted); }
+.c8-selfcheck-score[hidden] { display: none; }
+@media print { .c8-q-options, .c8-selfcheck-score { display: none !important; } }
+<!-- c8:part script -->
+  /* --------------------------------------- C6: three-question self-check with explanations (optional) */
+  window.C8.register("self_check", function (el) {
+    var qs = Array.prototype.slice.call(el.querySelectorAll("[data-c8-q]"));
+    var score = el.querySelector("[data-c8-selfcheck-score]");
+    var results = {};
+    function tally() {
+      if (!score) { return; }
+      var done = Object.keys(results).length;
+      var right = Object.keys(results).filter(function (k) { return results[k]; }).length;
+      score.textContent = done + " of " + qs.length + " answered, " + right + " right.";
+    }
+    qs.forEach(function (q, qi) {
+      var answer = parseInt(q.getAttribute("data-answer"), 10);
+      var fb = q.querySelector("[data-c8-q-feedback]");
+      var details = q.querySelector("[data-c8-q-answer]");
+      var opts = Array.prototype.slice.call(q.querySelectorAll("[data-c8-option]"));
+      opts.forEach(function (b) {
+        b.addEventListener("click", function () {
+          var pick = parseInt(b.getAttribute("data-c8-option"), 10);
+          var right = pick === answer;
+          opts.forEach(function (o) {
+            o.setAttribute("aria-pressed", o === b ? "true" : "false");
+            o.removeAttribute("data-verdict");
+          });
+          b.setAttribute("data-verdict", right ? "right" : "wrong");
+          if (fb) {
+            var correct = opts[answer] ? opts[answer].textContent : "";
+            fb.textContent = right ? "Right. The explanation is below." :
+              "Not quite: the answer is “" + correct + "”. The explanation is below.";
+          }
+          if (details) { details.open = true; }
+          results[qi] = right;
+          tally();
+        });
+      });
+    });
+    tally();
+  });

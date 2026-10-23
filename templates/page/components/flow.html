@@ -1,0 +1,25 @@
+<!-- c8:part figure -->
+<figure class="c8-flow" data-c8-flow id="{{id}}" aria-labelledby="{{id}}-title">
+  <div class="c8-flow-head">
+    <p class="c8-flow-title" id="{{id}}-title">{{title}}</p>
+    <button type="button" class="c8-btn" data-c8-zoom aria-pressed="false" hidden>Full size</button>
+  </div>
+  <div class="c8-flow-canvas">
+{{{svg}}}
+  </div>
+{{{outline}}}
+  <figcaption>{{{caption}}}</figcaption>
+{{{legend}}}
+</figure>
+<!-- c8:part outline -->
+  <details class="c8-flow-text">
+    <summary>Read this flow as a list</summary>
+    {{{list}}}
+  </details>
+<!-- c8:part legend -->
+  <ul class="c8-legend" aria-label="Where each step's answer comes from">
+    <li><span class="c8-swatch" data-source="deterministic" aria-hidden="true"></span>{{deterministic}}</li>
+    <li><span class="c8-swatch" data-source="model-judgement" aria-hidden="true"></span>{{model}}</li>
+    <li><span class="c8-swatch" data-source="data-field" aria-hidden="true"></span>{{data}}</li>
+    <li><span class="c8-swatch" data-source="vision" aria-hidden="true"></span>{{vision}}</li>
+  </ul>

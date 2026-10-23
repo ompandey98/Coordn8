@@ -1,0 +1,17 @@
+<!-- c8:part stepper -->
+<div class="c8-stepper" data-c8-stepper id="{{id}}" role="group" aria-labelledby="{{id}}-title">
+  <p class="c8-stepper-title" id="{{id}}-title"><strong>{{title}}</strong></p>
+  <ol class="c8-steps">
+{{{steps}}}
+  </ol>
+  <div class="c8-stepper-controls" data-c8-controls hidden>
+    <button type="button" class="c8-btn" data-c8-prev aria-disabled="true">Previous step</button>
+    <p class="c8-step-count" data-c8-count aria-live="polite">Step 1 of {{count}}</p>
+    <button type="button" class="c8-btn" data-c8-next>Next step</button>
+  </div>
+</div>
+<!-- c8:part step -->
+    <li class="c8-step" data-c8-step data-highlight="{{highlight}}">
+      <h4>{{title}}</h4>
+      {{{body}}}
+    </li>

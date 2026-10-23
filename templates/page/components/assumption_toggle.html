@@ -1,0 +1,83 @@
+<!-- c8:part toggle -->
+<div class="c8-assume" id="{{id}}" data-c8-widget="assumption_toggle" role="group" aria-labelledby="{{id}}-title"
+     data-highlight-on="{{highlight}}">
+  <p class="c8-check-kicker">Change an assumption and see what breaks</p>
+  <p class="c8-assume-title" id="{{id}}-title"><strong>{{{assumption}}}</strong></p>
+  <button type="button" class="c8-btn c8-assume-switch" role="switch" aria-checked="false"
+          aria-describedby="{{id}}-title" data-c8-assume-switch hidden data-c8-js-only>
+    <span class="c8-assume-track" aria-hidden="true"><span class="c8-assume-thumb"></span></span>
+    <span class="c8-assume-label">{{switch_label}}</span>
+  </button>
+  <div class="c8-assume-state" data-c8-assume-state="holds" id="{{id}}-holds">
+    <p class="c8-assume-head">{{holds_label}}</p>
+    {{{holds}}}
+  </div>
+  <div class="c8-assume-state" data-c8-assume-state="breaks" id="{{id}}-breaks">
+    <p class="c8-assume-head">{{breaks_label}}</p>
+    {{{breaks}}}
+  </div>
+  <p class="c8-assume-live" data-c8-assume-live aria-live="polite"></p>
+</div>
+<!-- c8:part css -->
+/* C6 change-an-assumption toggle: a real switch; without script both states are simply shown */
+.c8-assume {
+  border: 1px solid var(--c8p-line); border-radius: var(--c8p-radius); background: var(--c8p-surface);
+  padding: .9rem 1rem 1rem; margin: 1rem 0;
+}
+.c8-assume .c8-check-kicker {
+  margin: 0 0 .35rem; font-size: var(--c8p-small); color: var(--c8-muted);
+  text-transform: uppercase; letter-spacing: .06em; font-weight: var(--c8-weight-strong, 650);
+}
+.c8-assume-title { margin: 0 0 .6rem; }
+.c8-assume-switch { display: inline-flex; align-items: center; gap: .55rem; }
+.c8-assume-switch[hidden] { display: none; }
+.c8-assume-track {
+  position: relative; display: inline-block; width: 2.4rem; height: 1.3rem; border-radius: 1rem;
+  border: 2px solid var(--c8-muted); background: var(--c8p-surface-2); flex: none;
+}
+.c8-assume-thumb {
+  position: absolute; top: 1px; left: 1px; width: .95rem; height: .95rem; border-radius: 50%;
+  background: var(--c8-muted); transition: left var(--c8p-dur) var(--c8p-ease);
+}
+.c8-assume-switch[aria-checked="true"] .c8-assume-track { border-color: var(--c8-accent); }
+.c8-assume-switch[aria-checked="true"] .c8-assume-thumb { left: calc(100% - 1rem - 1px); background: var(--c8-accent); }
+.c8-assume-state { margin-top: .7rem; padding-top: .6rem; border-top: 1px solid var(--c8p-line-soft); }
+.c8-assume-state[hidden] { display: none; }
+.c8-assume-head { margin: 0 0 .3rem; font-weight: var(--c8-weight-strong, 650); }
+.c8-assume-live:empty { display: none; }
+.c8-assume-live { margin: .6rem 0 0; font-size: var(--c8p-small); color: var(--c8-muted); }
+@media (prefers-reduced-motion: reduce) { .c8-assume-thumb { transition: none; } }
+@media print { .c8-assume-state[hidden] { display: block !important; } .c8-assume-switch { display: none !important; } }
+<!-- c8:part script -->
+  /* ------------------------------------- C6: change an assumption and see what breaks (optional) */
+  window.C8.register("assumption_toggle", function (el) {
+    var sw = el.querySelector("[data-c8-assume-switch]");
+    var holds = el.querySelector("[data-c8-assume-state='holds']");
+    var breaks = el.querySelector("[data-c8-assume-state='breaks']");
+    var live = el.querySelector("[data-c8-assume-live]");
+    if (!sw || !holds || !breaks) { return; }
+    var ids = (el.getAttribute("data-highlight-on") || "").split(/\s+/).filter(Boolean);
+    var scope = el.closest("[data-c8-section]") || document;
+    function mark(on) {
+      ids.forEach(function (id) {
+        var sel = "[data-node-id='" + id.replace(/'/g, "") + "']";
+        Array.prototype.forEach.call(scope.querySelectorAll(sel), function (n) {
+          if (on) { n.classList.add("c8-hl"); n.setAttribute("data-c8-broken", ""); }
+          else { n.classList.remove("c8-hl"); n.removeAttribute("data-c8-broken"); }
+        });
+      });
+    }
+    function paint(on, announce) {
+      sw.setAttribute("aria-checked", on ? "true" : "false");
+      holds.hidden = on;
+      breaks.hidden = !on;
+      sw.setAttribute("aria-controls", (on ? breaks : holds).id);
+      mark(on);
+      if (announce && live) {
+        var head = (on ? breaks : holds).querySelector(".c8-assume-head");
+        live.textContent = head ? head.textContent : "";
+      }
+    }
+    sw.addEventListener("click", function () { paint(sw.getAttribute("aria-checked") !== "true", true); });
+    paint(false, false);
+  });

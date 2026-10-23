@@ -1,0 +1,48 @@
+<!-- c8:part predict -->
+<div class="c8-predict" id="{{id}}" data-c8-widget="predict" role="group" aria-labelledby="{{id}}-q">
+  <p class="c8-check-kicker">Predict what happens next</p>
+  <p class="c8-predict-q" id="{{id}}-q"><strong>{{{prompt}}}</strong></p>
+  <p class="c8-predict-hint">{{{hint}}}</p>
+  <button type="button" class="c8-btn c8-predict-btn" data-c8-predict-btn aria-expanded="false"
+          aria-controls="{{id}}-reveal" data-label-open="{{label_open}}" data-label-close="{{label_close}}"
+          hidden data-c8-js-only>{{label_open}}</button>
+  <div class="c8-predict-reveal" id="{{id}}-reveal" data-c8-predict-reveal role="region" aria-labelledby="{{id}}-q">
+    <p class="c8-check-kicker">What happens</p>
+    {{{reveal}}}
+  </div>
+</div>
+<!-- c8:part css -->
+/* C6 predict-next pause: the question first, the answer behind a real button */
+.c8-predict {
+  border: 1px solid var(--c8p-line); border-radius: var(--c8p-radius); background: var(--c8p-surface);
+  padding: .9rem 1rem 1rem; margin: 1rem 0;
+}
+.c8-predict .c8-check-kicker {
+  margin: 0 0 .35rem; font-size: var(--c8p-small); color: var(--c8-muted);
+  text-transform: uppercase; letter-spacing: .06em; font-weight: var(--c8-weight-strong, 650);
+}
+.c8-predict-q { margin: 0 0 .4rem; }
+.c8-predict-hint { margin: 0 0 .7rem; color: var(--c8-muted); }
+.c8-predict-hint:empty { display: none; }
+.c8-predict-reveal { margin-top: .8rem; padding-top: .7rem; border-top: 1px solid var(--c8p-line-soft); }
+.c8-predict-reveal[hidden] { display: none; }
+.c8-predict-btn[aria-expanded="true"] { border-color: var(--c8-accent); }
+@media print { .c8-predict-reveal[hidden] { display: block !important; } .c8-predict-btn { display: none !important; } }
+<!-- c8:part script -->
+  /* ------------------------------------------- C6: predict what happens next (optional) */
+  window.C8.register("predict", function (el) {
+    var btn = el.querySelector("[data-c8-predict-btn]");
+    var reveal = el.querySelector("[data-c8-predict-reveal]");
+    if (!btn || !reveal) { return; }
+    reveal.hidden = true;            /* without script the answer simply stays visible */
+    function paint(open) {
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.textContent = open ? btn.getAttribute("data-label-close") : btn.getAttribute("data-label-open");
+      reveal.hidden = !open;
+    }
+    btn.addEventListener("click", function () {
+      var open = btn.getAttribute("aria-expanded") !== "true";
+      paint(open);
+    });
+    paint(false);
+  });

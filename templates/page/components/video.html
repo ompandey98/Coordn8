@@ -1,0 +1,20 @@
+<!-- c8:part tabs -->
+<div class="c8-tabs" role="tablist" aria-label="How to take this in" hidden>
+  <button type="button" class="c8-btn" role="tab" id="c8-tab-read" data-c8-tab="read" aria-controls="c8-panel-read" aria-selected="true">Read</button>
+  <button type="button" class="c8-btn" role="tab" id="c8-tab-watch" data-c8-tab="watch" aria-controls="c8-panel-watch" aria-selected="false" tabindex="-1">Watch</button>
+</div>
+<!-- c8:part watch -->
+<div class="c8-panel c8-watch" id="c8-panel-watch" data-c8-panel="watch" role="tabpanel" aria-labelledby="c8-tab-watch">
+  <h2 id="watch">{{title}}</h2>
+  <video id="c8-video" controls preload="metadata" playsinline src="{{src}}">
+{{{track}}}
+  </video>
+  <div class="c8-speed" role="group" aria-label="Playback speed" data-c8-speed-group="c8-video" hidden>
+    <p class="c8-speed-label" aria-hidden="true">Speed</p>
+{{{speeds}}}
+  </div>
+</div>
+<!-- c8:part track -->
+    <track kind="captions" src="{{vtt}}" srclang="{{lang}}" label="{{label}}" default>
+<!-- c8:part speed -->
+    <button type="button" class="c8-btn" data-c8-speed="{{rate}}" aria-pressed="false">{{label}}</button>

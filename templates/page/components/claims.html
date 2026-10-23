@@ -1,0 +1,17 @@
+<!-- c8:part ledger -->
+<div class="c8-table-wrap c8-claims" id="{{id}}" data-c8-claims>
+  <table class="c8-table" data-c8-table="claims">
+    <caption>{{caption}}</caption>
+    <thead><tr><th scope="col">Claim</th><th scope="col">Where in the code</th><th scope="col">Basis</th></tr></thead>
+    <tbody>
+{{{rows}}}
+    </tbody>
+  </table>
+  <p class="c8-claims-tally" data-c8-claims-tally>{{tally}}</p>
+</div>
+<!-- c8:part row -->
+      <tr data-claim-id="{{cid}}" data-claim-status="{{status}}" data-claim-ref="{{ref}}">
+        <td data-label="Claim">{{{claim}}}</td>
+        <td data-label="Where in the code">{{{where}}}</td>
+        <td data-label="Basis"><span class="c8-basis" data-basis="{{status}}">{{status_label}}</span></td>
+      </tr>

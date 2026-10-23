@@ -1,0 +1,31 @@
+<!-- c8:part section -->
+<section id="{{id}}" class="c8-section" data-c8-section aria-labelledby="{{id}}-title">
+  <h2 id="{{id}}-title" tabindex="-1">{{title}}</h2>
+  <p class="c8-summary" data-c8-summary>{{{summary}}}</p>
+{{{body}}}
+</section>
+<!-- c8:part wwh -->
+  <div class="c8-wwh">
+{{{blocks}}}
+  </div>
+<!-- c8:part what -->
+    <div class="c8-what" data-c8-block="what">
+      <h3 class="c8-block-label">What</h3>
+      {{{text}}}
+    </div>
+<!-- c8:part why -->
+    <div class="c8-why" data-c8-block="why">
+      <h3 class="c8-block-label">Why</h3>
+      {{{text}}}
+    </div>
+<!-- c8:part how -->
+    <details class="c8-how" data-c8-block="how">
+      <summary>{{label}}</summary>
+      <div class="c8-how-body">
+      {{{text}}}
+      </div>
+    </details>
+<!-- c8:part components -->
+  <div class="c8-components">
+{{{items}}}
+  </div>
