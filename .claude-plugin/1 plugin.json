@@ -1,0 +1,22 @@
+{
+  "name": "coordn8",
+  "displayName": "Coordn8",
+  "version": "2.0.0",
+  "description": "Point it at any codebase; it ships a narrated, synced video and an interactive page, audience-tailored, with every claim traced to the code. Skill, role agents, quality hooks, a coordn8 command and an output style.",
+  "author": {
+    "name": "pandeom"
+  },
+  "homepage": "https://github.com/ompandey98/coordn8",
+  "repository": "https://github.com/ompandey98/coordn8",
+  "license": "MIT",
+  "keywords": [
+    "documentation",
+    "codebase",
+    "walkthrough",
+    "onboarding",
+    "video",
+    "diagram",
+    "explainer",
+    "interactive-page"
+  ]
+}

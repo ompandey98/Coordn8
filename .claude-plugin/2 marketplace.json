@@ -1,0 +1,14 @@
+{
+  "name": "coordn8",
+  "description": "Coordn8: turn any codebase into a narrated, synced video and an interactive page.",
+  "owner": {
+    "name": "pandeom"
+  },
+  "plugins": [
+    {
+      "name": "coordn8",
+      "source": ".",
+      "description": "Point it at any codebase; it ships a narrated, synced video and an interactive page, audience-tailored, with every claim traced to the code."
+    }
+  ]
+}
