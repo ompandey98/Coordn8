@@ -1,0 +1,76 @@
+name: coordn8-pages
+
+# OPTIONAL, MANUAL-ONLY. Publishes a Coordn8-generated interactive page to GitHub
+# Pages as a live demo.
+#
+# Why this is manual (workflow_dispatch) and not on push:
+#   The earlier version ran on every push touching examples/, and failed on all of
+#   them with "Get Pages site failed / Not Found" — because GitHub Pages was never
+#   enabled on the repository. That produced a permanent red X on a green build,
+#   which is worse than having no workflow at all: a failing check that nobody
+#   needs trains you to ignore failing checks. It also had nothing to publish
+#   (examples/ holds source, not a rendered page), so even a successful run would
+#   have deployed an empty site.
+#
+# So: it runs only when you deliberately ask for it, it enables Pages itself, and
+# it refuses to deploy nothing.
+#
+# To use it: put a generated page at examples/site/index.html (e.g. copy a
+# Coordn8/<slug>.html there), then run this workflow from the Actions tab.
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_dir:
+        description: "Directory to publish (must contain index.html)"
+        required: false
+        default: "examples/site"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      # checkout@v5 runs on Node 24. v4 targets Node 20, which GitHub now
+      # force-migrates and warns about on every run.
+      - uses: actions/checkout@v5
+
+      # Refuse early and clearly rather than deploying an empty site. A green
+      # "deployed" on a site with no page is a false success.
+      - name: Verify there is something to publish
+        run: |
+          DIR="${{ inputs.source_dir }}"
+          if [ ! -f "$DIR/index.html" ]; then
+            echo "::error::No $DIR/index.html found — nothing to publish."
+            echo "Generate a page first, then copy it to $DIR/index.html:"
+            echo "  npx -y github:ompandey98/coordn8 init claude"
+            echo "  # run /coordn8 in a repo, then:"
+            echo "  mkdir -p $DIR && cp Coordn8/<slug>.html $DIR/index.html"
+            exit 1
+          fi
+          echo "Publishing $DIR ($(du -sh "$DIR" | cut -f1))"
+
+      # enablement: true turns Pages on if it is off, so this cannot 404 the way
+      # the previous version did on every push.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload the page as the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ inputs.source_dir }}
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
