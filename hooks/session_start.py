@@ -92,7 +92,24 @@ def fit(text: str) -> dict:
     return {}
 
 
+def repair_exec_bits() -> None:
+    """Browser uploads to a repository drop the executable flag. Give the plugin's own
+    launchers it back (package-owned files only; silent; never raises)."""
+    root = Path(os.environ.get("CLAUDE_PLUGIN_ROOT") or Path(__file__).resolve().parents[1])
+    for rel in ("bin/coordn8", "bin/coordn8.js", "install.sh"):
+        f = root / rel
+        try:
+            if f.is_file() and not os.access(str(f), os.X_OK):
+                os.chmod(str(f), f.stat().st_mode | 0o111)
+        except OSError:
+            pass
+
+
 def main():
+    try:
+        repair_exec_bits()
+    except Exception:  # noqa: BLE001 - never let a repair attempt stop the recall
+        pass
     data = C.read_stdin()
     try:
         write_marker(data)
