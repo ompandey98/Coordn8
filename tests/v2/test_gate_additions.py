@@ -39,6 +39,20 @@ def main() -> int:
         r3 = run("scripts/gates/content_ban.py", [data_hit, "--skip-code"])
         s.check("content_ban --skip-code still sweeps JSON data blocks",
                 status(r3).get("status") == "REVIEW", r3.stdout[:200])
+    with tmpdir() as d2:
+        import os, shutil, subprocess
+        d2 = Path(d2); root = d2 / "plugin"
+        (root / "bin").mkdir(parents=True); (root / "hooks").mkdir()
+        from _harness import ROOT
+        for rel in ("bin/coordn8", "bin/coordn8.js", "install.sh", "hooks/session_start.py", "hooks/_common.py"):
+            shutil.copy(ROOT / rel, root / rel); os.chmod(root / rel, 0o644)
+        env = dict(os.environ, CLAUDE_PLUGIN_ROOT=str(root), HOME=str(d2), COORDN8_HOME=str(d2 / "c8"))
+        r = subprocess.run([sys.executable, str(root / "hooks/session_start.py")], input='{"cwd": "%s"}' % d2,
+                           capture_output=True, text=True, env=env, timeout=30)
+        s.check("session start restores the executable flag a browser upload stripped (bin/coordn8, coordn8.js, install.sh)",
+                all(os.access(str(root / x), os.X_OK) for x in ("bin/coordn8", "bin/coordn8.js", "install.sh")),
+                r.stdout[-200:] + r.stderr[-200:])
+        s.check("the repaired hook still exits cleanly", r.returncode == 0, r.stderr[-300:])
     return s.finish()
 
 
