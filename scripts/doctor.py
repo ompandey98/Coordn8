@@ -40,7 +40,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "render"))
-from lib.common import find_chrome, have  # noqa: E402
+from lib.common import CHROME_QUIET, find_chrome, have  # noqa: E402
 from diskguard import (ABORT_FREE_MB, DEFAULT_CAP_GB, RESERVE_MB,  # noqa: E402
                        disk_free, disk_total, human)
 from parallel import (_free_ram_mb, _load_1m, compute_worker_ceiling,  # noqa: E402
@@ -90,7 +90,7 @@ def probe_engine_and_rate(n_frames: int = 12) -> dict:
         # --- cold launch cost (the naive path) --------------------------
         dest = tmp / "cold.jpg"
         t0 = time.monotonic()
-        subprocess.run([chrome, "--headless=new", "--disable-gpu", "--no-sandbox",
+        subprocess.run([chrome, *CHROME_QUIET, "--headless=new", "--disable-gpu", "--no-sandbox",
                         "--hide-scrollbars", "--virtual-time-budget=120",
                         "--window-size=1920,1080", f"--screenshot={dest}",
                         scene.resolve().as_uri() + "?t=1.0"],

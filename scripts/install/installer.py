@@ -239,7 +239,56 @@ def print_summary(rows: list[dict]) -> None:
     print("", flush=True)
 
 
+def _install_lock():
+    """One Coordn8 install at a time. Two at once (e.g. a paused run resumed next to a
+    new one) race on the same files and the shared npx copy. A lock held by a dead
+    process is stale and is taken over. Returns (ok, message, release)."""
+    lock = user_home() / ".install.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    for _ in range(2):
+        try:
+            fd = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+            os.write(fd, str(os.getpid()).encode()); os.close(fd)
+            return True, "", (lambda: lock.unlink() if lock.exists() else None)
+        except FileExistsError:
+            try:
+                other = int((lock.read_text() or "0").strip() or 0)
+            except (OSError, ValueError):
+                other = 0
+            alive = False
+            if other > 0:
+                try:
+                    os.kill(other, 0); alive = True
+                except ProcessLookupError:
+                    alive = False
+                except PermissionError:
+                    alive = True
+            if alive:
+                return False, (f"another Coordn8 install is already running (pid {other}). Let it finish, "
+                               f"or stop it (Ctrl-C in its window; `kill {other}` if it was paused with Ctrl-Z), "
+                               "then run this again."), (lambda: None)
+            try:
+                lock.unlink()           # stale: its process is gone
+            except OSError:
+                pass
+    return True, "", (lambda: None)
+
+
 def cmd_init(args) -> int:
+    ok, msg, release = _install_lock()
+    if not ok:
+        say(msg)
+        return 3
+    try:
+        return _cmd_init(args)
+    finally:
+        try:
+            release()
+        except OSError:
+            pass
+
+
+def _cmd_init(args) -> int:
     try:
         targets = parse_targets(args.target or args.target_pos)
         selected = parse_steps(args.steps)
@@ -555,7 +604,23 @@ def cmd_status(args) -> int:
     return 0
 
 
+def _never_pause_on_the_terminal() -> None:
+    """A terminal program that writes to or reads from the terminal while it is not the
+    foreground job gets SIGTTOU/SIGTTIN, and the default action PAUSES it (state 'T'),
+    which looks exactly like a hung install. Ignore both: writes still reach the screen,
+    a background read fails fast instead of pausing, and the run carries on."""
+    import signal
+    for name in ("SIGTTOU", "SIGTTIN"):
+        sig = getattr(signal, name, None)
+        if sig is not None:
+            try:
+                signal.signal(sig, signal.SIG_IGN)
+            except (OSError, ValueError):
+                pass
+
+
 def main(argv=None) -> int:
+    _never_pause_on_the_terminal()
     _ensure_utf8_stdout()
     ap = build_parser()
     args = ap.parse_args(argv)

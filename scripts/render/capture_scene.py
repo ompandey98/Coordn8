@@ -55,7 +55,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from parallel import PoolResult, run_pool  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from lib.common import find_chrome, have, run  # noqa: E402
+from lib.common import CHROME_QUIET, find_chrome, have, run  # noqa: E402
 from telemetry import (Progress, ResourceSampler, Run,  # noqa: E402
                        fmt_duration, verdict)
 from diskguard import (ABORT_FREE_MB, Budget, DiskBudgetError,  # noqa: E402
@@ -65,7 +65,7 @@ from diskguard import (ABORT_FREE_MB, Budget, DiskBudgetError,  # noqa: E402
 
 def _shot_args(chrome: str, url: str, dest: Path, settle_ms: int,
                size: str = "1920,1080") -> list[str]:
-    return [chrome, "--headless=new", "--disable-gpu", "--no-sandbox",
+    return [chrome, *CHROME_QUIET, "--headless=new", "--disable-gpu", "--no-sandbox",
             "--hide-scrollbars", f"--virtual-time-budget={settle_ms}",
             f"--window-size={size}", f"--screenshot={dest}", url]
 
@@ -529,16 +529,19 @@ def capture_stream(scene: Path, duration: float, fps: int, out_mp4: Path,
 
 
 def _manim_bin() -> list[str] | None:
-    """Return an argv prefix that runs Manim, or None if unavailable.
-    Prefer the console script; fall back to `python -m manim` so a pip-installed
-    Manim without a PATH shim still works."""
+    """How to run Manim here: the console script, `python -m manim` for this
+    interpreter, or a Manim installed for ANOTHER local Python (pipx, uv tool,
+    Homebrew python…). None when no working Manim exists on the machine."""
     if have("manim"):
         return ["manim"]
     cp = run([sys.executable, "-c", "import manim"], timeout=60)
     if cp.returncode == 0:
         return [sys.executable, "-m", "manim"]
-    return None
-
+    try:
+        from lib.common import find_manim
+    except Exception:  # noqa: BLE001
+        return None
+    return find_manim()
 
 def _find_manim_mp4(media_dir: Path, name: str) -> Path | None:
     """Locate the mp4 Manim wrote for scene `name` under its media tree.

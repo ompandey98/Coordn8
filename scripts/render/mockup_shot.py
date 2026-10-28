@@ -48,7 +48,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from lib.common import find_chrome, run  # noqa: E402
+from lib.common import CHROME_QUIET, find_chrome, run  # noqa: E402
 
 EXIT_OK = 0
 EXIT_FAIL = 1
@@ -393,7 +393,7 @@ def _shot_chrome_cli(html: Path, out: Path, vw: int, vh: int, mock: dict | None,
         render_file = tmp
     out.parent.mkdir(parents=True, exist_ok=True)
     url = f"{render_file.resolve().as_uri()}"
-    cp = run([chrome, "--headless=new", "--disable-gpu", "--no-sandbox",
+    cp = run([chrome, *CHROME_QUIET, "--headless=new", "--disable-gpu", "--no-sandbox",
               "--hide-scrollbars", f"--window-size={vw},{vh}",
               "--virtual-time-budget=2000",
               f"--screenshot={out}", url], timeout=90)
@@ -464,7 +464,7 @@ def _rasterize_svg(svg_path: Path, out: Path, width: int, height: int) -> int:
             f"skip — no fake PNG.\n")
         return EXIT_SKIPPED
     url = f"{svg_path.resolve().as_uri()}"
-    cp = run([chrome, "--headless=new", "--disable-gpu", "--no-sandbox",
+    cp = run([chrome, *CHROME_QUIET, "--headless=new", "--disable-gpu", "--no-sandbox",
               "--hide-scrollbars", f"--window-size={width},{height}",
               "--default-background-color=00000000",
               f"--screenshot={out}", url], timeout=90)

@@ -94,6 +94,32 @@ def find_coordn8_entries(cache: Path) -> list[tuple[Path, str]]:
     return found
 
 
+def _entry_in_use(entry: Path) -> str | None:
+    """Another process (other than this one and its parents) running from this cached
+    copy? Then it must not be deleted under it. Best effort: uses `ps` on POSIX."""
+    if os.name != "posix":
+        return None
+    try:
+        r = subprocess.run(["ps", "-Ao", "pid=,ppid=,command="], capture_output=True, text=True,
+                           timeout=5, stdin=subprocess.DEVNULL)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    mine, rows = set(), {}
+    for ln in r.stdout.splitlines():
+        parts = ln.strip().split(None, 2)
+        if len(parts) == 3 and parts[0].isdigit() and parts[1].isdigit():
+            rows[int(parts[0])] = (int(parts[1]), parts[2])
+    pid = os.getpid()
+    while pid in rows and pid not in mine:          # this process and its ancestors
+        mine.add(pid)
+        pid = rows[pid][0]
+    needle = str(entry)
+    for pid, (_ppid, cmd) in rows.items():
+        if pid not in mine and needle in cmd:
+            return f"pid {pid}"
+    return None
+
+
 def clean(dry_run: bool = False, cache: Path | None = None) -> dict:
     """Remove only Coordn8's _npx entries. Never raises."""
     try:
@@ -107,8 +133,17 @@ def clean(dry_run: bool = False, cache: Path | None = None) -> dict:
             if dry_run:
                 removed.append({"path": str(entry), "why": why, "dry_run": True})
                 continue
+            busy = _entry_in_use(entry)
+            if busy:
+                removed.append({"path": str(entry), "why": why, "kept": f"in use by {busy}"})
+                continue
             try:
-                shutil.rmtree(str(entry))
+                # Rename first (atomic), then delete: npx never sees a half-deleted copy,
+                # so a run starting at the same moment re-fetches instead of crashing with
+                # "Cannot find module .../_npx/<hash>/node_modules/.bin/coordn8".
+                gone = entry.with_name(entry.name + f".coordn8-removing-{os.getpid()}")
+                os.rename(str(entry), str(gone))
+                shutil.rmtree(str(gone), ignore_errors=True)
                 removed.append({"path": str(entry), "why": why})
             except OSError as e:
                 errors.append({"path": str(entry), "error": str(e)})

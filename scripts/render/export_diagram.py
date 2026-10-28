@@ -31,7 +31,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SCRIPTS = HERE.parent
 sys.path.insert(0, str(SCRIPTS))
-from lib.common import EXIT_ERROR, EXIT_PASS, EXIT_SKIPPED, emit, find_chrome, run  # noqa: E402
+from lib.common import CHROME_QUIET, EXIT_ERROR, EXIT_PASS, EXIT_SKIPPED, emit, find_chrome, run  # noqa: E402
 
 CLI = HERE / "layout_cli.js"
 GATE = SCRIPTS / "gates" / "check_connectors.py"
@@ -90,7 +90,7 @@ def rasterise(svg: Path, png: Path, w: int, h: int, scale: float, tmp: Path):
                        "python3 -m playwright install chromium`)")
     prof = tmp / "profile"
     prof.mkdir(exist_ok=True)
-    cmd = [chrome, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run",
+    cmd = [chrome, *CHROME_QUIET, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run",
            "--no-default-browser-check", f"--user-data-dir={prof}", "--host-resolver-rules=MAP * ~NOTFOUND",
            f"--force-device-scale-factor={scale:g}", f"--window-size={w},{h}",
            f"--screenshot={png}", svg.resolve().as_uri()]

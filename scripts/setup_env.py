@@ -191,12 +191,19 @@ def run(cmd: list[str], timeout: float = TIMEOUT_INSTALL,
             return 127, f"{cmd[0]}: not found"
         except OSError as e:
             return 126, f"{cmd[0]}: {e}"
-        try:
-            proc.wait(timeout=t)
-            timed_out = False
-        except subprocess.TimeoutExpired:
-            _kill_tree(proc)
-            timed_out = True
+        timed_out = False
+        start = time.monotonic()
+        while True:
+            try:
+                proc.wait(timeout=min(20.0, max(0.1, t - (time.monotonic() - start))))
+                break
+            except subprocess.TimeoutExpired:
+                waited = time.monotonic() - start
+                if waited >= t:
+                    _kill_tree(proc)
+                    timed_out = True
+                    break
+                log(f"… still running: {' '.join(map(str, cmd[:4]))[:80]} ({waited:.0f}s of {t:g}s)")
         out.seek(0)
         text = out.read().decode("utf-8", errors="replace").strip()
     if timed_out:
@@ -279,9 +286,16 @@ def has_pymod(mod: str) -> bool:
 
 
 def has_manim() -> bool:
-    # A runnable Manim = the module imports AND a CLI entry exists (console script
-    # or `python -m manim`). We probe the import; that's the load-bearing bit.
-    return have("manim") or has_pymod("manim")
+    # A runnable Manim anywhere on this machine counts: the console script on PATH,
+    # a pipx / uv-tool / ~/.local install, or `python -m manim` for ANY local python3.
+    # (Checking only this interpreter re-installed Manim on machines that had it.)
+    if have("manim") or has_pymod("manim"):
+        return True
+    try:
+        from lib.common import find_manim
+    except Exception:  # noqa: BLE001
+        return False
+    return find_manim() is not None
 
 
 def _vendor_manifest() -> dict:
@@ -587,6 +601,9 @@ MANIM_FIX = ("python3 -m pip install --user manim   (needs cairo + pango; macOS:
              "brew install cairo pango pkg-config)")
 
 
+MANIM_BUDGET = int(os.environ.get("COORDN8_MANIM_BUDGET", "180"))
+
+
 def ensure_manim(dry: bool) -> dict:
     if has_manim():
         return {"tool": "manim", "status": "already-present", "verified": True,
@@ -595,9 +612,18 @@ def ensure_manim(dry: bool) -> dict:
         return {"tool": "manim", "status": "would-install", "kind": "enhancement",
                 "plan": "OS pkg mgr: cairo/pango/pkg-config, then pip install manim",
                 "fix": MANIM_FIX}
-    sysdeps = _manim_system_deps(dry=False)
-    log("installing Manim (pip) …")
-    ok, out = pip_install(["manim"])
+    if os.environ.get("COORDN8_NO_MANIM") or "--no-manim" in sys.argv:
+        return {"tool": "manim", "status": "skipped", "kind": "enhancement",
+                "reason": "skipped on request (--no-manim / COORDN8_NO_MANIM)", "fix": MANIM_FIX}
+    # Manim is an ENHANCEMENT: it must never hold the install for long. No OS-package
+    # builds here, wheels only (a source build of its native parts can take tens of
+    # minutes), one bounded attempt, no second --user try after a timeout.
+    sysdeps = {"step": "manim-system-deps", "status": "skipped",
+               "note": "not attempted during setup (slow); see fix"}
+    log(f"installing Manim (pip, prebuilt wheels only, at most {MANIM_BUDGET}s) …")
+    code, out = run([sys.executable, "-m", "pip", "install", "--no-input", "--only-binary=:all:",
+                     "--user", "manim"], timeout=MANIM_BUDGET)
+    ok = code == 0
     verified = has_manim()
     return {"tool": "manim", "kind": "enhancement",
             "status": "installed" if verified else "install-failed",

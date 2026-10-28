@@ -45,7 +45,7 @@ _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE))
 sys.path.insert(0, str(_HERE.parent))
 import caption_marks as cm  # noqa: E402
-from lib.common import find_chrome, run  # noqa: E402
+from lib.common import CHROME_QUIET, find_chrome, run  # noqa: E402
 
 DEFAULT_SIZES = ((1280, 720), (1080, 1920))
 TITLE_FLOOR_1080 = 44            # PLAYBOOK 2.4a: titles >= 44 px at 1080p
@@ -294,7 +294,7 @@ def _render_chrome_cli(chrome, scene, t, sizes, title, subtitle, kb, out_dir: Pa
         uri = None
         if scene:
             fp = Path(td) / "frame.png"
-            cp = run([chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
+            cp = run([chrome, *CHROME_QUIET, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
                       "--virtual-time-budget=1500", "--window-size=1920,1080", f"--screenshot={fp}",
                       Path(scene).resolve().as_uri() + f"?t={t:.4f}"], timeout=120)
             if cp.returncode != 0 or not fp.exists():
@@ -304,7 +304,7 @@ def _render_chrome_cli(chrome, scene, t, sizes, title, subtitle, kb, out_dir: Pa
             hp = Path(td) / f"cover-{w}x{h}.html"
             hp.write_text(cover_page(w, h, uri, title, subtitle, kb), encoding="utf-8")
             dest = out_dir / f"{name}-{w}x{h}.png"
-            cp = run([chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
+            cp = run([chrome, *CHROME_QUIET, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
                       "--virtual-time-budget=1500", f"--window-size={w},{h}", f"--screenshot={dest}",
                       hp.resolve().as_uri()], timeout=120)
             if cp.returncode != 0 or not dest.exists():

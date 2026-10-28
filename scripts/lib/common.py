@@ -34,6 +34,13 @@ CAPTION_MAX_CUE_SECONDS = 7.0     # no cue lingers longer than this
 CAPTION_MAX_CPS = 20.0            # reading-speed ceiling (chars per second)
 
 
+# Flags for EVERY direct headless Chrome launch. On macOS a Chrome started without
+# them reaches for the login keychain ("Chrome Safe Storage") and pops a password /
+# "keychain not found" dialog on every run. Playwright adds the first two itself.
+CHROME_QUIET = ["--use-mock-keychain", "--password-store=basic", "--no-first-run",
+                "--no-default-browser-check", "--disable-sync"]
+
+
 def emit(result: dict) -> None:
     """Print a machine-readable result line the agent can parse, plus a human line."""
     print(json.dumps(result, ensure_ascii=False))
@@ -144,3 +151,44 @@ def run(cmd: list[str], timeout: int = 120) -> subprocess.CompletedProcess:
             cmd, 127, "",
             f"[coordn8] COULD NOT RUN {cmd[0] if cmd else '?'}: "
             f"{type(e).__name__}: {e}")
+
+
+def find_manim(timeout: float = 20.0) -> list | None:
+    """Locate a WORKING Manim anywhere on this machine, not just in the current Python.
+
+    Order: the `manim` console script on PATH; common user-level tool dirs (pipx, uv
+    tool, ~/.local/bin); `python -m manim` for this interpreter and for every other
+    python3.x on PATH or in the usual Homebrew/system locations. Returns the argv
+    prefix to run it (e.g. ["manim"] or ["/opt/homebrew/bin/python3.12", "-m", "manim"]),
+    or None. Each probe is bounded and never raises."""
+    import os
+    import glob
+    home = Path.home()
+    cands: list = []
+    w = shutil.which("manim")
+    if w:
+        cands.append([w])
+    for c in (home / ".local/bin/manim", home / ".local/share/uv/tools/manim/bin/manim",
+              home / ".local/pipx/venvs/manim/bin/manim", home / ".local/share/pipx/venvs/manim/bin/manim"):
+        if c.exists():
+            cands.append([str(c)])
+    pys = [sys.executable]
+    for name in ("python3", "python3.13", "python3.12", "python3.11", "python3.10", "python3.9"):
+        w = shutil.which(name)
+        if w:
+            pys.append(w)
+    for pat in ("/opt/homebrew/bin/python3*", "/usr/local/bin/python3*",
+                str(home / ".pyenv/versions/*/bin/python3")):
+        pys += sorted(glob.glob(pat))
+    seen = set()
+    for py in pys:
+        rp = os.path.realpath(py)
+        if rp in seen or not os.access(py, os.X_OK) or py.endswith("-config"):
+            continue
+        seen.add(rp)
+        cands.append([py, "-m", "manim"])
+    for argv in cands:
+        cp = run(list(argv) + ["--version"], timeout=timeout)
+        if cp.returncode == 0 and "manim" in (cp.stdout + cp.stderr).lower():
+            return list(argv)
+    return None

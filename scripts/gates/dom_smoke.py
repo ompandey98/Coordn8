@@ -26,7 +26,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from lib.common import (EXIT_ERROR, EXIT_PASS, EXIT_REVIEW, EXIT_SKIPPED,  # noqa: E402
+from lib.common import (CHROME_QUIET, EXIT_ERROR, EXIT_PASS, EXIT_REVIEW, EXIT_SKIPPED,  # noqa: E402
                         emit, find_chrome, run)
 
 EXTERNAL_DEP = re.compile(
@@ -35,12 +35,12 @@ EXTERNAL_DEP = re.compile(
 
 def dump_dom(chrome: str, file_url: str, timeout: int = 45) -> str | None:
     try:
-        cp = run([chrome, "--headless=new", "--disable-gpu", "--no-sandbox",
+        cp = run([chrome, *CHROME_QUIET, "--headless=new", "--disable-gpu", "--no-sandbox",
                   "--dump-dom", file_url], timeout=timeout)
         if cp.returncode == 0 and cp.stdout:
             return cp.stdout
         # older chrome flag fallback
-        cp = run([chrome, "--headless", "--disable-gpu", "--dump-dom", file_url],
+        cp = run([chrome, *CHROME_QUIET, "--headless", "--disable-gpu", "--dump-dom", file_url],
                  timeout=timeout)
         return cp.stdout or None
     except Exception:
